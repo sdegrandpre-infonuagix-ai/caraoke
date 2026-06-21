@@ -1,0 +1,9 @@
+{
+  "name": "caraoke",
+  "description": "Caraoke is a mobile app that allows 2 persons in distinct cars to sing to the same song together.",
+  "createdAt": "2026-06-21T07:00:32.509Z",
+  "platform": "claude-code",
+  "upstreamVersions": {
+    "bmadCommit": "d1163f85"
+  }
+}
