@@ -4,8 +4,7 @@
 > **Do not use this file for UX, architecture, epics, or implementation.** Retained for historical reference only. — *Deprecated 2026-06-21*
 
 ---
-
-## 1. Executive Summary
+## 1. Executive Summarys
 Caraoke is a mobile app that enables two people in separate cars to sing the same song together in real time. It delivers synchronized playback, low-latency audio sharing, and on-screen scoring for paired users to match lyrics and rhythm while maintaining privacy and connection across distance.
 
 ## 2. Success Criteria
