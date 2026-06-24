@@ -166,8 +166,8 @@ This document provides the complete epic and story breakdown for caraoke, decomp
 ## Epic List
 
 ### Epic 1: Foundation & the Magic Moment (Phase 0)
-Scaffold the monorepo and base infrastructure, then build and run the throwaway Phase 0 validation harness on a real Montreal highway to prove backing-track drift, voice latency, and the "felt together" feeling. This is the go/no-go gate before the full build.
-**FRs covered:** none directly (enabler) — implements AR1, AR2; validates NFR2, NFR3.
+Scaffold the monorepo and base infrastructure, deploy the real-time media prerequisites (LiveKit SFU, Spotify MCP), then build and run the throwaway Phase 0 validation harness on a real Montreal highway to prove backing-track drift, voice latency, and the "felt together" feeling. This is the go/no-go gate before the full build.
+**FRs covered:** none directly (enabler) — implements AR1, AR2, AR3 (MCP), AR6 (LiveKit); validates NFR2, NFR3.
 
 ### Epic 2: Accounts, Profile & Localization
 Users sign in (Apple/Google via Cognito), link Spotify Premium, set their language (agent speech + UI, independently per user), and manage or delete their account. Establishes design tokens, foundation primitives, and the i18n foundation.
@@ -258,6 +258,36 @@ So that I have evidence to decide whether to build the full product.
 **Then** drift (position vs wallclock) and one-way voice latency are sampled and logged to `results/`
 **And** a spoken "did that feel like singing together?" answer is recorded
 **And** a summary report states measured drift vs ≤50ms (NFR2), latency vs ≤150ms (NFR3), and a go/no-go recommendation.
+
+### Story 1.5: Deploy self-hosted LiveKit SFU
+
+As a developer,
+I want the self-hosted LiveKit SFU deployed in `ca-central-1`,
+So that the live-voice plane (Epic 4) has a residency-compliant media server to connect to.
+
+**Acceptance Criteria:**
+
+**Given** the Terraform infra baseline (Story 1.2)
+**When** the LiveKit module is applied
+**Then** a self-hosted LiveKit SFU runs in `ca-central-1`, backed by the existing Redis for distributed state (AR6, NFR10)
+**And** it is reachable via the integration abstraction with health checks and a documented path to relocate to the Bell Wavelength Zone when Phase 0 justifies (NFR5)
+**And** voice media is encrypted end-to-end (SRTP/DTLS) (NFR6)
+**And** this production SFU is independent of the throwaway WebRTC used in the Phase 0 harness (Story 1.3).
+
+### Story 1.6: Deploy Spotify MCP server
+
+As a developer,
+I want the Spotify MCP server deployed on ECS Express Mode,
+So that the Voice Agent (Epic 4) can trigger Spotify playback via MCP tool calls.
+
+**Acceptance Criteria:**
+
+**Given** the Terraform infra baseline (Story 1.2)
+**When** the `services/spotify-mcp` server is built and deployed
+**Then** it runs on ECS Express Mode in `ca-central-1` with `streamable-http` transport (AR3)
+**And** it exposes the MCP tools needed to control playback, behind the Spotify integration abstraction with a sandbox mock available (NFR20, AR9)
+**And** Spotify credentials are sourced from Secrets Manager, never hard-coded
+**And** it honors Spotify provider terms — no peer-to-peer re-streaming of audio (NFR21).
 
 ---
 
