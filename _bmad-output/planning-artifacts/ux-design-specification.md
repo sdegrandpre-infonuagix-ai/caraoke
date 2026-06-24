@@ -1,5 +1,8 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+lastStep: 14
+status: 'complete'
+completedAt: '2026-06-21'
 inputDocuments:
   - _bmad-output/planning-artifacts/prd.md
   - _bmad-output/planning-artifacts/architecture.md
@@ -471,3 +474,242 @@ The home screen centers on a large Riff voice button (gradient accent → second
 - `SuggestionPrompt` — rotating suggestion text below the button.
 - `RecentPartners` — horizontal avatar row with online indicators, tap to quick-start.
 - `TabBar` — Home / Discover / Profile (three tabs, large icons).
+
+## User Journey Flows
+
+### Journey 1 — The Initiator (happy path)
+Liam speaks one sentence and, seconds later, hears Sofia's voice. For returning users this is the *entire* app. The flow works identically whether the screen is black (moving) or showing the Voice Hub (stationary) — Riff is the interface either way.
+
+```mermaid
+flowchart TD
+  Start([In car]) --> Mode{Driving mode?}
+  Mode -->|Moving: black screen| Voice["Tap-to-wake or speak:<br/>'Caraoke, sing X with Y'"]
+  Mode -->|Stationary: Voice Hub| Voice
+  Voice --> Riff["Riff: 'Got it. X with Y.<br/>Reaching out now.' (≤3s)"]
+  Riff --> Notify[Partner: push + Riff voice]
+  Notify --> Wait{Partner responds ≤60s?}
+  Wait -->|No| Retry["Riff: 'Y hasn't picked up.<br/>Keep trying, or later?'"]
+  Retry --> Voice
+  Wait -->|Yes| Handshake["Riff (both): 'You're both here.<br/>Getting X ready.'"]
+  Handshake --> PreRoll[Pre-buffer Spotify paused + clock-sync offset]
+  PreRoll --> Countdown["Riff: 'Three... two... one...'"]
+  Countdown --> Duet["Unpause at T · voice opens · THE PEAK"]
+  Duet --> AfterGlow[Song ends · 2s afterglow · voice stays open]
+  AfterGlow --> Feel["Riff: 'Did that feel like singing together?'"]
+  Feel --> Capture[Spoken answer captured]
+  Capture --> Again{Another, or done?}
+  Again -->|Another| Voice
+  Again -->|Done| Close["Riff: 'Great session. See you next time.'"]
+```
+
+### Journey 2 — The Joiner (first-run + Premium-gate recovery)
+Sofia's never used Caraoke and she's already driving. Goal: hearing Liam's voice as fast as legally/technically possible — **three gates max** (mic, Premium, go), preceded by a one-tap account creation. The critical branch is the Premium gate: it must offer a warm path, never silently fail mid-duet.
+
+```mermaid
+flowchart TD
+  Invite(["Push: 'Liam wants to sing with you'"]) --> Accept{Accept?}
+  Accept -->|Ignore| Expire([Invite expires gracefully; Liam told])
+  Accept -->|Tap / 'yes'| Auth[Sign in with Apple/Google · Cognito]
+  Auth --> Mic[Mic permission · Riff explains why]
+  Mic -->|Denied| MicBlock["Riff: 'I need the mic to share<br/>your singing.' · retry / exit"]
+  Mic -->|Granted| Lang[Language · defaults to device locale · confirm by voice]
+  Lang --> Premium{Spotify Premium?}
+  Premium -->|Yes| Join[Pulled into Liam's session]
+  Premium -->|No / Free tier| Gate["Riff: 'You'll each need Spotify Premium<br/>so you both get the music.'"]
+  Gate --> Choice{Upgrade or later?}
+  Choice -->|Upgrade now| OAuth[Spotify OAuth + upgrade · stationary screen moment]
+  OAuth --> Join
+  Choice -->|Remind me later| Defer["Riff: 'No worries — I'll remind you.<br/>Want me to tell Liam?'"]
+  Defer --> ExitWarm([Graceful exit; Liam notified])
+  Join --> Duet([Duet begins → Journey 1 from countdown])
+```
+
+### Journey 3 — Mid-drive failure (safety-critical)
+A tunnel kills the connection mid-song. The whole point: a dropped connection must feel like a *pause*, not a crash — and never tempt the driver to look down. Everything is voice; if moving, the screen stays black throughout.
+
+```mermaid
+flowchart TD
+  Singing([Mid-song duet]) --> Issue{What broke?}
+  Issue -->|Drift >50ms| Correct[Invisible micro-seek · user never knows]
+  Correct --> Singing
+  Issue -->|Connection lost| Duck["Riff ducks music:<br/>'Lost Sofia, trying to reconnect.'"]
+  Duck --> Recon{Reconnect ≤60s?}
+  Recon -->|Yes| Resume["Riff: 'They're back.' · resync · resume"]
+  Resume --> Singing
+  Recon -->|No| GraceEnd["Riff: 'Couldn't reconnect.<br/>Want to try again when you stop?'"]
+  GraceEnd --> EndCalm([Session ends calmly · screen stays black if moving])
+```
+
+### Journey 4 — Nearby Discovery (opt-in, first time)
+The privacy-sensitive one. Age verification and location are gated *here* — at first opt-in — not in onboarding. Coarse Plus-Code area only, and once a partner is added their location goes dark forever.
+
+```mermaid
+flowchart TD
+  Disc([Discover tab · stationary]) --> Toggle["Toggle 'Discoverable nearby' (off by default)"]
+  Toggle --> Age{Age-verified 18+?}
+  Age -->|No| Verify[Stripe Identity check · one-time]
+  Verify -->|Under 18 / fail| Block([Discovery unavailable · explained warmly])
+  Verify -->|Pass 18+| Loc
+  Age -->|Yes| Loc[Coarse location permission · just-in-time]
+  Loc --> Active[Opt-in active · coarse Plus-Code area only]
+  Active --> Ask["While driving: 'Riff, any Caraokes nearby?'"]
+  Ask --> Pool{Anyone in coarse area?}
+  Pool -->|None| Warm["Riff: 'Nobody nearby right now —<br/>I'll keep an ear out.'"]
+  Pool -->|Yes| ReadOut[Riff reads opted-in singers by name]
+  ReadOut --> Add{Add a partner?}
+  Add -->|No| Warm
+  Add -->|Yes| Dark[Partner added · their location goes dark permanently]
+  Dark --> Sing([Start a duet → Journey 1])
+```
+
+### Journey Patterns
+- **Navigation:** Voice-first entry everywhere; the 3-tab visual nav (Home / Discover / Profile) exists only when stationary; black screen when moving.
+- **Gate sequencing (just-in-time):** account (one-tap Apple/Google) + mic + Premium at first *session*; age + location at first *discovery opt-in*. No gate appears before it's meaningful.
+- **Decisions:** binary-only voice choices, always (retry/stop, upgrade/later, another/done). Never three options aloud.
+- **Feedback:** every state change voice-announced + a sonic cue; 2s post-song afterglow; never >3s silence while connected; failures are calm, never alarming.
+- **Recovery:** every dead-end offers a warm path forward (remind-later, try-when-stopped, keep-an-ear-out) — no flow ever just *ends*.
+
+### Flow Optimization Principles
+1. **One sentence to sing.** Returning users skip every gate — intent → duet, ≤30s.
+2. **Three gates max, first run.** Joiner hits only account → mic → Premium-confirm → go.
+3. **Defer to the moment of meaning.** Age/location only at discovery; Premium only when a session needs it.
+4. **The peak is the destination.** Every flow minimizes distance to "first partner voice heard."
+5. **Graceful by default.** Failure paths preserve the emotional thread; Riff fills silence; the screen never demands attention while moving.
+
+## Component Strategy
+
+### Design System Components
+**NativeWind provides no components** — only utility styling. No third-party RN UI kit (per Step 6: a component library would dilute the warm/playful brand and cost override-wars for a two-person team). Therefore **100% of components are custom**, built on NativeWind tokens.
+
+### Component System Architecture (the conductor)
+**`SessionStateMachine` is the single source of truth.** It owns the session lifecycle (`idle → pairing → ready → playing → reconnecting → ended`) — the exact machine the architecture defines — and **both the visual and sonic layers subscribe to it.** No component reacts to session state independently. This structurally prevents visual↔sonic desync (e.g., screen says "connected" but the chime never fired), which in a voice-first app would shatter trust. Every component below is a *subscriber*, never an owner, of session state.
+
+The library has three layers: **Foundation primitives**, **Feature components** (visual), and **Sonic services** (native-backed — the primary interface in use).
+
+### Foundation primitives
+`Button` (primary 56px / secondary / voice 72px / icon 48px), `Card`, `ScreenContainer` (safe-area + driving-mode aware), `Text`, `Avatar` (optional color ring), `Toggle`, `Icon`. States: default/press/disabled/loading.
+
+### Feature components (visual)
+
+| Component | Purpose | Notes |
+|---|---|---|
+| `DrivingModeScreen` | Novel black-screen container; renders nothing when moving, routes tap → wake Riff | Motion trigger via debounced accelerometer + GPS (>15–20mph sustained 5–10s; debounced entry **and** exit to avoid red-light flicker) |
+| `WaveformVisualizer` | Ambient dual-voice waveform (coral + gold) | **Runs on the UI thread (Reanimated/Skia), NOT React re-renders;** fed by *throttled* native voice-activity events; honors `prefers-reduced-motion` |
+| `RiffButton` | Home hero, 160px gradient, tap-to-talk | idle / listening / processing |
+| `RiffStatus` | Centered Riff-state text | subscribes to `SessionStateMachine` |
+| `SessionControls` | mute (48px) / Riff (72px) / end (48px) | per-control states |
+| `PartnerBar` + `PartnerAvatar` | "Who's here" + song + elapsed | connecting / ready / singing / dropped |
+| `CountdownOverlay` | The 3-2-1 emotional peak | UI-thread animation; timing tied to scheduled-start T |
+| `GateCard` | **Shared shell + per-gate body** — shell handles layout + Riff-voiced rationale; bodies differ: mic (native permission), Premium (OAuth), age (Stripe Identity SDK), location (native) | request / granted / denied / recovery |
+| `SuggestionPrompt`, `RecentPartners`, `TabBar` | Home browsing (stationary only) | default / empty |
+| `DiscoveryList` | Nearby singers read by Riff; sparse/empty-state aware (never "0 found") | populated / empty-warm |
+| `PlanCard`, `PaymentMethodRow`, `ReceiptRow` | Billing (stationary) | active / past-due |
+
+### Sonic services (native-backed — NOT React components)
+These live in `modules/caraoke-audio` (Swift/Kotlin) with **TypeScript facades in `apps/mobile/src/lib/`** and a **typed event-bridge contract** to JS. They render nothing — they are the primary interface in use. Build them as services, never as `.tsx`.
+- `SonicEngine` — preloaded audio-cue player (listening, processing, partner-connected chime, countdown tone, error, session-end, driving on/off).
+- `RiffVoice` — TTS controller: warm tone, concise, calm errors; wake-word-free 3–5s follow-up window.
+- `AudioDucking` — backing track ~12dB / partner ~6dB on Riff speech, 500ms restore; priority stack: phone call > Riff > partner > music > notifications.
+- `AmbientPresence` — subtle "alive" texture on the black screen.
+
+**Post-session "felt together?" capture (FR16/FR42) — intentionally has NO visual component.** Handled entirely by the Sonic layer: `RiffVoice` asks aloud during the 2s afterglow, `SonicEngine` frames it warmly, the native module captures the spoken answer. A visual component here would violate the eyes-free law. Its absence is a deliberate decision, not a gap.
+
+### Sonic verification harness
+Because the Sonic layer is the primary interface, it gets a first-class test story: an **audio-state assertion harness** that verifies cue playback, ducking levels/curves (−12dB / 500ms restore), ambient-presence-while-black, and `RiffVoice` follow-up windows. Lives alongside `tools/phase0-harness/`. Without it the sonic system ships unverified.
+
+### Implementation Roadmap (phased to front-load risk)
+**Phase 0 de-risk wave (tied to `tools/phase0-harness/`):** the riskiest things, proven on a real Montreal highway before the full build — `SessionStateMachine`, `SonicEngine` + `AudioDucking`, `WaveformVisualizer` (UI-thread), `CountdownOverlay`, `DrivingModeScreen` (motion debounce). These ARE Phase 0's subject matter.
+**Phase 1 — Core loop:** `ScreenContainer`, `Button`, `RiffStatus`, `SessionControls`, `RiffVoice`, `AmbientPresence`, `GateCard` (mic). Completes Journeys 1 & 3.
+**Phase 2 — Onboarding + home:** `RiffButton`, `SuggestionPrompt`, `PartnerBar`/`PartnerAvatar`, `RecentPartners`, `TabBar`, `GateCard` (Premium/language). Completes Journey 2.
+**Phase 3 — Discovery, billing:** `DiscoveryList`, `GateCard` (age/location), billing rows. Admin = separate web surface (`apps/admin`).
+
+## UX Consistency Patterns
+
+### Voice Interaction Patterns (the primary pattern set — novel)
+The most-used "interface" is talking to Riff. These govern it:
+- **Listen cue + hot window:** every Riff utterance opens a distinct "listening" tone and keeps the mic hot 3–5s — no wake word for follow-ups.
+- **Binary-only choices:** Riff never offers more than two options aloud ("retry or stop?").
+- **Confirm-by-restate:** Riff confirms intent by restating it ("Mr. Brightside with Sofia — reaching out").
+- **Barge-in:** the user can interrupt Riff anytime; Riff stops and listens.
+- **Failure ladder:** 1st miss → re-ask; 2nd → offer an alternative; 3rd → graceful exit. Never an infinite "I didn't catch that" loop.
+- **Concision:** Riff speaks the minimum ("Got it. Waiting for Sofia.").
+
+### Feedback Patterns (sonic-first, visual-secondary)
+- **Every state has a sound.** Silence reads as broken — a `SonicEngine` cue fires on every transition (listening, processing, partner-connected, error, end).
+- **Voice-announced transitions** for anything meaningful ("Sofia's ready").
+- **Visual feedback only when stationary** (waveform, status text) — never required to understand state.
+- **Success = warmth, not a checkmark.** Riff acknowledges; no success modals.
+- **Never expose raw metrics** (drift/latency) to users.
+
+### Error & Recovery Patterns
+- **Voice-first, calm, binary.** "Lost Sofia, trying to reconnect" → recovers silently, or "want to try again when you stop?"
+- **No modals while moving;** visual error banners only when stationary.
+- **Pre-loaded offline message** (from device storage) for network drops — never a blank failure.
+- **Never a dead-end** — every error offers a warm path forward; **never require pickup/unlock** to recover.
+
+### Button Hierarchy (visual — stationary only)
+- **Primary** (accent #FF6B6B, 56px) — one per screen. **Secondary** (surface outline). **Voice** (72px gradient circle) — the *real* primary on any session-capable screen. **Icon** (48px) — mute/end/utility.
+- **While moving: no buttons render.** A tap anywhere wakes Riff (voice), not UI.
+
+### Navigation Patterns
+- **Voice is navigation** in-session. **3-tab bar** (Home / Discover / Profile) only when stationary. **Black screen replaces all nav** when moving.
+- No hamburger menus, deep hierarchies, carousels, or horizontal scroll.
+
+### Form & Input Patterns (stationary setup only)
+- Used only in onboarding (account, language), billing, profile. Prefer **Sign-in-with-Apple/Google, OAuth, toggles** over typed fields — minimize text entry.
+- Inline validation, **Zod-backed**, aligned to the API error envelope; one plain-language field error at a time; 48px+ targets.
+
+### Empty & Loading State Patterns
+- **Never "0 results."** Empty discovery → Riff warmth ("Nobody nearby right now — I'll keep an ear out").
+- **Loading is sonic in-session** (processing tone), not spinners; stationary screens may use subtle skeletons.
+- **Pre/post-song silence is filled** by Riff/ambient — never >3s silent while connected.
+
+### Modal & Overlay Patterns
+- **In-session modals are banned** (eyes-free law). The sole in-session overlay is `CountdownOverlay` — non-interactive, the emotional peak.
+- Stationary setup may use overlays (Spotify OAuth, `GateCard`s) — dismissible, large targets.
+
+### Driving-Mode Transition Pattern
+- **Entry:** Riff narrates ("Driving mode — screen's off, I'm here") + `AmbientPresence` begins + visual fades to black (~500ms). Never silent or abrupt — the transition builds trust.
+- **Exit (sustained stop):** UI fades back in; no interactive elements until stop sustained >30s.
+
+### Design System Integration
+Visual patterns use NativeWind tokens (Warm Dusk palette, 8px spacing, radius scale); sonic patterns are governed by the sonic design system (cues, ducking, `RiffVoice`). **Both subscribe to `SessionStateMachine`** — so visual and sonic feedback are always consistent by construction.
+
+## Responsive Design & Accessibility
+
+### Responsive Strategy
+- **Mobile-only, single-column, phone-first.** No tablet/desktop layout for the app. The only non-phone surface is the **admin web console** (separate, standard responsive desktop).
+- **Orientation:** portrait-primary (car mounts, one-glance reads). Landscape supported gracefully, not optimized. The driving black-screen is orientation-agnostic.
+- **Phone size range:** small (~320pt, iPhone SE) → large (~430pt, Pro Max / large Android). Fluid layouts via flex + NativeWind; the spacious, center-weighted composition scales naturally.
+- **Safe areas:** notch / Dynamic Island / home-indicator handled centrally by `ScreenContainer`; content never under cutouts.
+- **Admin web (separate surface):** standard desktop-first dashboards; breakpoints 768 / 1024.
+
+### Breakpoint Strategy
+- **The app is not breakpoint-driven** — it scales fluidly across phone sizes. Its two "modes" are behavioral, not size-based: **stationary** (full UI) vs **moving** (black screen), triggered by *motion*, not screen width.
+- **Dynamic type:** respect OS font-scaling; layouts reflow and never clip; the type scale scales with accessibility settings.
+- **Admin:** standard 768 / 1024 breakpoints.
+
+### Accessibility Strategy
+- **Target: WCAG 2.1 AA** (NFR18) for all visual UI; AAA for primary text — already met (see Visual Foundation contrast ratios).
+- **Eyes-free *is* accessibility:** the voice-first / black-screen design is a powerful **motor + visual accessibility** property — the core experience is operable without sight or precise touch (NFR17).
+- **Screen readers:** VoiceOver (iOS) + TalkBack (Android) on all stationary UI; `accessibilityLabel` + `accessibilityRole` + state on every interactive element; logical focus order.
+- **RTL:** full mirroring for RTL languages among the 25; logical `start`/`end` props from day one.
+- **Dynamic type & targets:** honor OS text-size; ≥48px targets (exceeds Apple 44 / Material 48).
+- **No color-only information:** partners distinguished by color **and** position **and** name.
+- **Reduced motion:** `prefers-reduced-motion` honored by `WaveformVisualizer` + `CountdownOverlay` (static/simplified fallback).
+- **Honest limitation (from PRD):** the product is inherently audio-centric — **profoundly deaf users are not an MVP target.** Stated transparently. *Future inclusivity path (Growth):* a stationary visual transcript of Riff's speech + visual partner-activity indicators could open partial access for hard-of-hearing users.
+
+### Testing Strategy
+- **Device matrix:** real iPhone (SE → Pro Max) + Android (small → large, incl. one budget device for honest audio-latency), not just simulators.
+- **In-car real-world (Phase 0):** the definitive test — Bell 5G, Montreal highway, motion-detection debounce, black-screen behavior, sonic-cue intelligibility at road noise.
+- **Screen-reader passes:** VoiceOver + TalkBack on every stationary screen.
+- **Internationalization:** forced-RTL pseudo-locale + one real RTL language (e.g., Arabic) + one CJK.
+- **Contrast / color-blind simulation** on the Warm Dusk palette.
+- **Sonic accessibility:** verify every cue is distinguishable at road-noise volume and that ducking keeps `RiffVoice` intelligible over music + partner.
+
+### Implementation Guidelines
+- Relative units + flex + NativeWind; no fixed-pixel layouts; safe-area insets via `ScreenContainer`.
+- Every interactive element ships `accessibilityLabel` + role + state; logical focus order.
+- RTL via logical props; validate under forced-RTL.
+- Honor `prefers-reduced-motion` and OS dynamic type everywhere.
+- **Treat audio intelligibility at road noise as an accessibility requirement**, not polish — the sonic layer is the primary interface, so its clarity is an a11y concern.
