@@ -13,4 +13,13 @@ describe('caraoke-api', () => {
       error: null,
     });
   });
+
+  it('GET /health/livekit reports SFU health via the media abstraction', async () => {
+    // Default (mock) integration mode → healthy sandbox media server.
+    const res = await request(app).get('/health/livekit');
+    expect(res.status).toBe(200);
+    expect(res.body.data.healthy).toBe(true);
+    expect(res.body.data.provider).toBe('mock');
+    expect(res.body.error).toBeNull();
+  });
 });

@@ -47,3 +47,13 @@ output "ecs_cluster_name" {
   description = "ECS cluster name for the core API."
   value       = module.api.cluster_name
 }
+
+output "livekit_signaling_url" {
+  description = "LiveKit SFU signaling URL for the client SDK."
+  value       = module.livekit.signaling_url
+}
+
+output "livekit_keys_secret_arn" {
+  description = "ARN of the LiveKit API keys secret (value set out-of-band)."
+  value       = module.livekit.keys_secret_arn
+}

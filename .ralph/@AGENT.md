@@ -50,6 +50,14 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   committed. The ECS API service is a placeholder (`desired_count = 0`, `busybox` image) until
   the real image ships; it `ignore_changes` on task_definition/desired_count so deploys don't
   fight Terraform.
+- `modules/livekit` is the self-hosted SFU (Story 1.5): Fargate behind an NLB (TCP signaling
+  7880/7881 + UDP media 7882), config via `LIVEKIT_CONFIG_BODY`, keys via the KMS-encrypted
+  `<prefix>/livekit` secret, distributed state on the existing Redis over TLS. Media is
+  SRTP/DTLS by construction (NFR6). Set the keys secret out-of-band before the service starts.
+- The API reaches the SFU ONLY via the media integration abstraction
+  (`services/api/src/integrations/media`, live|mock by `CARAOKE_INTEGRATIONS`). `GET
+  /health/livekit` reports SFU reachability (200 healthy / 503 unhealthy, uniform envelope).
+  Set `LIVEKIT_URL` for the live adapter.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

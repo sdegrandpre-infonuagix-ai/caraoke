@@ -15,7 +15,8 @@ infra/
 │   ├── redis/        # ElastiCache Redis (ephemeral state + LiveKit backend)
 │   ├── cognito/      # user pool + app client + user/admin RBAC groups
 │   ├── secrets/      # Secrets Manager containers (spotify/xai/stripe)
-│   └── ecs-express/  # ECS cluster + placeholder Fargate API service
+│   ├── ecs-express/  # ECS cluster + placeholder Fargate API service
+│   └── livekit/      # self-hosted LiveKit SFU (Fargate + NLB, Redis-backed)
 └── envs/
     ├── dev/          # composition root for the dev environment
     └── prod/         # placeholder (mirrors dev, hardened — later story)

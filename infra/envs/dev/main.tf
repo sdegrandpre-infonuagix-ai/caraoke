@@ -61,3 +61,14 @@ module "api" {
   vpc_cidr_block = module.vpc.vpc_cidr_block
   subnet_ids     = module.vpc.private_subnet_ids
 }
+
+module "livekit" {
+  source             = "../../modules/livekit"
+  name_prefix        = local.name_prefix
+  region             = var.region
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  private_subnet_ids = module.vpc.private_subnet_ids
+  redis_address      = module.redis.primary_endpoint
+  kms_key_arn        = module.kms.key_arn
+}

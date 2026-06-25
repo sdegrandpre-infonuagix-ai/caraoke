@@ -14,7 +14,7 @@
   > So that I have evidence to decide whether to build the full product.
   > AC: Given a harness session on Bell 5G on a Montreal highway, When a full song completes, Then drift (position vs wallclock) and one-way voice latency are sampled and logged to `results/`, And a spoken "did that feel like singing together?" answer is recorded, And a summary report states measured drift vs ≤50ms (NFR2), latency vs ≤150ms (NFR3), and a go/no-go recommendation.
   > Spec: specs/planning-artifacts/epics.md#story-1-4
-- [ ] Story 1.5: Deploy self-hosted LiveKit SFU
+- [x] Story 1.5: Deploy self-hosted LiveKit SFU
   > As a developer
   > I want the self-hosted LiveKit SFU deployed in `ca-central-1`
   > So that the live-voice plane (Epic 4) has a residency-compliant media server to connect to.

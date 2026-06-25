@@ -9,6 +9,8 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3000),
   CARAOKE_INTEGRATIONS: z.enum(['live', 'mock']).default('mock'),
   AWS_REGION: z.string().default('ca-central-1'),
+  // LiveKit SFU signaling URL (Story 1.5). Optional in mock mode.
+  LIVEKIT_URL: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
