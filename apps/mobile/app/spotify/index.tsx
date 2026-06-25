@@ -1,6 +1,7 @@
 import { Linking, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Redirect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useSpotifyAuth } from '../../src/auth/useSpotifyAuth';
@@ -19,6 +20,7 @@ export default function SpotifyLinkScreen() {
   const { authorize, ready } = useSpotifyAuth();
   const queryClient = useQueryClient();
   const statusQuery = useSpotifyStatus();
+  const { t } = useTranslation();
 
   const link = useMutation({
     mutationFn: async () => {
@@ -36,18 +38,15 @@ export default function SpotifyLinkScreen() {
   return (
     <ScreenContainer>
       <View className="flex-1 gap-xl">
-        <Text variant="h1">Connect Spotify</Text>
-        <Text color="secondary">
-          Caraoke plays the song from your own Spotify. A Premium account is required to sing
-          together.
-        </Text>
+        <Text variant="h1">{t('spotify.title')}</Text>
+        <Text color="secondary">{t('spotify.intro')}</Text>
 
         {status?.linked && status.isPremium ? (
           <Card>
             <View className="flex-row items-center gap-sm">
-              <Icon name="checkmark-circle" color="#4ADE80" accessibilityLabel="Verified" />
+              <Icon name="checkmark-circle" color="#4ADE80" accessibilityLabel={t('spotify.connected')} />
               <Text variant="h3" color="success">
-                Spotify Premium connected
+                {t('spotify.connected')}
               </Text>
             </View>
           </Card>
@@ -57,17 +56,17 @@ export default function SpotifyLinkScreen() {
           <Card>
             <View className="gap-sm">
               <View className="flex-row items-center gap-sm">
-                <Icon name="alert-circle" color="#FF4D4D" accessibilityLabel="Not Premium" />
+                <Icon name="alert-circle" color="#FF4D4D" accessibilityLabel={t('spotify.notPremiumTitle')} />
                 <Text variant="h3" color="error">
-                  Spotify connected, but not Premium
+                  {t('spotify.notPremiumTitle')}
                 </Text>
               </View>
               <Text color="secondary">
-                Your Spotify account is “{status.product}”. Caraoke duets need Spotify Premium.
+                {t('spotify.notPremiumBody', { product: status.product })}
               </Text>
               <Button
-                label="Upgrade to Premium"
-                accessibilityLabel="Upgrade to Spotify Premium"
+                label={t('spotify.upgrade')}
+                accessibilityLabel={t('spotify.upgrade')}
                 onPress={() => void Linking.openURL(PREMIUM_URL)}
               />
             </View>
@@ -77,19 +76,19 @@ export default function SpotifyLinkScreen() {
         <Button
           label={
             link.isPending
-              ? 'Connecting…'
+              ? t('spotify.connecting')
               : status?.linked
-                ? 'Reconnect Spotify'
-                : 'Connect Spotify'
+                ? t('spotify.reconnect')
+                : t('spotify.connect')
           }
           variant={status?.linked ? 'secondary' : 'primary'}
-          accessibilityLabel="Connect Spotify"
+          accessibilityLabel={t('spotify.connect')}
           disabled={!ready || link.isPending || !idToken}
           onPress={() => link.mutate()}
         />
         {link.isError && link.error?.message !== 'cancelled' ? (
           <Text variant="caption" color="error">
-            Couldn&apos;t connect Spotify. Please try again.
+            {t('spotify.error')}
           </Text>
         ) : null}
       </View>

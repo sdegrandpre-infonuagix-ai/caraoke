@@ -18,12 +18,7 @@
 - [x] Story 2.2: Sign in with Apple/Google (Cognito)
 - [x] Story 2.3: Profile management & account deletion
 - [x] Story 2.4: Connect & verify Spotify Premium
-  > As a user
-  > I want to connect my Spotify account and have Premium verified
-  > So that the system knows I can participate in duets.
-  > AC: Given an authenticated user on the Spotify link screen, When I complete Spotify OAuth, Then the link is stored and Premium status is verified via the Spotify integration (FR2), And a non-Premium account is told plainly and offered an upgrade path (not silently accepted), And the Spotify provider is accessed only via its abstraction with a sandbox mock available (NFR20, AR9).
-  > Spec: specs/planning-artifacts/epics.md#story-2-4
-- [ ] Story 2.5: Language preference & i18n foundation
+- [x] Story 2.5: Language preference & i18n foundation
   > As a user
   > I want to set my language and have the app and agent speak it
   > So that Caraoke works in my own tongue regardless of my partner's.

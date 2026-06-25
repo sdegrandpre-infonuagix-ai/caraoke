@@ -27,6 +27,7 @@ class InMemoryUsers implements UserRepository {
       email: claims.email,
       displayName: claims.displayName ?? null,
       authProvider: claims.authProvider,
+      languagePref: 'en',
       createdAt: now,
       updatedAt: now,
     };

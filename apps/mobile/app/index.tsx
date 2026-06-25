@@ -1,24 +1,34 @@
+import { useEffect } from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Avatar, Button } from '../src/components';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { useMe } from '../src/api/useMe';
+import { applyLanguage } from '../src/i18n/useLocale';
 
 /**
- * Home route. Redirects to onboarding when signed out; otherwise greets the current user.
- * The full home experience is built in later epics — this proves the auth gate end-to-end.
+ * Home route. Redirects to onboarding when signed out; otherwise greets the current user and
+ * applies their saved language preference (FR3/FR5). Full home experience arrives in later epics.
  */
 export default function Index() {
   const status = useAuthStore((s) => s.status);
   const signOut = useAuthStore((s) => s.signOut);
   const me = useMe();
   const router = useRouter();
+  const { t } = useTranslation();
+
+  // Apply the user's saved language once their profile loads.
+  const lang = me.data?.languagePref;
+  useEffect(() => {
+    if (lang) applyLanguage(lang);
+  }, [lang]);
 
   if (status === 'loading') {
     return (
       <ScreenContainer>
         <View className="flex-1 items-center justify-center">
-          <Text color="secondary">Loading…</Text>
+          <Text color="secondary">{t('common.loading')}</Text>
         </View>
       </ScreenContainer>
     );
@@ -32,23 +42,29 @@ export default function Index() {
     <ScreenContainer>
       <View className="flex-1 items-center justify-center gap-lg">
         <Avatar name={me.data?.displayName ?? me.data?.email ?? 'You'} size="lg" partner="A" />
-        <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? 'Welcome'}</Text>
-        <Text color="secondary">You're signed in.</Text>
+        <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? t('home.welcome')}</Text>
+        <Text color="secondary">{t('home.signedIn')}</Text>
         <Button
-          label="Connect Spotify"
-          accessibilityLabel="Connect Spotify"
+          label={t('home.connectSpotify')}
+          accessibilityLabel={t('home.connectSpotify')}
           onPress={() => router.push('/spotify')}
         />
         <Button
-          label="Edit profile"
+          label={t('home.editProfile')}
           variant="secondary"
-          accessibilityLabel="Edit profile"
+          accessibilityLabel={t('home.editProfile')}
           onPress={() => router.push('/profile')}
         />
         <Button
-          label="Sign out"
+          label={t('home.language')}
           variant="secondary"
-          accessibilityLabel="Sign out"
+          accessibilityLabel={t('home.language')}
+          onPress={() => router.push('/settings/language')}
+        />
+        <Button
+          label={t('common.signOut')}
+          variant="secondary"
+          accessibilityLabel={t('common.signOut')}
           onPress={() => void signOut()}
         />
       </View>

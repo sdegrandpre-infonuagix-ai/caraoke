@@ -1,0 +1,52 @@
+{
+  "app": { "name": "Caraoke", "tagline": "Sing together, across distance." },
+  "common": {
+    "save": "Save",
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "signOut": "Sign out",
+    "tryAgain": "Please try again."
+  },
+  "onboarding": {
+    "continueApple": "Continue with Apple",
+    "continueGoogle": "Continue with Google",
+    "signingIn": "Signing in…",
+    "error": "Sign-in was cancelled or failed. Please try again."
+  },
+  "home": {
+    "signedIn": "You're signed in.",
+    "welcome": "Welcome",
+    "editProfile": "Edit profile",
+    "connectSpotify": "Connect Spotify",
+    "language": "Language"
+  },
+  "profile": {
+    "title": "Profile",
+    "displayName": "Display name",
+    "namePlaceholder": "Your name",
+    "saveError": "Couldn't save. Please try again.",
+    "dangerZone": "Danger zone",
+    "deleteAccount": "Delete account",
+    "deleting": "Deleting…",
+    "deleteConfirmTitle": "Delete account?",
+    "deleteConfirmBody": "This permanently deletes your account and all your data. This cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "spotify": {
+    "title": "Connect Spotify",
+    "intro": "Caraoke plays the song from your own Spotify. A Premium account is required to sing together.",
+    "connected": "Spotify Premium connected",
+    "notPremiumTitle": "Spotify connected, but not Premium",
+    "notPremiumBody": "Your Spotify account is \"{{product}}\". Caraoke duets need Spotify Premium.",
+    "upgrade": "Upgrade to Premium",
+    "connect": "Connect Spotify",
+    "reconnect": "Reconnect Spotify",
+    "connecting": "Connecting…",
+    "error": "Couldn't connect Spotify. Please try again."
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose the language for the app and your Caraoke voice."
+  }
+}

@@ -7,6 +7,8 @@ export interface User {
   email: string;
   displayName: string | null;
   authProvider: AuthProvider;
+  /** Preferred language (FR3) — drives UI (FR5) and Voice-Agent speech (FR4). */
+  languagePref: string;
   createdAt: string;
   updatedAt: string;
 }

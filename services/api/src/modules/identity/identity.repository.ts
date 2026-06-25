@@ -6,6 +6,7 @@ import type { AuthClaims, User } from './identity.types.js';
 /** Patch of editable user columns (camelCase). Undefined fields are left unchanged. */
 export interface UserUpdate {
   displayName?: string | null;
+  languagePref?: string;
 }
 
 /** Data access for users. The repository is the only code touching SQL (architecture). */
@@ -50,15 +51,23 @@ export class PgUserRepository implements UserRepository {
   }
 
   async update(id: string, patch: UserUpdate): Promise<User | null> {
-    // Only displayName is editable today; the validated patch always carries it (may be
-    // null to clear). Bump updated_at on every change.
+    // Build a SET clause from only the fields present in the patch (presence, not value, so
+    // displayName can be set to null to clear it). updated_at always bumps.
+    const sets: string[] = ['updated_at = now()'];
+    const values: unknown[] = [id];
+
+    if ('displayName' in patch) {
+      values.push(patch.displayName ?? null);
+      sets.push(`display_name = $${values.length}`);
+    }
+    if ('languagePref' in patch && patch.languagePref !== undefined) {
+      values.push(patch.languagePref);
+      sets.push(`language_pref = $${values.length}`);
+    }
+
     const { rows } = await this.db().query(
-      `UPDATE users
-         SET display_name = $2,
-             updated_at = now()
-       WHERE id = $1
-       RETURNING *`,
-      [id, patch.displayName ?? null],
+      `UPDATE users SET ${sets.join(', ')} WHERE id = $1 RETURNING *`,
+      values,
     );
     return rows[0] ? rowToCamel<User>(rows[0]) : null;
   }

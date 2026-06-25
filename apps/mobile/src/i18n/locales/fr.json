@@ -1,0 +1,52 @@
+{
+  "app": { "name": "Caraoke", "tagline": "Chantez ensemble, malgré la distance." },
+  "common": {
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "loading": "Chargement…",
+    "signOut": "Se déconnecter",
+    "tryAgain": "Veuillez réessayer."
+  },
+  "onboarding": {
+    "continueApple": "Continuer avec Apple",
+    "continueGoogle": "Continuer avec Google",
+    "signingIn": "Connexion…",
+    "error": "La connexion a été annulée ou a échoué. Veuillez réessayer."
+  },
+  "home": {
+    "signedIn": "Vous êtes connecté.",
+    "welcome": "Bienvenue",
+    "editProfile": "Modifier le profil",
+    "connectSpotify": "Connecter Spotify",
+    "language": "Langue"
+  },
+  "profile": {
+    "title": "Profil",
+    "displayName": "Nom affiché",
+    "namePlaceholder": "Votre nom",
+    "saveError": "Échec de l'enregistrement. Veuillez réessayer.",
+    "dangerZone": "Zone sensible",
+    "deleteAccount": "Supprimer le compte",
+    "deleting": "Suppression…",
+    "deleteConfirmTitle": "Supprimer le compte ?",
+    "deleteConfirmBody": "Ceci supprime définitivement votre compte et toutes vos données. Action irréversible.",
+    "cancel": "Annuler",
+    "delete": "Supprimer"
+  },
+  "spotify": {
+    "title": "Connecter Spotify",
+    "intro": "Caraoke joue la chanson depuis votre propre Spotify. Un compte Premium est requis pour chanter ensemble.",
+    "connected": "Spotify Premium connecté",
+    "notPremiumTitle": "Spotify connecté, mais pas Premium",
+    "notPremiumBody": "Votre compte Spotify est « {{product}} ». Les duos Caraoke nécessitent Spotify Premium.",
+    "upgrade": "Passer à Premium",
+    "connect": "Connecter Spotify",
+    "reconnect": "Reconnecter Spotify",
+    "connecting": "Connexion…",
+    "error": "Échec de la connexion à Spotify. Veuillez réessayer."
+  },
+  "language": {
+    "title": "Langue",
+    "subtitle": "Choisissez la langue de l'application et de votre voix Caraoke."
+  }
+}

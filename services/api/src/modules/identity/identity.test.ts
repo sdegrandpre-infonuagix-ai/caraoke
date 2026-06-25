@@ -26,16 +26,24 @@ class InMemoryUserRepository implements UserRepository {
       email: claims.email,
       displayName: claims.displayName ?? null,
       authProvider: claims.authProvider,
+      languagePref: 'en',
       createdAt: now,
       updatedAt: now,
     };
     this.byId.set(user.id, user);
     return user;
   }
-  async update(id: string, patch: { displayName?: string | null }): Promise<User | null> {
+  async update(
+    id: string,
+    patch: { displayName?: string | null; languagePref?: string },
+  ): Promise<User | null> {
     const user = this.byId.get(id);
     if (!user) return null;
-    const updated = { ...user, displayName: patch.displayName ?? null };
+    const updated: User = {
+      ...user,
+      ...('displayName' in patch ? { displayName: patch.displayName ?? null } : {}),
+      ...(patch.languagePref !== undefined ? { languagePref: patch.languagePref } : {}),
+    };
     this.byId.set(id, updated);
     return updated;
   }
@@ -78,6 +86,14 @@ describe('IdentityService profile + deletion (FR1/FR6)', () => {
     const user = await service.findOrCreate(claims);
     const updated = await service.updateProfile(user.id, { displayName: 'New Name' });
     expect(updated.displayName).toBe('New Name');
+  });
+
+  it('updateProfile persists the language preference (FR3)', async () => {
+    const repo = new InMemoryUserRepository();
+    const service = new IdentityService(repo);
+    const user = await service.findOrCreate(claims);
+    const updated = await service.updateProfile(user.id, { languagePref: 'ar' });
+    expect(updated.languagePref).toBe('ar');
   });
 
   it('deleteAccount removes the user and the federated identity', async () => {

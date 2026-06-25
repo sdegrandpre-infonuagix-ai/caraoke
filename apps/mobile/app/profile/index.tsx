@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Redirect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card } from '../../src/components';
 import { colors } from '../../src/theme/tokens';
 import { useAuthStore } from '../../src/stores/useAuthStore';
@@ -18,6 +19,7 @@ export default function Profile() {
   const signOut = useAuthStore((s) => s.signOut);
   const me = useMe();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const [displayName, setDisplayName] = useState('');
 
@@ -26,8 +28,7 @@ export default function Profile() {
   }, [me.data]);
 
   const save = useMutation({
-    mutationFn: () =>
-      updateProfile(idToken!, { displayName: displayName.trim() || null }),
+    mutationFn: () => updateProfile(idToken!, { displayName: displayName.trim() || null }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
   });
 
@@ -39,32 +40,28 @@ export default function Profile() {
   if (status === 'signedOut') return <Redirect href="/(onboarding)/sign-in" />;
 
   const confirmDelete = () => {
-    Alert.alert(
-      'Delete account?',
-      'This permanently deletes your account and all your data. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => remove.mutate() },
-      ],
-    );
+    Alert.alert(t('profile.deleteConfirmTitle'), t('profile.deleteConfirmBody'), [
+      { text: t('profile.cancel'), style: 'cancel' },
+      { text: t('profile.delete'), style: 'destructive', onPress: () => remove.mutate() },
+    ]);
   };
 
   return (
     <ScreenContainer>
       <View className="flex-1 gap-xl">
-        <Text variant="h1">Profile</Text>
+        <Text variant="h1">{t('profile.title')}</Text>
 
         <Card>
           <View className="gap-sm">
             <Text variant="caption" color="secondary">
-              Display name
+              {t('profile.displayName')}
             </Text>
             <TextInput
               value={displayName}
               onChangeText={setDisplayName}
-              placeholder="Your name"
+              placeholder={t('profile.namePlaceholder')}
               placeholderTextColor={colors.textDisabled}
-              accessibilityLabel="Display name"
+              accessibilityLabel={t('profile.displayName')}
               style={{
                 color: colors.textPrimary,
                 backgroundColor: colors.surfaceRaised,
@@ -81,25 +78,25 @@ export default function Profile() {
         </Card>
 
         <Button
-          label={save.isPending ? 'Saving…' : 'Save'}
-          accessibilityLabel="Save profile"
+          label={save.isPending ? t('common.saving') : t('common.save')}
+          accessibilityLabel={t('common.save')}
           disabled={save.isPending || !idToken}
           onPress={() => save.mutate()}
         />
         {save.isError ? (
           <Text variant="caption" color="error">
-            Couldn&apos;t save. Please try again.
+            {t('profile.saveError')}
           </Text>
         ) : null}
 
         <View className="mt-2xl gap-sm">
           <Text variant="h3" color="error">
-            Danger zone
+            {t('profile.dangerZone')}
           </Text>
           <Button
-            label={remove.isPending ? 'Deleting…' : 'Delete account'}
+            label={remove.isPending ? t('profile.deleting') : t('profile.deleteAccount')}
             variant="secondary"
-            accessibilityLabel="Delete account"
+            accessibilityLabel={t('profile.deleteAccount')}
             disabled={remove.isPending || !idToken}
             onPress={confirmDelete}
           />

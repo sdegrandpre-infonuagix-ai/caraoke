@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Icon } from '../../src/components';
 import { useCognitoSignIn } from '../../src/auth/useCognitoSignIn';
 import type { FederatedProvider } from '../../src/auth/config';
@@ -10,6 +11,7 @@ import type { FederatedProvider } from '../../src/auth/config';
  */
 export default function SignIn() {
   const { signIn, ready } = useCognitoSignIn();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState<FederatedProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,9 +20,9 @@ export default function SignIn() {
     setError(null);
     try {
       const okSignIn = await signIn(provider);
-      if (!okSignIn) setError('Sign-in was cancelled or failed. Please try again.');
+      if (!okSignIn) setError(t('onboarding.error'));
     } catch {
-      setError('Something went wrong signing in. Please try again.');
+      setError(t('onboarding.error'));
     } finally {
       setBusy(null);
     }
@@ -30,23 +32,23 @@ export default function SignIn() {
     <ScreenContainer>
       <View className="flex-1 justify-center gap-2xl">
         <View className="items-center gap-sm">
-          <Text variant="display">Caraoke</Text>
+          <Text variant="display">{t('app.name')}</Text>
           <Text variant="body" color="secondary">
-            Sing together, across distance.
+            {t('app.tagline')}
           </Text>
         </View>
 
         <View className="gap-md">
           <Button
-            label={busy === 'apple' ? 'Signing in…' : 'Continue with Apple'}
-            accessibilityLabel="Sign in with Apple"
+            label={busy === 'apple' ? t('onboarding.signingIn') : t('onboarding.continueApple')}
+            accessibilityLabel={t('onboarding.continueApple')}
             disabled={!ready || busy != null}
             onPress={() => onPress('apple')}
           />
           <Button
-            label={busy === 'google' ? 'Signing in…' : 'Continue with Google'}
+            label={busy === 'google' ? t('onboarding.signingIn') : t('onboarding.continueGoogle')}
             variant="secondary"
-            accessibilityLabel="Sign in with Google"
+            accessibilityLabel={t('onboarding.continueGoogle')}
             disabled={!ready || busy != null}
             onPress={() => onPress('google')}
           />

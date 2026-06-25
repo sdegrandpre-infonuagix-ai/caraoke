@@ -7,6 +7,7 @@ export interface Me {
   email: string;
   displayName: string | null;
   authProvider: 'apple' | 'google' | 'cognito';
+  languagePref: string;
 }
 
 /** Current-user query (server state via TanStack Query). Hits GET /me with the ID token. */

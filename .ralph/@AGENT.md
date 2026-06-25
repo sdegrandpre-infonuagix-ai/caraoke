@@ -108,6 +108,19 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   Premium-verified or a non-Premium upgrade path (opens spotify.com/premium). Needs
   `EXPO_PUBLIC_SPOTIFY_CLIENT_ID`.
 
+## i18n / language (Story 2.5)
+- `packages/shared/languages.ts` is the source of truth: 25 `SUPPORTED_LANGUAGES` (incl. RTL
+  ar/he/fa/ur), `languageSchema` (Zod enum), `resolveLanguage(locale)`, `isRtlLanguage`.
+- API: `users.language_pref` (migration 0003, default 'en'); `PATCH /me` accepts
+  `languagePref` (validated by the shared enum); `/me` returns it. This is the per-user
+  agent speech language (FR4) and UI language (FR5), independent of the partner.
+- Mobile: i18next + react-i18next initialized once in `src/i18n` (default = device locale via
+  expo-localization → `resolveLanguage`); strings externalized in `src/i18n/locales/*.json`
+  (en complete; fr/ar partial, English fallback). `useLocale().change(code)` switches i18next,
+  applies RTL via `I18nManager` (UX-DR13), and persists via `PATCH /me`. `app/settings/
+  language.tsx` is the 25-language picker; the home route applies the saved pref on load.
+  Add new screens' strings to the locale JSON — do not hardcode.
+
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
   intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&
