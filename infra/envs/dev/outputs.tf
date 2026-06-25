@@ -57,3 +57,8 @@ output "livekit_keys_secret_arn" {
   description = "ARN of the LiveKit API keys secret (value set out-of-band)."
   value       = module.livekit.keys_secret_arn
 }
+
+output "spotify_mcp_cluster_name" {
+  description = "ECS cluster name for the Spotify MCP server."
+  value       = module.spotify_mcp.cluster_name
+}

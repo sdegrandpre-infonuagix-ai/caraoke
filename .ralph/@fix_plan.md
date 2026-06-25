@@ -9,18 +9,8 @@
 - [x] Story 1.2: Base AWS infrastructure skeleton (Terraform)
 - [x] Story 1.3: Phase 0 duet harness (manual two-phone prototype)
 - [x] Story 1.4: Phase 0 measurement & go/no-go report
-  > As a founder
-  > I want the harness to measure backing-track drift and one-way voice latency and capture a "felt together?" answer
-  > So that I have evidence to decide whether to build the full product.
-  > AC: Given a harness session on Bell 5G on a Montreal highway, When a full song completes, Then drift (position vs wallclock) and one-way voice latency are sampled and logged to `results/`, And a spoken "did that feel like singing together?" answer is recorded, And a summary report states measured drift vs ≤50ms (NFR2), latency vs ≤150ms (NFR3), and a go/no-go recommendation.
-  > Spec: specs/planning-artifacts/epics.md#story-1-4
 - [x] Story 1.5: Deploy self-hosted LiveKit SFU
-  > As a developer
-  > I want the self-hosted LiveKit SFU deployed in `ca-central-1`
-  > So that the live-voice plane (Epic 4) has a residency-compliant media server to connect to.
-  > AC: Given the Terraform infra baseline (Story 1.2), When the LiveKit module is applied, Then a self-hosted LiveKit SFU runs in `ca-central-1`, backed by the existing Redis for distributed state (AR6, NFR10), And it is reachable via the integration abstraction with health checks and a documented path to relocate to the Bell Wavelength Zone when Phase 0 justifies (NFR5), And voice media is encrypted end-to-end (SRTP/DTLS) (NFR6), And this production SFU is independent of the throwaway WebRTC used in the Phase 0 harness (Story 1.3).
-  > Spec: specs/planning-artifacts/epics.md#story-1-5
-- [ ] Story 1.6: Deploy Spotify MCP server
+- [x] Story 1.6: Deploy Spotify MCP server
   > As a developer
   > I want the Spotify MCP server deployed on ECS Express Mode
   > So that the Voice Agent (Epic 4) can trigger Spotify playback via MCP tool calls.

@@ -58,6 +58,12 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   (`services/api/src/integrations/media`, live|mock by `CARAOKE_INTEGRATIONS`). `GET
   /health/livekit` reports SFU reachability (200 healthy / 503 unhealthy, uniform envelope).
   Set `LIVEKIT_URL` for the live adapter.
+- `services/spotify-mcp` is the Spotify MCP server (Story 1.6): streamable-http transport
+  (`POST /mcp`, stateless) exposing playback-control tools (play/pause/resume/state). Spotify
+  behind an integration abstraction (live Web-API + sandbox mock, `CARAOKE_INTEGRATIONS`).
+  App credentials load from Secrets Manager (`SPOTIFY_SECRET_ID`) — never hard-coded; mock
+  mode needs no AWS. NFR21: control-plane only, never proxies/re-streams audio. Deployed via
+  the generalized `ecs-express` module (`service_name="spotify-mcp"`, secret-read task role).
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

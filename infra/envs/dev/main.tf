@@ -72,3 +72,25 @@ module "livekit" {
   redis_address      = module.redis.primary_endpoint
   kms_key_arn        = module.kms.key_arn
 }
+
+# Spotify MCP server on ECS Express (Story 1.6). Reads its app credentials from the
+# existing `spotify` Secrets Manager secret at runtime via its task role (NFR7).
+module "spotify_mcp" {
+  source               = "../../modules/ecs-express"
+  name_prefix          = local.name_prefix
+  service_name         = "spotify-mcp"
+  region               = var.region
+  vpc_id               = module.vpc.vpc_id
+  vpc_cidr_block       = module.vpc.vpc_cidr_block
+  subnet_ids           = module.vpc.private_subnet_ids
+  container_port       = 3001
+  readable_secret_arns = [module.secrets.secret_arns["spotify"]]
+  kms_key_arn          = module.kms.key_arn
+
+  extra_environment = [
+    { name = "PORT", value = "3001" },
+    { name = "CARAOKE_INTEGRATIONS", value = "live" },
+    { name = "AWS_REGION", value = var.region },
+    { name = "SPOTIFY_SECRET_ID", value = module.secrets.secret_arns["spotify"] },
+  ]
+}
