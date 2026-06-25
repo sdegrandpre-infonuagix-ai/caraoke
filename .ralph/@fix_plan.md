@@ -6,12 +6,7 @@
 > Goal: Scaffold the monorepo and base infra, then prove the duet *feels* real on a Montreal highway before committing to the full build.
 
 - [x] Story 1.1: Monorepo & Expo app scaffold
-  > As a developer
-  > I want the pnpm monorepo, Expo SDK 56 app, and shared packages initialized with a CI gate
-  > So that all subsequent work has a consistent, type-safe foundation.
-  > AC: Given an empty repo, When the scaffold story is complete, Then `apps/mobile` (Expo SDK 56), `services/api`, `packages/shared`, `packages/config` exist in a pnpm workspace, And TypeScript `strict`, shared ESLint/Prettier, and a CI workflow blocking on lint/type/test are configured, And `pnpm dev` and `pnpm build` run successfully across the workspace.
-  > Spec: specs/planning-artifacts/epics.md#story-1-1
-- [ ] Story 1.2: Base AWS infrastructure skeleton (Terraform)
+- [x] Story 1.2: Base AWS infrastructure skeleton (Terraform)
   > As a developer
   > I want a minimal Terraform-defined infrastructure baseline in `ca-central-1`
   > So that later epics can deploy services into a residency-compliant environment.

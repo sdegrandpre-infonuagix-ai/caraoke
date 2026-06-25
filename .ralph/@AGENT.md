@@ -38,6 +38,19 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   key in SDK 56 (new arch is default).
 - Update this section when you learn new build optimizations or gotchas.
 
+## Infrastructure (Terraform)
+- `infra/modules/*` are reusable; `infra/envs/dev` is the composition root (`prod` is a
+  placeholder). Region is Canada-only (NFR10) via a `region` variable validation + a
+  `check "data_residency"` block; all data stores are KMS-encrypted at rest (NFR6).
+- Validate/plan: `cd infra/envs/dev && terraform init && terraform validate && terraform plan`.
+  Apply needs AWS creds whose default region is Canadian. State backend (S3) is commented in
+  `backend.tf` so local state works for first validation.
+- Aurora master password is RDS-managed in Secrets Manager (`manage_master_user_password`),
+  not stored in TF. Secret *values* (spotify/xai/stripe) are populated out-of-band, never
+  committed. The ECS API service is a placeholder (`desired_count = 0`, `busybox` image) until
+  the real image ships; it `ignore_changes` on task_definition/desired_count so deploys don't
+  fight Terraform.
+
 ## Feature Development Quality Standards
 
 **CRITICAL**: All new features MUST meet the following mandatory requirements before being considered complete.
