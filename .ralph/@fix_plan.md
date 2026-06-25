@@ -27,12 +27,7 @@
 - [x] Story 3.3: Save partners & fast re-pair
 - [x] Story 3.4: Ready-handshake
 - [x] Story 3.5: Push notifications (invites, ready, reconnect)
-  > As a user
-  > I want push notifications for invitations, partner-ready, and reconnection events
-  > So that I never miss a fleeting moment.
-  > AC: Given a user with notifications granted, When an invite, partner-ready, or reconnection event occurs, Then a push notification is delivered via APNs/FCM in the user's language (FR11, NFR19), And the push deep-links to the relevant session.
-  > Spec: specs/planning-artifacts/epics.md#story-3-5
-- [ ] Story 3.6: Clock-sync primitive
+- [x] Story 3.6: Clock-sync primitive
   > As a developer
   > I want a server-time offset primitive on each client
   > So that simultaneous start can be scheduled accurately.

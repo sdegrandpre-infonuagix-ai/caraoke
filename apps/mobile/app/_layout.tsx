@@ -7,12 +7,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { usePushRegistration } from '../src/notifications/usePushRegistration';
+import { clockSync } from '../src/lib/clockSync';
 
 const queryClient = new QueryClient();
 
 /** Child of the providers so it can use router + query hooks. */
 function PushBridge() {
   usePushRegistration();
+  return null;
+}
+
+/** Keep the server-time offset fresh while the app is running (Story 3.6). */
+function ClockBridge() {
+  useEffect(() => {
+    clockSync.start();
+    return () => clockSync.stop();
+  }, []);
   return null;
 }
 
@@ -33,6 +43,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <StatusBar style="auto" />
         <PushBridge />
+        <ClockBridge />
         <Stack screenOptions={{ headerShown: false }} />
       </SafeAreaProvider>
     </QueryClientProvider>

@@ -22,4 +22,11 @@ describe('caraoke-api', () => {
     expect(res.body.data.provider).toBe('mock');
     expect(res.body.error).toBeNull();
   });
+
+  it('GET /time returns server time for clock-sync (Story 3.6)', async () => {
+    const res = await request(app).get('/time');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.data.serverTime).toBe('number');
+    expect(res.body.error).toBeNull();
+  });
 });

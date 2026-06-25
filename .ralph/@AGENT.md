@@ -164,6 +164,12 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   Mobile `usePushRegistration` (in `_layout`) requests permission just-in-time, registers the
   Expo push token once signed in, and deep-links on notification tap. Env: `APP_SCHEME`,
   `EXPO_ACCESS_TOKEN`.
+- Clock-sync (Story 3.6, AR10/NFR1): canonical pure math in `packages/shared/clockSync.ts`
+  (`estimateOffsetMs`, `bestSampleOffsetMs` = NTP lowest-RTT sample, `medianOffsetMs`,
+  `serverNow`, `msUntil`). API `GET /time` → `{ serverTime }` (read at the latest moment).
+  Mobile `src/lib/clockSync.ts` singleton samples `/time` ×5, keeps the offset, refreshes
+  every 60s, and exposes `serverNow()`/`msUntil(targetServerEpoch)` to the playback layer;
+  started by `ClockBridge` in `_layout`. This is what Story 4.4's simultaneous start consumes.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

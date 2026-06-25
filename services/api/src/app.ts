@@ -90,6 +90,12 @@ export function createApp(deps: AppDeps = {}): Express {
     res.json(ok({ status: 'ok', service: 'caraoke-api' }));
   });
 
+  // Clock-sync primitive (Story 3.6, AR10/NFR1): server time for the client's offset
+  // exchange. Read at the latest possible moment to minimize asymmetric delay.
+  app.get('/time', (_req, res) => {
+    res.json(ok({ serverTime: Date.now() }));
+  });
+
   // Live-voice plane reachability (Story 1.5): reports the SFU health via the abstraction.
   app.get('/health/livekit', (_req, res, next) => {
     media
