@@ -19,7 +19,7 @@ const config: ExpoConfig = {
   android: {
     package: 'ai.caraoke.app',
   },
-  plugins: ['expo-router'],
+  plugins: ['expo-router', 'expo-notifications'],
   experiments: {
     typedRoutes: true,
   },

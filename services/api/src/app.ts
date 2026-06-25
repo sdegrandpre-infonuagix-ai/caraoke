@@ -18,6 +18,10 @@ import { SavedPartnerService } from './modules/pairing/savedPartner.service.js';
 import { PgSavedPartnerRepository } from './modules/pairing/savedPartner.repository.js';
 import { SessionReadyService } from './modules/pairing/ready.service.js';
 import { getEventPublisher } from './events/index.js';
+import { NotificationService } from './modules/notifications/notification.service.js';
+import { PgPushTokenRepository } from './modules/notifications/pushToken.repository.js';
+import { createNotificationRouter } from './modules/notifications/notification.router.js';
+import { getPushSender } from './integrations/push/index.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -32,6 +36,8 @@ export interface AppDeps {
   savedPartnerService?: SavedPartnerService;
   /** Override the ready-handshake service (tests). Defaults to Postgres + event publisher. */
   readyService?: SessionReadyService;
+  /** Override the notification service (tests). Defaults to push + Postgres-backed. */
+  notificationService?: NotificationService;
 }
 
 /**
@@ -52,6 +58,12 @@ export function createApp(deps: AppDeps = {}): Express {
     env.CARAOKE_INTEGRATIONS === 'live' ? new CognitoUserDirectory() : new NoopUserDirectory();
   const identityService =
     deps.identityService ?? new IdentityService(new PgUserRepository(), directory);
+  // Notifications (Story 3.5): localized to the recipient's profile language.
+  const notificationService =
+    deps.notificationService ??
+    new NotificationService(new PgPushTokenRepository(), getPushSender(env), {
+      getLanguage: (id) => identityService.getById(id).then((u) => u?.languagePref ?? null),
+    }, env.APP_SCHEME);
   const spotifyService =
     deps.spotifyService ??
     new SpotifyService(getSpotifyProvider(env), new PgSpotifyLinkRepository());
@@ -63,10 +75,15 @@ export function createApp(deps: AppDeps = {}): Express {
     });
   const savedPartnerService =
     deps.savedPartnerService ??
-    new SavedPartnerService(new PgSavedPartnerRepository(), pairingService);
+    new SavedPartnerService(new PgSavedPartnerRepository(), pairingService, notificationService);
   const readyService =
     deps.readyService ??
-    new SessionReadyService(new PgSessionRepository(), getEventPublisher(env));
+    new SessionReadyService(
+      new PgSessionRepository(),
+      getEventPublisher(env),
+      undefined,
+      notificationService,
+    );
 
   // Liveness/readiness probe for ECS Express health checks.
   app.get('/health', (_req, res) => {
@@ -97,6 +114,9 @@ export function createApp(deps: AppDeps = {}): Express {
       readyService,
     }),
   );
+
+  // Notification routes (FR11).
+  app.use('/', createNotificationRouter({ verifier, identityService, notificationService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

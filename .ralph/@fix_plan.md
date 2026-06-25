@@ -26,12 +26,7 @@
 - [x] Story 3.2: Join session via invite
 - [x] Story 3.3: Save partners & fast re-pair
 - [x] Story 3.4: Ready-handshake
-  > As a user
-  > I want both partners confirmed ready before the song starts
-  > So that there are no false starts.
-  > AC: Given two paired users, When both indicate readiness, Then the system confirms a ready state to both via AppSync Events before any countdown (FR10), And the `SessionStateMachine` transitions `pairing → ready` and is the single source of truth (UX-DR2).
-  > Spec: specs/planning-artifacts/epics.md#story-3-4
-- [ ] Story 3.5: Push notifications (invites, ready, reconnect)
+- [x] Story 3.5: Push notifications (invites, ready, reconnect)
   > As a user
   > I want push notifications for invitations, partner-ready, and reconnection events
   > So that I never miss a fleeting moment.

@@ -154,6 +154,16 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   `POST`/`GET /sessions/:id/ready`. Mobile `app/session/ready.tsx` ("I'm ready", polls
   `useReadyState` until both ready); reached from join-connected and saved-partner re-pair.
   Env: `APPSYNC_EVENTS_HTTP_URL`, `APPSYNC_EVENTS_API_KEY`.
+- Push notifications (Story 3.5, FR11/NFR19): `integrations/push` abstraction (live Expo Push
+  → APNs/FCM + mock by `CARAOKE_INTEGRATIONS`); migration 0008 `push_tokens`. `notifications`
+  module: `POST /push-tokens` registers a device; `NotificationService.notify` localizes copy
+  to the recipient's `languagePref` (`push.strings.ts`, en/fr/ar + English fallback) and deep-
+  links (`caraoke://session/ready?id=`). Best-effort delivery (swallows errors). Wired via a
+  `Notifier` port (optional, default Noop): `SavedPartnerService.repair` → `invite` push to the
+  partner; `SessionReadyService.markReady` → `partner.ready` push to the other participant.
+  Mobile `usePushRegistration` (in `_layout`) requests permission just-in-time, registers the
+  Expo push token once signed in, and deep-links on notification tap. Env: `APP_SCHEME`,
+  `EXPO_ACCESS_TOKEN`.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

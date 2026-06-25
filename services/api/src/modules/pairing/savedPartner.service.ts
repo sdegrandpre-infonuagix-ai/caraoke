@@ -2,6 +2,7 @@ import { AppError } from '@caraoke/shared';
 import type { SavedPartnerRepository } from './savedPartner.repository.js';
 import type { SavedPartnerView } from './savedPartner.types.js';
 import type { SessionConnection } from './pairing.types.js';
+import { NoopNotifier, type Notifier } from '../notifications/notifier.js';
 
 /** The subset of PairingService the re-pair path needs. */
 export interface PairedSessionFactory {
@@ -17,6 +18,7 @@ export class SavedPartnerService {
   constructor(
     private readonly repo: SavedPartnerRepository,
     private readonly pairing: PairedSessionFactory,
+    private readonly notifier: Notifier = new NoopNotifier(),
   ) {}
 
   async save(userId: string, partnerUserId: string): Promise<void> {
@@ -39,6 +41,9 @@ export class SavedPartnerService {
     if (!(await this.repo.exists(userId, partnerUserId))) {
       throw new AppError('NOT_FOUND', 'That partner is not in your saved list.');
     }
-    return this.pairing.createSessionWith(userId, partnerUserId);
+    const connection = await this.pairing.createSessionWith(userId, partnerUserId);
+    // Tell the saved partner they've been invited (deep-linked, localized) — best-effort.
+    await this.notifier.notify(partnerUserId, 'invite', { sessionId: connection.session.id });
+    return connection;
   }
 }

@@ -2,6 +2,7 @@ import { AppError } from '@caraoke/shared';
 import type { EventPublisher } from '../../events/index.js';
 import type { SessionRepository } from './pairing.repository.js';
 import { decideReady, toReadyState, type ReadyState } from './ready.logic.js';
+import { NoopNotifier, type Notifier } from '../notifications/notifier.js';
 
 /**
  * Ready-handshake orchestration (FR10). Marks a participant ready; when both are ready the
@@ -13,6 +14,7 @@ export class SessionReadyService {
     private readonly sessions: SessionRepository,
     private readonly events: EventPublisher,
     private readonly now: () => Date = () => new Date(),
+    private readonly notifier: Notifier = new NoopNotifier(),
   ) {}
 
   async markReady(sessionId: string, userId: string): Promise<ReadyState> {
@@ -37,6 +39,12 @@ export class SessionReadyService {
         occurredAt: this.now().toISOString(),
         data: state,
       });
+    }
+
+    // Nudge the OTHER participant that their partner is ready (push) — best-effort.
+    const other = decision.role === 'host' ? session.guestUserId : session.hostUserId;
+    if (other) {
+      await this.notifier.notify(other, 'partner.ready', { sessionId });
     }
 
     return state;
