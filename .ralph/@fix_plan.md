@@ -5,7 +5,7 @@
 ### Foundation & the Magic Moment (Phase 0)
 > Goal: Scaffold the monorepo and base infra, then prove the duet *feels* real on a Montreal highway before committing to the full build.
 
-- [ ] Story 1.1: Monorepo & Expo app scaffold
+- [x] Story 1.1: Monorepo & Expo app scaffold
   > As a developer
   > I want the pnpm monorepo, Expo SDK 56 app, and shared packages initialized with a CI gate
   > So that all subsequent work has a consistent, type-safe foundation.

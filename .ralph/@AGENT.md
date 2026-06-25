@@ -1,29 +1,42 @@
 # Agent Build Instructions
 
+> Stack: pnpm workspace + Turborepo. Node >= 22, pnpm >= 10 (`corepack enable`).
+> Packages: `apps/mobile` (Expo SDK 56), `services/api` (Express), `packages/shared`, `packages/config`.
+
 ## Project Setup
 ```bash
-npm install
+pnpm install
 ```
 
 ## Running Tests
 ```bash
-npm test
+pnpm test          # vitest across the workspace (turbo)
 ```
 
 ## Build Commands
 ```bash
-npm run build
+pnpm build         # turbo build (respects dep graph; shared builds first)
+pnpm typecheck     # tsc --noEmit (strict) across all packages
+pnpm lint          # eslint across all packages
 ```
 
 ## Development Server
 ```bash
-npm run dev
+pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
+# single package: pnpm --filter @caraoke/api dev
 ```
 
 ## Key Learnings
-- Update this section when you learn new build optimizations
-- Document any gotchas or special setup requirements
-- Keep track of the fastest test/build cycle
+- Monorepo orchestrated by Turborepo; `build`/`typecheck`/`test` set `dependsOn: ["^build"]`
+  so `@caraoke/shared` compiles before consumers. CI gate = lint + typecheck + test.
+- `@caraoke/shared` is the source-of-truth for cross-package types/Zod schemas (error
+  envelope `{data,error}`, session state machine, domain events). Never redefine these.
+- Mobile package is intentionally NOT `type: module` (Expo `babel.config.js` is CommonJS);
+  its ESLint config is `eslint.config.mjs`. Mobile `build`/`typecheck` = `tsc --noEmit`
+  (the shippable artifact is produced by EAS, not tsc).
+- Expo SDK 56 = RN 0.85.3 / React 19.2.3. `newArchEnabled` is NOT a valid `app.config.ts`
+  key in SDK 56 (new arch is default).
+- Update this section when you learn new build optimizations or gotchas.
 
 ## Feature Development Quality Standards
 

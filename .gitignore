@@ -1,1 +1,28 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Expo / React Native
+.expo/
+.expo-shared/
+apps/mobile/ios/
+apps/mobile/android/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
 .ralph/logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
