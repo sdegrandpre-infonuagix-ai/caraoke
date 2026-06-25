@@ -11,15 +11,10 @@
 - [x] Story 1.4: Phase 0 measurement & go/no-go report
 - [x] Story 1.5: Deploy self-hosted LiveKit SFU
 - [x] Story 1.6: Deploy Spotify MCP server
-  > As a developer
-  > I want the Spotify MCP server deployed on ECS Express Mode
-  > So that the Voice Agent (Epic 4) can trigger Spotify playback via MCP tool calls.
-  > AC: Given the Terraform infra baseline (Story 1.2), When the `services/spotify-mcp` server is built and deployed, Then it runs on ECS Express Mode in `ca-central-1` with `streamable-http` transport (AR3), And it exposes the MCP tools needed to control playback, behind the Spotify integration abstraction with a sandbox mock available (NFR20, AR9), And Spotify credentials are sourced from Secrets Manager, never hard-coded, And it honors Spotify provider terms — no peer-to-peer re-streaming of audio (NFR21).
-  > Spec: specs/planning-artifacts/epics.md#story-1-6
 ### Accounts, Profile & Localization
 > Goal: Users onboard, link Premium, set language, and control their account.
 
-- [ ] Story 2.1: Design tokens & foundation primitives
+- [x] Story 2.1: Design tokens & foundation primitives
   > As a developer
   > I want NativeWind configured with the "Warm Dusk" tokens and the foundation primitive components
   > So that all screens are built consistently and accessibly.

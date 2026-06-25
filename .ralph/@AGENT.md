@@ -65,6 +65,19 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   mode needs no AWS. NFR21: control-plane only, never proxies/re-streams audio. Deployed via
   the generalized `ecs-express` module (`service_name="spotify-mcp"`, secret-read task role).
 
+## Mobile design system (Story 2.1)
+- NativeWind v4 + "Warm Dusk" tokens in `apps/mobile/tailwind.config.js` (colors, 8px
+  spacing, type scale, radius). `src/theme/tokens.ts` is the programmatic mirror for raw
+  values; `src/theme/variants.ts` holds the pure variant→className maps (unit-tested).
+- Foundation primitives in `src/components/` (UX-DR7): `Text`, `Button` (primary/secondary/
+  voice/icon), `Card`, `ScreenContainer`, `Avatar`, `Toggle`, `Icon`. Interactive ones carry
+  `accessibilityRole`/label, ≥48px targets, and logical start/end insets (UX-DR14).
+- `global.css` is imported once in `app/_layout.tsx`; Metro wires NativeWind via
+  `metro.config.js`; Babel preset uses `jsxImportSource: 'nativewind'`. RN tooling configs
+  (babel/metro/tailwind) are CommonJS and exempted in `eslint.config.mjs`.
+- Mobile has no RN test renderer yet; the pure `variants.ts` logic is tested via node:test
+  + tsx: `node --import tsx --test src/theme/variants.test.ts` (run from apps/mobile).
+
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
   intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&
