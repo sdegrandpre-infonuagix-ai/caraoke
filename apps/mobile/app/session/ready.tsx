@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components';
 import { colors } from '../../src/theme/tokens';
@@ -19,6 +19,7 @@ export default function Ready() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [iPressed, setIPressed] = useState(false);
 
   const state = useReadyState(id);
@@ -45,14 +46,21 @@ export default function Ready() {
         </View>
 
         {both ? (
-          <Card raised>
-            <View className="flex-row items-center justify-center gap-sm">
-              <Icon name="musical-notes" color={colors.success} accessibilityLabel={t('ready.bothReady')} />
-              <Text variant="h3" color="success">
-                {t('ready.bothReady')}
-              </Text>
-            </View>
-          </Card>
+          <View className="gap-md">
+            <Card raised>
+              <View className="flex-row items-center justify-center gap-sm">
+                <Icon name="musical-notes" color={colors.success} accessibilityLabel={t('ready.bothReady')} />
+                <Text variant="h3" color="success">
+                  {t('ready.bothReady')}
+                </Text>
+              </View>
+            </Card>
+            <Button
+              label={t('voice.open')}
+              accessibilityLabel={t('voice.open')}
+              onPress={() => router.push(`/session/voice?id=${id}`)}
+            />
+          </View>
         ) : (
           <Card>
             <Text color="secondary">

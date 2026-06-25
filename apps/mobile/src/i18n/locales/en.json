@@ -34,6 +34,18 @@
     "saved": "Partner saved",
     "saveError": "Couldn't save partner."
   },
+  "voice": {
+    "title": "Live voice",
+    "consentTitle": "Turn on your microphone",
+    "consentBody": "Caraoke needs your microphone so you and your partner can hear each other while you sing. Your voice is live only — it is never recorded or stored.",
+    "allowMic": "Allow microphone",
+    "connecting": "Connecting your voices…",
+    "connected": "Voice connected",
+    "waitingPartner": "Waiting for your partner to join…",
+    "partnerConnected": "Your partner is here — say hi!",
+    "error": "Couldn't open voice. Please try again.",
+    "open": "Open live voice"
+  },
   "ready": {
     "title": "Ready to sing?",
     "intro": "When you're both ready, Caraoke will start the song together.",

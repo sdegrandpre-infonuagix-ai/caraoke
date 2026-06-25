@@ -14,18 +14,31 @@ export interface MediaHealth {
   detail?: string;
 }
 
-/** The live-voice plane (Epic 4 builds rooms/tokens on top of this in Story 4.1). */
+/** A signed access token + URL the client SDK uses to join the voice room (Story 4.1). */
+export interface VoiceGrant {
+  url: string;
+  token: string;
+  room: string;
+  identity: string;
+}
+
+/** The live-voice plane (FR23/FR24). Voice media is SRTP/DTLS end-to-end by construction. */
 export interface MediaServer {
   readonly provider: MediaProvider;
   /** WebSocket signaling URL for the client SDK, or null if unconfigured. */
   signalingUrl(): string | null;
   /** Application-level reachability check used by the API health route. */
   health(): Promise<MediaHealth>;
+  /**
+   * Mint a join token for a participant: room = session id, identity = user id, with
+   * publish + subscribe grants so both partners can speak and hear (full duplex).
+   */
+  createVoiceToken(room: string, identity: string): Promise<VoiceGrant>;
 }
 
 export function getMediaServer(env: Env): MediaServer {
   if (env.CARAOKE_INTEGRATIONS === 'live') {
-    return new LiveKitMediaServer(env.LIVEKIT_URL);
+    return new LiveKitMediaServer(env.LIVEKIT_URL, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
   }
   return new MockMediaServer();
 }

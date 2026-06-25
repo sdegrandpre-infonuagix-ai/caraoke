@@ -118,6 +118,7 @@ export function createApp(deps: AppDeps = {}): Express {
       pairingService,
       savedPartnerService,
       readyService,
+      mediaServer: media,
     }),
   );
 

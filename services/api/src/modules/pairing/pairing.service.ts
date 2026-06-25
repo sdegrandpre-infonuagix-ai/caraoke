@@ -112,6 +112,19 @@ export class PairingService {
     return toConnection(updated);
   }
 
+  /**
+   * Return the session if `userId` is a participant (host or guest), else throw. Used to gate
+   * the voice-token endpoint so only the two singers can join the room (Story 4.1).
+   */
+  async assertParticipant(sessionId: string, userId: string): Promise<Session> {
+    const session = await this.sessions.findById(sessionId);
+    if (!session) throw new AppError('SESSION_NOT_FOUND', 'Session not found.');
+    if (session.hostUserId !== userId && session.guestUserId !== userId) {
+      throw new AppError('FORBIDDEN', 'You are not part of this session.');
+    }
+    return session;
+  }
+
   private async resolve(invite: JoinByInvite): Promise<Session | null> {
     if (invite.token) return this.sessions.findByInviteToken(invite.token);
     if (invite.code) {

@@ -15,11 +15,22 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'ai.caraoke.app',
+    infoPlist: {
+      // Mic consent copy (FR22). Caraoke captures the mic only for the live duet voice.
+      NSMicrophoneUsageDescription:
+        'Caraoke uses your microphone so you and your partner can hear each other while you sing. Your voice is live only and never recorded.',
+    },
   },
   android: {
     package: 'ai.caraoke.app',
+    permissions: ['RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS'],
   },
-  plugins: ['expo-router', 'expo-notifications'],
+  plugins: [
+    'expo-router',
+    'expo-notifications',
+    '@livekit/react-native-expo-plugin',
+    '@config-plugins/react-native-webrtc',
+  ],
   experiments: {
     typedRoutes: true,
   },

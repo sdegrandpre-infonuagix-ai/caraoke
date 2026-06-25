@@ -288,3 +288,42 @@ describe('POST /sessions/join', () => {
     expect(res.body.error.code).toBe('VALIDATION_FAILED');
   });
 });
+
+describe('POST /sessions/:id/voice-token (FR23/FR24)', () => {
+  const verifier: TokenVerifier = {
+    async verify(token) {
+      if (token !== 'good') throw new Error('bad');
+      return { cognitoSub: 'sub-1', email: 'u@x.ca', authProvider: 'google' };
+    },
+  };
+  const repo = new InMemorySessions();
+  // The authenticated user resolves to user-1 (first created); make them the host.
+  repo.seed(makeSession({ id: 'svt', hostUserId: 'user-1', inviteToken: 'tk' }));
+  const app = createApp({
+    verifier,
+    identityService: new IdentityService(new InMemoryUsers()),
+    pairingService: new PairingService(repo, { inviteBaseUrl: 'https://caraoke.app', ttlMinutes: 15 }),
+  });
+
+  it('mints a voice token for a participant', async () => {
+    const res = await request(app)
+      .post('/sessions/svt/voice-token')
+      .set('Authorization', 'Bearer good');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toMatchObject({ room: 'svt', identity: 'user-1' });
+    expect(res.body.data.token).toBeTruthy();
+  });
+
+  it('forbids a non-participant', async () => {
+    const other = new InMemorySessions();
+    other.seed(makeSession({ id: 'svt2', hostUserId: 'someone', guestUserId: 'else', inviteToken: 'tk2' }));
+    const app2 = createApp({
+      verifier,
+      identityService: new IdentityService(new InMemoryUsers()),
+      pairingService: new PairingService(other, { inviteBaseUrl: 'https://caraoke.app', ttlMinutes: 15 }),
+    });
+    const res = await request(app2).post('/sessions/svt2/voice-token').set('Authorization', 'Bearer good');
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+  });
+});

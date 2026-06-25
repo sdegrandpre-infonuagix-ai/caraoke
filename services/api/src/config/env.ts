@@ -11,6 +11,9 @@ const envSchema = z.object({
   AWS_REGION: z.string().default('ca-central-1'),
   // LiveKit SFU signaling URL (Story 1.5). Optional in mock mode.
   LIVEKIT_URL: z.string().url().optional(),
+  // LiveKit token-signing credentials (Story 4.1). Required to mint voice tokens in live mode.
+  LIVEKIT_API_KEY: z.string().optional(),
+  LIVEKIT_API_SECRET: z.string().optional(),
   // Aurora connection string (Story 2.2+). Optional until a DB-backed route is hit.
   DATABASE_URL: z.string().optional(),
   // Cognito (Story 2.2). Required to verify JWTs in live mode.

@@ -5,6 +5,7 @@ import type { IdentityService } from '../identity/identity.service.js';
 import type { PairingService } from './pairing.service.js';
 import type { SavedPartnerService } from './savedPartner.service.js';
 import type { SessionReadyService } from './ready.service.js';
+import type { MediaServer } from '../../integrations/media/index.js';
 import { joinSessionSchema, savePartnerSchema } from './pairing.schema.js';
 
 /**
@@ -22,6 +23,7 @@ export function createPairingRouter(deps: {
   pairingService: PairingService;
   savedPartnerService: SavedPartnerService;
   readyService: SessionReadyService;
+  mediaServer: MediaServer;
 }): Router {
   const router = Router();
   const auth = requireAuth(deps.verifier);
@@ -127,6 +129,23 @@ export function createPairingRouter(deps: {
     deps.readyService
       .getReadyState(String(req.params.id))
       .then((state) => res.json(ok(state)))
+      .catch(next);
+  });
+
+  // --- Live voice plane (FR23/FR24): mint a LiveKit join token for a participant ---
+
+  router.post('/sessions/:id/voice-token', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    const sessionId = String(req.params.id);
+
+    deps.identityService
+      .findOrCreate(claims)
+      .then(async (user) => {
+        await deps.pairingService.assertParticipant(sessionId, user.id);
+        return deps.mediaServer.createVoiceToken(sessionId, user.id);
+      })
+      .then((grant) => res.json(ok(grant)))
       .catch(next);
   });
 

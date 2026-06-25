@@ -28,15 +28,10 @@
 - [x] Story 3.4: Ready-handshake
 - [x] Story 3.5: Push notifications (invites, ready, reconnect)
 - [x] Story 3.6: Clock-sync primitive
-  > As a developer
-  > I want a server-time offset primitive on each client
-  > So that simultaneous start can be scheduled accurately.
-  > AC: Given a client establishing a session, When it performs the clock-sync exchange, Then it computes a server-time offset accurate enough to support a ≤200ms scheduled start (AR10, NFR1), And the offset is refreshed periodically and exposed to the playback layer.
-  > Spec: specs/planning-artifacts/epics.md#story-3-6
 ### The Duet (real-time singing loop)
 > Goal: The product: two people sing together, hands-free, across distance.
 
-- [ ] Story 4.1: Native audio module & LiveKit live voice
+- [x] Story 4.1: Native audio module & LiveKit live voice
   > As a singer
   > I want my microphone captured (after consent) and my partner's live voice in full duplex
   > So that we hear each other while we sing.

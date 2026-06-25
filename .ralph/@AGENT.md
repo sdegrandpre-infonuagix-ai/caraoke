@@ -171,6 +171,20 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   every 60s, and exposes `serverNow()`/`msUntil(targetServerEpoch)` to the playback layer;
   started by `ClockBridge` in `_layout`. This is what Story 4.4's simultaneous start consumes.
 
+## Live voice (Story 4.1, FR22/FR23/FR24)
+- Media abstraction gains `createVoiceToken(room, identity)`: live signs a LiveKit JWT
+  (`livekit-server-sdk`, roomJoin + canPublish + canSubscribe = full duplex) from
+  `LIVEKIT_API_KEY`/`SECRET`; mock returns a deterministic grant. `POST /sessions/:id/voice-
+  token` is participant-gated (`PairingService.assertParticipant`). Voice is SRTP/DTLS E2E
+  (NFR6) by construction.
+- Mobile uses `@livekit/react-native` (+ `@livekit/react-native-webrtc`, `livekit-client`);
+  Expo config plugins `@livekit/react-native-expo-plugin` + `@config-plugins/react-native-
+  webrtc` (needs a dev client, not Expo Go). `src/voice/voiceRoom.ts` connects + publishes mic
+  + auto-plays remote audio; `useVoiceRoom` is a no-op until explicit mic consent
+  (`useMicConsent`, FR22). `app/session/voice.tsx` is the consent gate → connected view,
+  reached from the ready screen when both are ready. The bespoke local Expo audio module
+  (ducking over Spotify) is Story 4.2.
+
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
   intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&

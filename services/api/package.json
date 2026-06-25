@@ -20,6 +20,7 @@
     "@caraoke/shared": "workspace:*",
     "aws-jwt-verify": "5.2.1",
     "express": "4.21.2",
+    "livekit-server-sdk": "2.15.5",
     "pg": "8.22.0",
     "zod": "3.24.1"
   },

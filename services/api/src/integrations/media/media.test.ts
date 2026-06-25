@@ -36,4 +36,17 @@ describe('media integration abstraction', () => {
     expect(health.healthy).toBe(false);
     expect(health.provider).toBe('livekit');
   });
+
+  it('mock createVoiceToken returns a deterministic grant', async () => {
+    const grant = await new MockMediaServer().createVoiceToken('sess-1', 'user-1');
+    expect(grant).toMatchObject({ room: 'sess-1', identity: 'user-1' });
+    expect(grant.token).toContain('sess-1');
+    expect(grant.url).toContain('ws://');
+  });
+
+  it('live createVoiceToken throws when signing keys are unconfigured', async () => {
+    await expect(
+      new LiveKitMediaServer('ws://lk:7880').createVoiceToken('r', 'u'),
+    ).rejects.toMatchObject({ code: 'INTERNAL' });
+  });
 });
