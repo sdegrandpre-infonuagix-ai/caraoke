@@ -2,7 +2,9 @@ import { Router } from 'express';
 import { ok, AppError } from '@caraoke/shared';
 import { requireAuth, type TokenVerifier } from '../../middleware/auth.js';
 import type { IdentityService } from './identity.service.js';
+import type { SpotifyService } from './spotify.service.js';
 import { updateProfileSchema } from './identity.schema.js';
+import { linkSpotifySchema } from './spotify.schema.js';
 
 /**
  * Identity routes (FR1, FR6).
@@ -16,6 +18,7 @@ import { updateProfileSchema } from './identity.schema.js';
 export function createIdentityRouter(deps: {
   service: IdentityService;
   verifier: TokenVerifier;
+  spotifyService: SpotifyService;
 }): Router {
   const router = Router();
   const auth = requireAuth(deps.verifier);
@@ -57,6 +60,40 @@ export function createIdentityRouter(deps: {
       .findOrCreate(claims)
       .then((user) => deps.service.deleteAccount(user))
       .then(() => res.json(ok({ deleted: true })))
+      .catch(next);
+  });
+
+  // --- Spotify link + Premium verification (FR2) ---
+
+  router.get('/me/spotify', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.service
+      .findOrCreate(claims)
+      .then((user) => deps.spotifyService.getStatus(user.id))
+      .then((status) => res.json(ok(status)))
+      .catch(next);
+  });
+
+  router.post('/me/spotify', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+
+    const parsed = linkSpotifySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return next(
+        new AppError('VALIDATION_FAILED', 'Invalid Spotify link request.', {
+          details: { issues: parsed.error.issues },
+        }),
+      );
+    }
+
+    deps.service
+      .findOrCreate(claims)
+      .then((user) =>
+        deps.spotifyService.link(user.id, parsed.data.accessToken, parsed.data.refreshToken),
+      )
+      .then((status) => res.json(ok(status)))
       .catch(next);
   });
 

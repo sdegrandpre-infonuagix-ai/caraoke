@@ -35,7 +35,13 @@ export default function Index() {
         <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? 'Welcome'}</Text>
         <Text color="secondary">You're signed in.</Text>
         <Button
+          label="Connect Spotify"
+          accessibilityLabel="Connect Spotify"
+          onPress={() => router.push('/spotify')}
+        />
+        <Button
           label="Edit profile"
+          variant="secondary"
           accessibilityLabel="Edit profile"
           onPress={() => router.push('/profile')}
         />

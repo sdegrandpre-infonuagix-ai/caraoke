@@ -17,12 +17,7 @@
 - [x] Story 2.1: Design tokens & foundation primitives
 - [x] Story 2.2: Sign in with Apple/Google (Cognito)
 - [x] Story 2.3: Profile management & account deletion
-  > As a user
-  > I want to view/edit my profile and delete my account and data
-  > So that I control my presence and satisfy my privacy rights.
-  > AC: Given an authenticated user, When I edit profile fields and save, Then changes persist via the uniform `{data,error}` API (FR1), And when I request account deletion, my account and all associated personal data are removed via cascading deletion (FR6, NFR10), And deletion is confirmed and irreversible.
-  > Spec: specs/planning-artifacts/epics.md#story-2-3
-- [ ] Story 2.4: Connect & verify Spotify Premium
+- [x] Story 2.4: Connect & verify Spotify Premium
   > As a user
   > I want to connect my Spotify account and have Premium verified
   > So that the system knows I can participate in duets.

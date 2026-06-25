@@ -99,6 +99,14 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   personal-data table FKs `users(id) ON DELETE CASCADE`. Mobile `app/profile/index.tsx`
   edits the display name and has a confirmed, irreversible "Delete account" (Alert →
   DELETE → signOut).
+- Spotify Premium (Story 2.4, FR2): Spotify behind an integration abstraction in the API
+  (`integrations/spotify`, live Web-API + sandbox mock by `CARAOKE_INTEGRATIONS`; mock token
+  containing "free" → non-Premium). `POST /me/spotify` verifies Premium via the provider and
+  upserts `spotify_accounts` (one per user, FK ON DELETE CASCADE); `GET /me/spotify` returns
+  status. Non-Premium is stored as linked-but-not-premium — never silently accepted. Mobile
+  `useSpotifyAuth` runs Spotify OAuth (code+PKCE); `app/spotify/index.tsx` shows
+  Premium-verified or a non-Premium upgrade path (opens spotify.com/premium). Needs
+  `EXPO_PUBLIC_SPOTIFY_CLIENT_ID`.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
