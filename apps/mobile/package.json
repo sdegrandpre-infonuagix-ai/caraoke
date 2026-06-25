@@ -1,0 +1,36 @@
+{
+  "name": "@caraoke/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Caraoke mobile app — Expo SDK 56 (React Native 0.85), Expo Router.",
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "echo \"@caraoke/mobile: no unit tests in scaffold yet\""
+  },
+  "dependencies": {
+    "@caraoke/shared": "workspace:*",
+    "expo": "56.0.12",
+    "expo-constants": "~56.0.18",
+    "expo-linking": "~56.0.14",
+    "expo-router": "~56.2.11",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2"
+  },
+  "devDependencies": {
+    "@caraoke/config": "workspace:*",
+    "@types/react": "19.2.17",
+    "eslint": "9.18.0",
+    "typescript": "5.7.3"
+  }
+}

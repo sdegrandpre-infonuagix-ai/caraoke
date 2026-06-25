@@ -1,49 +1,66 @@
 # Agent Build Instructions
 
+> Stack: pnpm workspace + Turborepo. Node >= 22, pnpm >= 10 (`corepack enable`).
+> Packages: `apps/mobile` (Expo SDK 56), `services/api` (Express), `packages/shared`, `packages/config`.
+
 ## Project Setup
 ```bash
-# Install dependencies (example for Node.js project)
-npm install
-
-# Or for Python project
-pip install -r requirements.txt
-
-# Or for Rust project  
-cargo build
+pnpm install
 ```
 
 ## Running Tests
 ```bash
-# Node.js
-npm test
-
-# Python
-pytest
-
-# Rust
-cargo test
+pnpm test          # vitest across the workspace (turbo)
 ```
 
 ## Build Commands
 ```bash
-# Production build
-npm run build
-# or
-cargo build --release
+pnpm build         # turbo build (respects dep graph; shared builds first)
+pnpm typecheck     # tsc --noEmit (strict) across all packages
+pnpm lint          # eslint across all packages
 ```
 
 ## Development Server
 ```bash
-# Start development server
-npm run dev
-# or
-cargo run
+pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
+# single package: pnpm --filter @caraoke/api dev
 ```
 
 ## Key Learnings
-- Update this section when you learn new build optimizations
-- Document any gotchas or special setup requirements
-- Keep track of the fastest test/build cycle
+- Monorepo orchestrated by Turborepo; `build`/`typecheck`/`test` set `dependsOn: ["^build"]`
+  so `@caraoke/shared` compiles before consumers. CI gate = lint + typecheck + test.
+- `@caraoke/shared` is the source-of-truth for cross-package types/Zod schemas (error
+  envelope `{data,error}`, session state machine, domain events). Never redefine these.
+- Mobile package is intentionally NOT `type: module` (Expo `babel.config.js` is CommonJS);
+  its ESLint config is `eslint.config.mjs`. Mobile `build`/`typecheck` = `tsc --noEmit`
+  (the shippable artifact is produced by EAS, not tsc).
+- Expo SDK 56 = RN 0.85.3 / React 19.2.3. `newArchEnabled` is NOT a valid `app.config.ts`
+  key in SDK 56 (new arch is default).
+- Update this section when you learn new build optimizations or gotchas.
+
+## Infrastructure (Terraform)
+- `infra/modules/*` are reusable; `infra/envs/dev` is the composition root (`prod` is a
+  placeholder). Region is Canada-only (NFR10) via a `region` variable validation + a
+  `check "data_residency"` block; all data stores are KMS-encrypted at rest (NFR6).
+- Validate/plan: `cd infra/envs/dev && terraform init && terraform validate && terraform plan`.
+  Apply needs AWS creds whose default region is Canadian. State backend (S3) is commented in
+  `backend.tf` so local state works for first validation.
+- Aurora master password is RDS-managed in Secrets Manager (`manage_master_user_password`),
+  not stored in TF. Secret *values* (spotify/xai/stripe) are populated out-of-band, never
+  committed. The ECS API service is a placeholder (`desired_count = 0`, `busybox` image) until
+  the real image ships; it `ignore_changes` on task_definition/desired_count so deploys don't
+  fight Terraform.
+
+## Phase 0 harness (throwaway)
+- `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
+  intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&
+  npm install`). NFR21 invariant: WebRTC carries voice only; each phone plays its own Spotify
+  via the Web API — the song is never sent peer-to-peer (see `app/src/lib/voicePeer.ts`).
+- Pure clock/scheduling + measurement logic is unit-tested: `pnpm --dir tools/phase0-harness
+  test` (node:test via tsx; no phones/RN install required). `measure/` holds the drift
+  sampler, voice-latency probe, and go/no-go report; `pnpm --dir tools/phase0-harness report`
+  turns a saved `results/session-*.json` into a report scoring drift vs ≤50ms (NFR2) and
+  one-way voice vs ≤150ms (NFR3) with a GO/NO-GO recommendation.
 
 ## Feature Development Quality Standards
 
