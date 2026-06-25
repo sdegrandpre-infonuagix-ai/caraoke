@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../src/components';
 import { colors } from '../src/theme/tokens';
@@ -20,6 +20,7 @@ export default function Join() {
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token?: string }>();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [code, setCode] = useState('');
   const autoJoined = useRef(false);
@@ -66,6 +67,11 @@ export default function Join() {
               <Text color="secondary">
                 {connection.bothConnected ? t('join.bothConnected') : t('join.waiting')}
               </Text>
+              <Button
+                label={t('ready.imReady')}
+                accessibilityLabel={t('ready.imReady')}
+                onPress={() => router.push(`/session/ready?id=${connection.session.id}`)}
+              />
               <Button
                 label={save.isSuccess ? t('partners.saved') : t('partners.save')}
                 variant="secondary"

@@ -6,6 +6,8 @@ export interface Session {
   hostUserId: string;
   guestUserId: string | null;
   status: SessionState;
+  hostReady: boolean;
+  guestReady: boolean;
   pairingCode: string;
   inviteToken: string;
   expiresAt: string;

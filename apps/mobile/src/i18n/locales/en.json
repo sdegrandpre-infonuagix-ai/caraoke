@@ -34,6 +34,15 @@
     "saved": "Partner saved",
     "saveError": "Couldn't save partner."
   },
+  "ready": {
+    "title": "Ready to sing?",
+    "intro": "When you're both ready, Caraoke will start the song together.",
+    "imReady": "I'm ready",
+    "youAreReady": "You're ready",
+    "waiting": "Waiting for your partner…",
+    "partnerReady": "Your partner is ready — tap when you are.",
+    "bothReady": "You're both ready! Get ready to sing 🎤"
+  },
   "join": {
     "title": "Join a duet",
     "intro": "Enter the pairing code your partner shared, or open their invite link.",

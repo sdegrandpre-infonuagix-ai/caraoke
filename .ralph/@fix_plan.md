@@ -25,12 +25,7 @@
 - [x] Story 3.1: Create session & generate invite
 - [x] Story 3.2: Join session via invite
 - [x] Story 3.3: Save partners & fast re-pair
-  > As a returning user
-  > I want to save known partners and re-pair quickly
-  > So that singing again is effortless.
-  > AC: Given a completed session with a partner, When I save them as a known partner, Then a `saved_partners` record links us (FR9), And re-pairing with a saved partner completes from intent to ready-handshake in ≤10 seconds (FR9).
-  > Spec: specs/planning-artifacts/epics.md#story-3-3
-- [ ] Story 3.4: Ready-handshake
+- [x] Story 3.4: Ready-handshake
   > As a user
   > I want both partners confirmed ready before the song starts
   > So that there are no false starts.

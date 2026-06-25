@@ -16,6 +16,8 @@ import { PgSessionRepository } from './modules/pairing/pairing.repository.js';
 import { createPairingRouter } from './modules/pairing/pairing.router.js';
 import { SavedPartnerService } from './modules/pairing/savedPartner.service.js';
 import { PgSavedPartnerRepository } from './modules/pairing/savedPartner.repository.js';
+import { SessionReadyService } from './modules/pairing/ready.service.js';
+import { getEventPublisher } from './events/index.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -28,6 +30,8 @@ export interface AppDeps {
   pairingService?: PairingService;
   /** Override the saved-partner service (tests). Defaults to a Postgres-backed service. */
   savedPartnerService?: SavedPartnerService;
+  /** Override the ready-handshake service (tests). Defaults to Postgres + event publisher. */
+  readyService?: SessionReadyService;
 }
 
 /**
@@ -60,6 +64,9 @@ export function createApp(deps: AppDeps = {}): Express {
   const savedPartnerService =
     deps.savedPartnerService ??
     new SavedPartnerService(new PgSavedPartnerRepository(), pairingService);
+  const readyService =
+    deps.readyService ??
+    new SessionReadyService(new PgSessionRepository(), getEventPublisher(env));
 
   // Liveness/readiness probe for ECS Express health checks.
   app.get('/health', (_req, res) => {
@@ -82,7 +89,13 @@ export function createApp(deps: AppDeps = {}): Express {
   // Pairing routes (FR7, FR8, FR9).
   app.use(
     '/',
-    createPairingRouter({ verifier, identityService, pairingService, savedPartnerService }),
+    createPairingRouter({
+      verifier,
+      identityService,
+      pairingService,
+      savedPartnerService,
+      readyService,
+    }),
   );
 
   // Error envelope middleware MUST be last.

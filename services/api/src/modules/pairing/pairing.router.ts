@@ -4,6 +4,7 @@ import { requireAuth, type TokenVerifier } from '../../middleware/auth.js';
 import type { IdentityService } from '../identity/identity.service.js';
 import type { PairingService } from './pairing.service.js';
 import type { SavedPartnerService } from './savedPartner.service.js';
+import type { SessionReadyService } from './ready.service.js';
 import { joinSessionSchema, savePartnerSchema } from './pairing.schema.js';
 
 /**
@@ -20,6 +21,7 @@ export function createPairingRouter(deps: {
   identityService: IdentityService;
   pairingService: PairingService;
   savedPartnerService: SavedPartnerService;
+  readyService: SessionReadyService;
 }): Router {
   const router = Router();
   const auth = requireAuth(deps.verifier);
@@ -104,6 +106,27 @@ export function createPairingRouter(deps: {
       .findOrCreate(claims)
       .then((user) => deps.savedPartnerService.repair(user.id, String(req.params.partnerId)))
       .then((connection) => res.status(201).json(ok(connection)))
+      .catch(next);
+  });
+
+  // --- Ready-handshake (FR10) ---
+
+  router.post('/sessions/:id/ready', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.readyService.markReady(String(req.params.id), user.id))
+      .then((state) => res.json(ok(state)))
+      .catch(next);
+  });
+
+  router.get('/sessions/:id/ready', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.readyService
+      .getReadyState(String(req.params.id))
+      .then((state) => res.json(ok(state)))
       .catch(next);
   });
 

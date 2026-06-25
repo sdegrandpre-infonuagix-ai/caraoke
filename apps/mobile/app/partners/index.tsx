@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
-import { Redirect } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Avatar } from '../../src/components';
 import { useAuthStore } from '../../src/stores/useAuthStore';
@@ -15,12 +14,12 @@ export default function Partners() {
   const idToken = useAuthStore((s) => s.idToken);
   const authStatus = useAuthStore((s) => s.status);
   const { t } = useTranslation();
+  const router = useRouter();
   const partners = useSavedPartners();
-  const [connectedWith, setConnectedWith] = useState<string | null>(null);
 
   const repair = useMutation({
     mutationFn: (partnerUserId: string) => repairWith(idToken!, partnerUserId),
-    onSuccess: (_conn, partnerUserId) => setConnectedWith(partnerUserId),
+    onSuccess: (conn) => router.push(`/session/ready?id=${conn.session.id}`),
   });
 
   if (authStatus === 'signedOut') return <Redirect href="/(onboarding)/sign-in" />;
@@ -39,18 +38,12 @@ export default function Partners() {
         <ScrollView className="mt-lg" contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
           {items.map((p) => {
             const name = p.displayName ?? t('partners.unknown');
-            const connected = connectedWith === p.partnerUserId;
             return (
               <Card key={p.partnerUserId}>
                 <View className="flex-row items-center gap-md">
                   <Avatar name={name} size="md" partner="B" />
                   <View className="flex-1">
                     <Text variant="h3">{name}</Text>
-                    {connected ? (
-                      <Text variant="caption" color="success">
-                        {t('partners.connected')}
-                      </Text>
-                    ) : null}
                   </View>
                   <Button
                     label={

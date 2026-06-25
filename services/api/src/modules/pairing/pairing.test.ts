@@ -20,6 +20,8 @@ class InMemorySessions implements SessionRepository {
       hostUserId: input.hostUserId,
       guestUserId: input.guestUserId ?? null,
       status: 'pairing',
+      hostReady: false,
+      guestReady: false,
       pairingCode: input.pairingCode,
       inviteToken: input.inviteToken,
       expiresAt: input.expiresAt.toISOString(),
@@ -28,6 +30,9 @@ class InMemorySessions implements SessionRepository {
     };
     this.byId.set(session.id, session);
     return session;
+  }
+  async findById(id: string) {
+    return this.byId.get(id) ?? null;
   }
   async findByPairingCode(code: string) {
     return [...this.byId.values()].find((s) => s.pairingCode === code) ?? null;
@@ -39,6 +44,20 @@ class InMemorySessions implements SessionRepository {
     const s = this.byId.get(sessionId);
     if (!s) return null;
     const updated = { ...s, guestUserId };
+    this.byId.set(sessionId, updated);
+    return updated;
+  }
+  async setReady(sessionId: string, role: 'host' | 'guest', ready: boolean) {
+    const s = this.byId.get(sessionId);
+    if (!s) return null;
+    const updated = { ...s, ...(role === 'host' ? { hostReady: ready } : { guestReady: ready }) };
+    this.byId.set(sessionId, updated);
+    return updated;
+  }
+  async updateStatus(sessionId: string, status: string) {
+    const s = this.byId.get(sessionId);
+    if (!s) return null;
+    const updated = { ...s, status: status as Session['status'] };
     this.byId.set(sessionId, updated);
     return updated;
   }
@@ -55,6 +74,8 @@ function makeSession(over: Partial<Session>): Session {
     hostUserId: 'host-1',
     guestUserId: null,
     status: 'pairing',
+    hostReady: false,
+    guestReady: false,
     pairingCode: 'ABC234',
     inviteToken: 'tok-seed',
     expiresAt: new Date('2999-01-01T00:00:00.000Z').toISOString(),

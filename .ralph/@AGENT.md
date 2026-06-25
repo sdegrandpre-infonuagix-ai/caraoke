@@ -145,6 +145,15 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   (well under the ≤10s target; no invite/code step). `pairing.repository.create` now accepts
   an optional `guestUserId`. Mobile: `app/partners/index.tsx` (one-tap "Sing again"),
   `app/join.tsx` gains a "Save partner" button after connecting; linked from home.
+- Ready-handshake (Story 3.4, FR10/UX-DR2): migration 0007 adds `host_ready`/`guest_ready`.
+  `ready.logic.ts` `decideReady` is pure — computes flags + next state, transitions
+  pairing→ready ONLY when both ready (validated by the shared `canTransition` — single source
+  of truth), throws for non-participants/ended. `SessionReadyService.markReady` sets the flag,
+  transitions, and on both-ready publishes `partner.ready` via the events abstraction
+  (`src/events`, live AppSync-Events HTTP / mock by `CARAOKE_INTEGRATIONS`). Routes
+  `POST`/`GET /sessions/:id/ready`. Mobile `app/session/ready.tsx` ("I'm ready", polls
+  `useReadyState` until both ready); reached from join-connected and saved-partner re-pair.
+  Env: `APPSYNC_EVENTS_HTTP_URL`, `APPSYNC_EVENTS_API_KEY`.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
