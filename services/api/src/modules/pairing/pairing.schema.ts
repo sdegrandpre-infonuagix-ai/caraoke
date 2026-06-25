@@ -11,3 +11,10 @@ export const joinSessionSchema = z
   });
 
 export type JoinSessionInput = z.infer<typeof joinSessionSchema>;
+
+/** Save a known partner by their user id (FR9). */
+export const savePartnerSchema = z.object({
+  partnerUserId: z.string().uuid(),
+});
+
+export type SavePartnerInput = z.infer<typeof savePartnerSchema>;

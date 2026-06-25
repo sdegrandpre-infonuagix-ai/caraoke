@@ -24,12 +24,7 @@
 
 - [x] Story 3.1: Create session & generate invite
 - [x] Story 3.2: Join session via invite
-  > As an invited user
-  > I want to join a session via link or code
-  > So that I can connect with the person who invited me.
-  > AC: Given a valid, unexpired invite, When I open the link or enter the code, Then I am joined to the session and both partners are shown as connected (FR8), And an invalid or expired invite returns a clear `{error}` and a recovery path.
-  > Spec: specs/planning-artifacts/epics.md#story-3-2
-- [ ] Story 3.3: Save partners & fast re-pair
+- [x] Story 3.3: Save partners & fast re-pair
   > As a returning user
   > I want to save known partners and re-pair quickly
   > So that singing again is effortless.

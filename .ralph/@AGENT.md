@@ -137,6 +137,14 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   in the message. Migration 0005 adds `guest_user_id` (FK ON DELETE SET NULL). Success returns
   a `SessionConnection` with both partners connected. Mobile `app/join.tsx` auto-joins from a
   deep-link `?token=` or takes a 6-char code, surfacing the server's clear error as recovery.
+- Saved partners + fast re-pair (Story 3.3, FR9): migration 0006 `saved_partners`
+  (composite PK, both FKs ON DELETE CASCADE, CHECK user≠partner). Routes: `GET/POST
+  /partners`, `DELETE /partners/:id`, `POST /partners/:id/repair`. `SavedPartnerService.repair`
+  verifies the link then calls `PairingService.createSessionWith(host, guest)` — a session
+  with the guest PRE-ASSIGNED, so re-pair is a single request to an already-connected session
+  (well under the ≤10s target; no invite/code step). `pairing.repository.create` now accepts
+  an optional `guestUserId`. Mobile: `app/partners/index.tsx` (one-tap "Sing again"),
+  `app/join.tsx` gains a "Save partner" button after connecting; linked from home.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

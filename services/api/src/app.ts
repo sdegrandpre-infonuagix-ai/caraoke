@@ -14,6 +14,8 @@ import { getSpotifyProvider } from './integrations/spotify/index.js';
 import { PairingService } from './modules/pairing/pairing.service.js';
 import { PgSessionRepository } from './modules/pairing/pairing.repository.js';
 import { createPairingRouter } from './modules/pairing/pairing.router.js';
+import { SavedPartnerService } from './modules/pairing/savedPartner.service.js';
+import { PgSavedPartnerRepository } from './modules/pairing/savedPartner.repository.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -24,6 +26,8 @@ export interface AppDeps {
   spotifyService?: SpotifyService;
   /** Override the pairing service (tests). Defaults to a Postgres-backed service. */
   pairingService?: PairingService;
+  /** Override the saved-partner service (tests). Defaults to a Postgres-backed service. */
+  savedPartnerService?: SavedPartnerService;
 }
 
 /**
@@ -53,6 +57,9 @@ export function createApp(deps: AppDeps = {}): Express {
       inviteBaseUrl: env.INVITE_BASE_URL,
       ttlMinutes: env.SESSION_INVITE_TTL_MINUTES,
     });
+  const savedPartnerService =
+    deps.savedPartnerService ??
+    new SavedPartnerService(new PgSavedPartnerRepository(), pairingService);
 
   // Liveness/readiness probe for ECS Express health checks.
   app.get('/health', (_req, res) => {
@@ -72,8 +79,11 @@ export function createApp(deps: AppDeps = {}): Express {
   // Identity routes (FR1).
   app.use('/', createIdentityRouter({ service: identityService, verifier, spotifyService }));
 
-  // Pairing routes (FR7).
-  app.use('/', createPairingRouter({ verifier, identityService, pairingService }));
+  // Pairing routes (FR7, FR8, FR9).
+  app.use(
+    '/',
+    createPairingRouter({ verifier, identityService, pairingService, savedPartnerService }),
+  );
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

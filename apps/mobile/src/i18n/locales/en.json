@@ -18,9 +18,21 @@
     "welcome": "Welcome",
     "startDuet": "Start a duet",
     "joinDuet": "Join a duet",
+    "savedPartners": "Saved partners",
     "editProfile": "Edit profile",
     "connectSpotify": "Connect Spotify",
     "language": "Language"
+  },
+  "partners": {
+    "title": "Saved partners",
+    "empty": "No saved partners yet. After a duet, save your partner to sing again in one tap.",
+    "unknown": "Partner",
+    "singAgain": "Sing again",
+    "connecting": "Connecting…",
+    "connected": "Connected — get ready to sing!",
+    "save": "Save partner",
+    "saved": "Partner saved",
+    "saveError": "Couldn't save partner."
   },
   "join": {
     "title": "Join a duet",

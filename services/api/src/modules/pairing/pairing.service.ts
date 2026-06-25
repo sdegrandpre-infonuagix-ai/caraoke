@@ -39,6 +39,29 @@ export class PairingService {
   ) {}
 
   async createSession(hostUserId: string): Promise<CreateSessionResult> {
+    const session = await this.allocate(hostUserId, null);
+    return {
+      session: toPublicSession(session),
+      invite: {
+        pairingCode: session.pairingCode,
+        inviteUrl: buildInviteUrl(this.opts.inviteBaseUrl, session.inviteToken),
+        expiresAt: session.expiresAt,
+      },
+    };
+  }
+
+  /**
+   * Create a session with the partner pre-assigned (Story 3.3 fast re-pair, FR9). No invite
+   * sharing is needed, so both partners are connected immediately — the path from intent to a
+   * connected session is a single request.
+   */
+  async createSessionWith(hostUserId: string, guestUserId: string): Promise<SessionConnection> {
+    const session = await this.allocate(hostUserId, guestUserId);
+    return toConnection(session);
+  }
+
+  /** Allocate a session row, retrying on the rare pairing-code/invite-token collision. */
+  private async allocate(hostUserId: string, guestUserId: string | null): Promise<Session> {
     const now = this.opts.now?.() ?? new Date();
     const expiresAt = new Date(now.getTime() + this.opts.ttlMinutes * 60_000);
 
@@ -46,27 +69,19 @@ export class PairingService {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const input: CreateSessionInput = {
         hostUserId,
+        guestUserId,
         status: 'pairing',
         pairingCode: generatePairingCode(),
         inviteToken: generateInviteToken(),
         expiresAt,
       };
       try {
-        const session = await this.sessions.create(input);
-        return {
-          session: toPublicSession(session),
-          invite: {
-            pairingCode: session.pairingCode,
-            inviteUrl: buildInviteUrl(this.opts.inviteBaseUrl, session.inviteToken),
-            expiresAt: session.expiresAt,
-          },
-        };
+        return await this.sessions.create(input);
       } catch (err) {
         if (isUniqueViolation(err) && attempt < maxAttempts) continue;
         throw err;
       }
     }
-    // Unreachable in practice; satisfies the type checker.
     throw new AppError('CONFLICT', 'Could not allocate a unique invite. Please retry.');
   }
 

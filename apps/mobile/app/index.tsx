@@ -56,6 +56,12 @@ export default function Index() {
           onPress={() => router.push('/join')}
         />
         <Button
+          label={t('home.savedPartners')}
+          variant="secondary"
+          accessibilityLabel={t('home.savedPartners')}
+          onPress={() => router.push('/partners')}
+        />
+        <Button
           label={t('home.connectSpotify')}
           variant="secondary"
           accessibilityLabel={t('home.connectSpotify')}

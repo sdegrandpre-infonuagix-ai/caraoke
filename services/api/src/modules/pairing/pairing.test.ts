@@ -18,7 +18,7 @@ class InMemorySessions implements SessionRepository {
     const session: Session = {
       id: `sess-${this.byId.size + 1}`,
       hostUserId: input.hostUserId,
-      guestUserId: null,
+      guestUserId: input.guestUserId ?? null,
       status: 'pairing',
       pairingCode: input.pairingCode,
       inviteToken: input.inviteToken,

@@ -5,6 +5,8 @@ import type { Session } from './pairing.types.js';
 
 export interface CreateSessionInput {
   hostUserId: string;
+  /** Pre-assigned guest for fast re-pair (Story 3.3); null for an open invite. */
+  guestUserId?: string | null;
   status: string;
   pairingCode: string;
   inviteToken: string;
@@ -31,10 +33,17 @@ export class PgSessionRepository implements SessionRepository {
 
   async create(input: CreateSessionInput): Promise<Session> {
     const { rows } = await this.db().query(
-      `INSERT INTO sessions (host_user_id, status, pairing_code, invite_token, expires_at)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO sessions (host_user_id, guest_user_id, status, pairing_code, invite_token, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [input.hostUserId, input.status, input.pairingCode, input.inviteToken, input.expiresAt],
+      [
+        input.hostUserId,
+        input.guestUserId ?? null,
+        input.status,
+        input.pairingCode,
+        input.inviteToken,
+        input.expiresAt,
+      ],
     );
     return rowToCamel<Session>(rows[0]!);
   }
