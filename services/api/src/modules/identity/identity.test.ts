@@ -32,6 +32,16 @@ class InMemoryUserRepository implements UserRepository {
     this.byId.set(user.id, user);
     return user;
   }
+  async update(id: string, patch: { displayName?: string | null }): Promise<User | null> {
+    const user = this.byId.get(id);
+    if (!user) return null;
+    const updated = { ...user, displayName: patch.displayName ?? null };
+    this.byId.set(id, updated);
+    return updated;
+  }
+  async deleteById(id: string): Promise<boolean> {
+    return this.byId.delete(id);
+  }
 }
 
 describe('IdentityService.findOrCreate (FR1)', () => {
@@ -51,6 +61,45 @@ describe('IdentityService.findOrCreate (FR1)', () => {
     expect(first.id).toBe(second.id);
     expect(repo.creates).toBe(1); // returning sign-in does not create a new record
     expect(first.authProvider).toBe('google');
+  });
+});
+
+describe('IdentityService profile + deletion (FR1/FR6)', () => {
+  const claims: AuthClaims = {
+    cognitoSub: 'sub-x',
+    email: 'p@q.ca',
+    displayName: 'Old',
+    authProvider: 'google',
+  };
+
+  it('updateProfile persists the new display name', async () => {
+    const repo = new InMemoryUserRepository();
+    const service = new IdentityService(repo);
+    const user = await service.findOrCreate(claims);
+    const updated = await service.updateProfile(user.id, { displayName: 'New Name' });
+    expect(updated.displayName).toBe('New Name');
+  });
+
+  it('deleteAccount removes the user and the federated identity', async () => {
+    const repo = new InMemoryUserRepository();
+    const deleted: string[] = [];
+    const directory = { async deleteAccount(sub: string) {
+      deleted.push(sub);
+    } };
+    const service = new IdentityService(repo, directory);
+    const user = await service.findOrCreate(claims);
+
+    await service.deleteAccount(user);
+
+    expect(await repo.findById(user.id)).toBeNull(); // personal data gone
+    expect(deleted).toEqual([claims.cognitoSub]); // IdP identity gone
+  });
+
+  it('deleteAccount on a missing user throws NOT_FOUND', async () => {
+    const service = new IdentityService(new InMemoryUserRepository());
+    await expect(
+      service.deleteAccount({ id: 'nope', cognitoSub: 'x' }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
 
@@ -108,5 +157,26 @@ describe('GET /me (session sync)', () => {
       data: expect.objectContaining({ email: 'me@x.ca', authProvider: 'apple' }),
       error: null,
     });
+  });
+
+  it('PATCH /me updates the profile (FR1)', async () => {
+    const res = await request(app)
+      .patch('/me')
+      .set('Authorization', 'Bearer good')
+      .send({ displayName: 'Renamed' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.displayName).toBe('Renamed');
+  });
+
+  it('PATCH /me rejects an empty body', async () => {
+    const res = await request(app).patch('/me').set('Authorization', 'Bearer good').send({});
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_FAILED');
+  });
+
+  it('DELETE /me removes the account (FR6)', async () => {
+    const res = await request(app).delete('/me').set('Authorization', 'Bearer good');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ deleted: true });
   });
 });

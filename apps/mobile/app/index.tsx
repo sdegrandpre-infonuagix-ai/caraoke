@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { ScreenContainer, Text, Avatar, Button } from '../src/components';
 import { useAuthStore } from '../src/stores/useAuthStore';
@@ -12,6 +12,7 @@ export default function Index() {
   const status = useAuthStore((s) => s.status);
   const signOut = useAuthStore((s) => s.signOut);
   const me = useMe();
+  const router = useRouter();
 
   if (status === 'loading') {
     return (
@@ -33,6 +34,11 @@ export default function Index() {
         <Avatar name={me.data?.displayName ?? me.data?.email ?? 'You'} size="lg" partner="A" />
         <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? 'Welcome'}</Text>
         <Text color="secondary">You're signed in.</Text>
+        <Button
+          label="Edit profile"
+          accessibilityLabel="Edit profile"
+          onPress={() => router.push('/profile')}
+        />
         <Button
           label="Sign out"
           variant="secondary"

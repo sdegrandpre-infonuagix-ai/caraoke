@@ -1,5 +1,7 @@
--- Story 2.2: users — system-of-record identity (FR1). UUID v7 PKs, snake_case columns.
--- Law 25 / GDPR deletion (FR6) cascades from this table in later migrations.
+-- Story 2.2: users — system-of-record identity (FR1). UUID PKs, snake_case columns.
+-- Law 25 / GDPR account deletion (FR6, Story 2.3): deleting a users row must remove ALL of a
+-- user's personal data. CONVENTION: every table holding personal data MUST declare its
+-- user_id FK as `REFERENCES users(id) ON DELETE CASCADE`, so DELETE FROM users cascades.
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 

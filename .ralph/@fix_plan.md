@@ -16,12 +16,7 @@
 
 - [x] Story 2.1: Design tokens & foundation primitives
 - [x] Story 2.2: Sign in with Apple/Google (Cognito)
-  > As a new user
-  > I want to sign in with Apple or Google
-  > So that I can create my Caraoke account in one tap.
-  > AC: Given the onboarding screen, When I choose Apple or Google sign-in, Then Cognito authenticates me and a `users` record is created (FR1), And a valid session (JWT) is issued and stored securely, And returning sign-in reuses the existing account.
-  > Spec: specs/planning-artifacts/epics.md#story-2-2
-- [ ] Story 2.3: Profile management & account deletion
+- [x] Story 2.3: Profile management & account deletion
   > As a user
   > I want to view/edit my profile and delete my account and data
   > So that I control my presence and satisfy my privacy rights.

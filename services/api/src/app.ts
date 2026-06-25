@@ -7,6 +7,7 @@ import { CognitoTokenVerifier, type TokenVerifier } from './middleware/auth.js';
 import { PgUserRepository } from './modules/identity/identity.repository.js';
 import { IdentityService } from './modules/identity/identity.service.js';
 import { createIdentityRouter } from './modules/identity/identity.router.js';
+import { CognitoUserDirectory, NoopUserDirectory } from './modules/identity/userDirectory.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -26,9 +27,13 @@ export function createApp(deps: AppDeps = {}): Express {
   // Media-server (LiveKit) accessed only via the integration abstraction (NFR20).
   const media = getMediaServer(loadEnv());
 
-  // Identity (Story 2.2). Verifier + service are injectable for tests.
+  // Identity (Story 2.2/2.3). Verifier + service are injectable for tests.
+  const env = loadEnv();
   const verifier = deps.verifier ?? new CognitoTokenVerifier();
-  const identityService = deps.identityService ?? new IdentityService(new PgUserRepository());
+  const directory =
+    env.CARAOKE_INTEGRATIONS === 'live' ? new CognitoUserDirectory() : new NoopUserDirectory();
+  const identityService =
+    deps.identityService ?? new IdentityService(new PgUserRepository(), directory);
 
   // Liveness/readiness probe for ECS Express health checks.
   app.get('/health', (_req, res) => {

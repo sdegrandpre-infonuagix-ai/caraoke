@@ -92,6 +92,13 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   stored in expo-secure-store and tracked in `useAuthStore` (Zustand). `useMe` (TanStack
   Query) hits `/me`. `app/(onboarding)/sign-in.tsx` is the one-tap Apple/Google screen; the
   home route redirects there when signed out. Public config via `EXPO_PUBLIC_*` env.
+- Profile/deletion (Story 2.3): `PATCH /me` (Zod-validated, requires ≥1 field) and
+  `DELETE /me` extend the identity module. Deletion removes personal data first (DB cascade,
+  FR6) then the federated identity via the `UserDirectory` port (live `CognitoUserDirectory`
+  = AdminDeleteUser; `NoopUserDirectory` for mock/test). Migration convention: every
+  personal-data table FKs `users(id) ON DELETE CASCADE`. Mobile `app/profile/index.tsx`
+  edits the display name and has a confirmed, irreversible "Delete account" (Alert →
+  DELETE → signOut).
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
