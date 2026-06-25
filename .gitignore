@@ -23,6 +23,33 @@ apps/mobile/android/
 *.log
 .ralph/logs/
 
+# Terraform — NEVER commit state (contains secrets) or provider binaries
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+# (Keep .terraform.lock.hcl tracked — it pins provider versions.)
+
+# Ralph runtime state (ephemeral; not the tracked @fix_plan.md / PROMPT.md / specs)
+.ralph/status.json
+.ralph/progress.json
+.ralph/.call_count
+.ralph/.circuit_breaker_history
+.ralph/.circuit_breaker_state
+.ralph/.claude_session_id
+.ralph/.exit_signals
+.ralph/.last_reset
+.ralph/.loop_start_sha
+.ralph/.ralph_session
+.ralph/.response_analysis
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -27,6 +27,10 @@ module "aurora" {
   subnet_ids     = module.vpc.private_subnet_ids
   kms_key_arn    = module.kms.key_arn
   engine_version = "17.9"
+
+  # Scale to zero when idle (architecture: "Aurora Serverless ... scales to zero").
+  # Trims dev cost to ~$0 for the DB when there's no traffic.
+  min_capacity = 0
 }
 
 module "redis" {
