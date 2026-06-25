@@ -50,6 +50,12 @@ export default function Index() {
           onPress={() => router.push('/session/create')}
         />
         <Button
+          label={t('home.joinDuet')}
+          variant="secondary"
+          accessibilityLabel={t('home.joinDuet')}
+          onPress={() => router.push('/join')}
+        />
+        <Button
           label={t('home.connectSpotify')}
           variant="secondary"
           accessibilityLabel={t('home.connectSpotify')}

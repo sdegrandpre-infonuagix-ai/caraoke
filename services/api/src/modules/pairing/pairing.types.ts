@@ -4,12 +4,30 @@ import type { SessionState } from '@caraoke/shared';
 export interface Session {
   id: string;
   hostUserId: string;
+  guestUserId: string | null;
   status: SessionState;
   pairingCode: string;
   inviteToken: string;
   expiresAt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Connection view returned on join (FR8): who is in the session and whether both are present. */
+export interface SessionConnection {
+  session: PublicSession;
+  host: { userId: string; connected: true };
+  guest: { userId: string; connected: true } | null;
+  bothConnected: boolean;
+}
+
+export function toConnection(s: Session): SessionConnection {
+  return {
+    session: toPublicSession(s),
+    host: { userId: s.hostUserId, connected: true },
+    guest: s.guestUserId ? { userId: s.guestUserId, connected: true } : null,
+    bothConnected: s.guestUserId != null,
+  };
 }
 
 /** Session view safe to return to clients (no raw invite token). */

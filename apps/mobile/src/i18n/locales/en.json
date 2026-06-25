@@ -17,9 +17,22 @@
     "signedIn": "You're signed in.",
     "welcome": "Welcome",
     "startDuet": "Start a duet",
+    "joinDuet": "Join a duet",
     "editProfile": "Edit profile",
     "connectSpotify": "Connect Spotify",
     "language": "Language"
+  },
+  "join": {
+    "title": "Join a duet",
+    "intro": "Enter the pairing code your partner shared, or open their invite link.",
+    "codeLabel": "Pairing code",
+    "codePlaceholder": "ABC234",
+    "join": "Join",
+    "joining": "Joining…",
+    "connected": "Connected!",
+    "bothConnected": "You and your partner are both connected.",
+    "waiting": "Waiting for your partner to connect…",
+    "error": "Couldn't join. Please check the code and try again."
   },
   "session": {
     "title": "Invite a partner",

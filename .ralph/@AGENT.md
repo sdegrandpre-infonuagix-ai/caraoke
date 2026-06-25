@@ -130,7 +130,13 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   session object. `PairingService` retries on the rare code/token unique collision.
   `INVITE_BASE_URL` (default https://caraoke.app) builds the `/join?token=` URL.
 - Mobile: `src/api/pairing.ts` + `app/session/create.tsx` (create invite, show code + link,
-  native Share), linked from home as "Start a duet". Story 3.2 will add joining.
+  native Share), linked from home as "Start a duet".
+- Join (Story 3.2, FR8): `POST /sessions/join` accepts `{token}` (link) or `{code}` (typed,
+  case-insensitive). `pairing.validate.ts` is a pure join validator (expired → INVITE_EXPIRED,
+  full/host/ended → CONFLICT, idempotent for the existing guest); errors carry a recovery hint
+  in the message. Migration 0005 adds `guest_user_id` (FK ON DELETE SET NULL). Success returns
+  a `SessionConnection` with both partners connected. Mobile `app/join.tsx` auto-joins from a
+  deep-link `?token=` or takes a 6-char code, surfacing the server's clear error as recovery.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

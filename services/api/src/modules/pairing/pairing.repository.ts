@@ -15,6 +15,8 @@ export interface SessionRepository {
   create(input: CreateSessionInput): Promise<Session>;
   findByPairingCode(code: string): Promise<Session | null>;
   findByInviteToken(token: string): Promise<Session | null>;
+  /** Set the guest (joiner) on a session. Returns the updated row, or null if missing. */
+  addGuest(sessionId: string, guestUserId: string): Promise<Session | null>;
 }
 
 /** Postgres unique-violation error code (used to detect code/token collisions). */
@@ -48,6 +50,15 @@ export class PgSessionRepository implements SessionRepository {
     const { rows } = await this.db().query('SELECT * FROM sessions WHERE invite_token = $1', [
       token,
     ]);
+    return rows[0] ? rowToCamel<Session>(rows[0]) : null;
+  }
+
+  async addGuest(sessionId: string, guestUserId: string): Promise<Session | null> {
+    const { rows } = await this.db().query(
+      `UPDATE sessions SET guest_user_id = $2, updated_at = now()
+       WHERE id = $1 RETURNING *`,
+      [sessionId, guestUserId],
+    );
     return rows[0] ? rowToCamel<Session>(rows[0]) : null;
   }
 }

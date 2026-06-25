@@ -23,12 +23,7 @@
 > Goal: Two users connect and reach the ready state, hands-free-ready.
 
 - [x] Story 3.1: Create session & generate invite
-  > As a user
-  > I want to create a duet session and get an invite link or code
-  > So that I can ask someone to sing with me.
-  > AC: Given an authenticated user, When I create a session, Then a `sessions` record is created and a valid invite link and pairing code are returned (FR7), And the invite encodes the session and expires after a defined window.
-  > Spec: specs/planning-artifacts/epics.md#story-3-1
-- [ ] Story 3.2: Join session via invite
+- [x] Story 3.2: Join session via invite
   > As an invited user
   > I want to join a session via link or code
   > So that I can connect with the person who invited me.

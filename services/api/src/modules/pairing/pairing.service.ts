@@ -2,7 +2,19 @@ import { AppError } from '@caraoke/shared';
 import type { CreateSessionInput, SessionRepository } from './pairing.repository.js';
 import { PG_UNIQUE_VIOLATION } from './pairing.repository.js';
 import { generatePairingCode, generateInviteToken, buildInviteUrl } from './pairing.codes.js';
-import { toPublicSession, type CreateSessionResult } from './pairing.types.js';
+import {
+  toPublicSession,
+  toConnection,
+  type CreateSessionResult,
+  type SessionConnection,
+  type Session,
+} from './pairing.types.js';
+import { validateJoin } from './pairing.validate.js';
+
+export interface JoinByInvite {
+  token?: string;
+  code?: string;
+}
 
 export interface PairingServiceOptions {
   inviteBaseUrl: string;
@@ -56,5 +68,41 @@ export class PairingService {
     }
     // Unreachable in practice; satisfies the type checker.
     throw new AppError('CONFLICT', 'Could not allocate a unique invite. Please retry.');
+  }
+
+  /**
+   * Join a session via invite token (link) or pairing code (FR8). Validates existence,
+   * expiry, and capacity, returning a clear error (with a recovery hint) otherwise. On
+   * success both partners are connected. Idempotent for the existing guest.
+   */
+  async join(invite: JoinByInvite, joinerUserId: string): Promise<SessionConnection> {
+    const session = await this.resolve(invite);
+    if (!session) {
+      throw new AppError('SESSION_NOT_FOUND', 'That invite is invalid. Ask your partner for a new one.');
+    }
+
+    const now = this.opts.now?.() ?? new Date();
+    const verdict = validateJoin(session, joinerUserId, now);
+    if (!verdict.ok) {
+      throw new AppError(verdict.code, verdict.message);
+    }
+    if (verdict.alreadyJoined) {
+      return toConnection(session);
+    }
+
+    const updated = await this.sessions.addGuest(session.id, joinerUserId);
+    if (!updated) {
+      throw new AppError('SESSION_NOT_FOUND', 'That session no longer exists. Ask your partner for a new invite.');
+    }
+    return toConnection(updated);
+  }
+
+  private async resolve(invite: JoinByInvite): Promise<Session | null> {
+    if (invite.token) return this.sessions.findByInviteToken(invite.token);
+    if (invite.code) {
+      // Pairing codes are case-insensitive for the user; stored uppercase.
+      return this.sessions.findByPairingCode(invite.code.trim().toUpperCase());
+    }
+    return null;
   }
 }
