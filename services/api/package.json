@@ -12,17 +12,21 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
+    "migrate": "tsx src/db/migrate.ts",
     "clean": "rimraf dist"
   },
   "dependencies": {
     "@caraoke/shared": "workspace:*",
+    "aws-jwt-verify": "5.2.1",
     "express": "4.21.2",
+    "pg": "8.22.0",
     "zod": "3.24.1"
   },
   "devDependencies": {
     "@caraoke/config": "workspace:*",
     "@types/express": "5.0.0",
     "@types/node": "22.10.5",
+    "@types/pg": "8.20.0",
     "@types/supertest": "6.0.2",
     "eslint": "9.18.0",
     "rimraf": "6.0.1",

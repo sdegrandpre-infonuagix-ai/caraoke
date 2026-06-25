@@ -15,12 +15,7 @@
 > Goal: Users onboard, link Premium, set language, and control their account.
 
 - [x] Story 2.1: Design tokens & foundation primitives
-  > As a developer
-  > I want NativeWind configured with the "Warm Dusk" tokens and the foundation primitive components
-  > So that all screens are built consistently and accessibly.
-  > AC: Given the mobile app, When primitives are implemented, Then `tailwind.config` defines the Warm Dusk palette, 8px spacing scale, type scale, and radius scale (UX-DR1), And `Button` (4 variants), `Card`, `ScreenContainer`, `Text`, `Avatar`, `Toggle`, `Icon` exist (UX-DR7), And every interactive primitive has `accessibilityLabel`/role, ≥48px targets, and uses logical `start`/`end` props (UX-DR14).
-  > Spec: specs/planning-artifacts/epics.md#story-2-1
-- [ ] Story 2.2: Sign in with Apple/Google (Cognito)
+- [x] Story 2.2: Sign in with Apple/Google (Cognito)
   > As a new user
   > I want to sign in with Apple or Google
   > So that I can create my Caraoke account in one tap.

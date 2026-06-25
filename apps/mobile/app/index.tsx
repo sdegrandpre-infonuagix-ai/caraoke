@@ -1,18 +1,45 @@
-import { Text, View } from 'react-native';
-import { SESSION_STATES, type SessionState } from '@caraoke/shared';
+import { Redirect } from 'expo-router';
+import { View } from 'react-native';
+import { ScreenContainer, Text, Avatar, Button } from '../src/components';
+import { useAuthStore } from '../src/stores/useAuthStore';
+import { useMe } from '../src/api/useMe';
 
 /**
- * Placeholder home route — proves the Expo Router app renders and that
- * cross-package imports from @caraoke/shared type-check end-to-end (Story 1.1).
+ * Home route. Redirects to onboarding when signed out; otherwise greets the current user.
+ * The full home experience is built in later epics — this proves the auth gate end-to-end.
  */
 export default function Index() {
-  const initialState: SessionState = SESSION_STATES[0];
+  const status = useAuthStore((s) => s.status);
+  const signOut = useAuthStore((s) => s.signOut);
+  const me = useMe();
+
+  if (status === 'loading') {
+    return (
+      <ScreenContainer>
+        <View className="flex-1 items-center justify-center">
+          <Text color="secondary">Loading…</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (status === 'signedOut') {
+    return <Redirect href="/(onboarding)/sign-in" />;
+  }
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-      <Text style={{ fontSize: 24, fontWeight: '600' }}>Caraoke</Text>
-      <Text>Sing together across distance.</Text>
-      <Text accessibilityLabel={`Session state ${initialState}`}>state: {initialState}</Text>
-    </View>
+    <ScreenContainer>
+      <View className="flex-1 items-center justify-center gap-lg">
+        <Avatar name={me.data?.displayName ?? me.data?.email ?? 'You'} size="lg" partner="A" />
+        <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? 'Welcome'}</Text>
+        <Text color="secondary">You're signed in.</Text>
+        <Button
+          label="Sign out"
+          variant="secondary"
+          accessibilityLabel="Sign out"
+          onPress={() => void signOut()}
+        />
+      </View>
+    </ScreenContainer>
   );
 }

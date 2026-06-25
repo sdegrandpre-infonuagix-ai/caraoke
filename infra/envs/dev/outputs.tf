@@ -38,6 +38,11 @@ output "cognito_app_client_id" {
   value       = module.cognito.app_client_id
 }
 
+output "cognito_hosted_ui_domain" {
+  description = "Cognito hosted-UI domain prefix."
+  value       = module.cognito.hosted_ui_domain
+}
+
 output "secret_arns" {
   description = "Map of integration secret ARNs."
   value       = module.secrets.secret_arns

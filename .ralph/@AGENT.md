@@ -75,8 +75,23 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
 - `global.css` is imported once in `app/_layout.tsx`; Metro wires NativeWind via
   `metro.config.js`; Babel preset uses `jsxImportSource: 'nativewind'`. RN tooling configs
   (babel/metro/tailwind) are CommonJS and exempted in `eslint.config.mjs`.
-- Mobile has no RN test renderer yet; the pure `variants.ts` logic is tested via node:test
-  + tsx: `node --import tsx --test src/theme/variants.test.ts` (run from apps/mobile).
+- Mobile has no RN test renderer yet; pure logic (`theme/variants.ts`, `auth/jwt.ts`) is
+  tested via node:test + tsx: `node --import tsx --test src/**/*.test.ts` (from apps/mobile).
+
+## Auth / identity (Story 2.2)
+- API identity module (`services/api/src/modules/identity`): `GET /me` verifies the Cognito
+  ID token (aws-jwt-verify) and find-or-creates the `users` record (FR1) — first call after
+  sign-in creates it, returning sign-ins reuse it. Verifier + service are injectable in
+  `createApp({ verifier, identityService })` for tests (no DB/Cognito needed).
+- DB layer: lazy `pg` pool (`db/pool.ts`), snake↔camel mapping in repositories only
+  (`db/mapping.ts`), forward-only migration runner `pnpm --filter @caraoke/api migrate`
+  (needs `DATABASE_URL`); first migration creates `users`.
+- Cognito module adds federated Apple/Google IdPs + hosted-UI OAuth (code+PKCE). Provider
+  credentials are sensitive vars set out-of-band (empty disables that IdP); never committed.
+- Mobile: `useCognitoSignIn` runs the hosted-UI OAuth via expo-auth-session; the ID token is
+  stored in expo-secure-store and tracked in `useAuthStore` (Zustand). `useMe` (TanStack
+  Query) hits `/me`. `app/(onboarding)/sign-in.tsx` is the one-tap Apple/Google screen; the
+  home route redirects there when signed out. Public config via `EXPO_PUBLIC_*` env.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
