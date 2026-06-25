@@ -9,7 +9,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "server": "node --import tsx server/index.ts",
-    "test": "node --import tsx --test app/src/lib/*.test.ts"
+    "report": "node --import tsx measure/generate-report.ts",
+    "test": "node --import tsx --test app/src/lib/*.test.ts measure/*.test.ts"
   },
   "dependencies": {
     "expo": "56.0.12",

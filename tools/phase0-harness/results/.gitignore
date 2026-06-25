@@ -1,0 +1,5 @@
+# Real Phase 0 run artifacts are local evidence, not source — keep the dir, ignore contents.
+session-*.json
+report-*.md
+*.wav
+*.m4a

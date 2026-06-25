@@ -56,9 +56,11 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&
   npm install`). NFR21 invariant: WebRTC carries voice only; each phone plays its own Spotify
   via the Web API — the song is never sent peer-to-peer (see `app/src/lib/voicePeer.ts`).
-- Pure clock/scheduling logic is unit-tested: `pnpm --dir tools/phase0-harness test`
-  (runs node:test via tsx; no phones/RN install required). Story 1.4 adds drift/latency
-  sampling under `measure/` + `results/`.
+- Pure clock/scheduling + measurement logic is unit-tested: `pnpm --dir tools/phase0-harness
+  test` (node:test via tsx; no phones/RN install required). `measure/` holds the drift
+  sampler, voice-latency probe, and go/no-go report; `pnpm --dir tools/phase0-harness report`
+  turns a saved `results/session-*.json` into a report scoring drift vs ≤50ms (NFR2) and
+  one-way voice vs ≤150ms (NFR3) with a GO/NO-GO recommendation.
 
 ## Feature Development Quality Standards
 

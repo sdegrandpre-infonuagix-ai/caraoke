@@ -36,7 +36,13 @@ tools/phase0-harness/
 │       ├── voicePeer.ts           # VOICE-ONLY WebRTC peer (NFR21 invariant)
 │       ├── spotifyClient.ts       # this phone's own Spotify Web API playback
 │       └── simultaneousStart.ts   # clock-offset + start-scheduling math (unit-tested)
-└── results/             # Story 1.4 drift/latency logs + "felt-together?" answers
+├── measure/             # Story 1.4 — drift sampler, voice-latency probe, go/no-go report
+│   ├── drift.ts         # position-vs-wallclock sampling + inter-device pairing
+│   ├── voiceLatency.ts  # one-way latency = median(rtt)/2 over the peer data channel
+│   ├── report.ts        # SessionLog → GoNoGoReport (NFR2/NFR3 verdicts) + Markdown
+│   ├── recorder.ts      # read/write session logs + reports under results/
+│   └── generate-report.ts  # CLI: results/session-*.json → results/report-*.md
+└── results/             # drift/latency logs + "felt-together?" answers (gitignored runs)
 ```
 
 ## Field protocol (Bell 5G, Montreal highway)
@@ -49,7 +55,24 @@ tools/phase0-harness/
    access token and the same track URI, then **Connect**. Set one phone's role to
    `operator`, the other to `partner`.
 4. Confirm voice is two-way, then the operator presses **Start countdown**.
-5. Drive. (Story 1.4 adds drift/latency sampling and the spoken "felt together?" capture.)
+5. Drive. During the song each phone samples backing-track drift (position vs wallclock);
+   the operator's phone also probes one-way voice latency over the peer data channel.
+6. When the song ends, the operator answers the spoken **"did that feel like singing
+   together?"** with the YES/NO buttons. The phone logs a `PHASE0_SESSION_LOG` JSON blob.
+
+## Measurement & go/no-go report (Story 1.4)
+
+The on-device session emits a `PHASE0_SESSION_LOG {...}` line. Save that JSON to
+`results/session-<id>.json` on a laptop, then generate the report:
+
+```bash
+pnpm --dir tools/phase0-harness report          # newest session log
+# or: node --import tsx measure/generate-report.ts results/session-<id>.json
+```
+
+The report states measured **drift p95 vs ≤50ms (NFR2)**, **one-way voice latency vs
+≤150ms (NFR3)**, the recorded felt-together answer, and a **GO / NO-GO / INCONCLUSIVE**
+recommendation. This is the Phase 0 gate before committing to the full build.
 
 ## Run the unit tests
 

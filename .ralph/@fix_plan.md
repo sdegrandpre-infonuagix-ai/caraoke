@@ -7,18 +7,8 @@
 
 - [x] Story 1.1: Monorepo & Expo app scaffold
 - [x] Story 1.2: Base AWS infrastructure skeleton (Terraform)
-  > As a developer
-  > I want a minimal Terraform-defined infrastructure baseline in `ca-central-1`
-  > So that later epics can deploy services into a residency-compliant environment.
-  > AC: Given AWS credentials and the `infra/` Terraform modules, When `terraform apply` runs for the `dev` env, Then a VPC, ECS Express service placeholder, Aurora Serverless (PostgreSQL 17.9), Redis, Cognito user pool, and Secrets Manager are provisioned in `ca-central-1`, And all data stores are KMS-encrypted at rest (NFR6), And no resources are provisioned outside Canada (NFR10).
-  > Spec: specs/planning-artifacts/epics.md#story-1-2
 - [x] Story 1.3: Phase 0 duet harness (manual two-phone prototype)
-  > As a founder
-  > I want a throwaway two-phone harness with manual simultaneous start, WebRTC voice, and dual independent Spotify playback
-  > So that I can experience and measure a real duet without the full stack.
-  > AC: Given two phones on cellular with Spotify Premium, When the operator triggers a manual countdown start, Then both phones begin the same track and open a full-duplex WebRTC voice channel, And the song audio is never transmitted peer-to-peer (only voice) (NFR21), And the harness lives in `tools/phase0-harness/` and is clearly marked throwaway.
-  > Spec: specs/planning-artifacts/epics.md#story-1-3
-- [ ] Story 1.4: Phase 0 measurement & go/no-go report
+- [x] Story 1.4: Phase 0 measurement & go/no-go report
   > As a founder
   > I want the harness to measure backing-track drift and one-way voice latency and capture a "felt together?" answer
   > So that I have evidence to decide whether to build the full product.

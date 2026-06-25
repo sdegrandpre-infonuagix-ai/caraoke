@@ -19,6 +19,8 @@ const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 export interface VoicePeer {
   localStream: MediaStream;
   remoteStream: MediaStream | null;
+  /** Echo transport over the peer data channel — used by the Story 1.4 latency probe. */
+  echoTransport(): import('../../../measure/voiceLatency.ts').EchoTransport;
   close(): void;
 }
 
@@ -38,6 +40,37 @@ export async function startVoicePeer(
   localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
   let remoteStream: MediaStream | null = null;
+
+  // Latency-probe data channel (Story 1.4). Offerer measures; answerer echoes.
+  // Carries only tiny nonce strings — never media (NFR21 unaffected).
+  let probeChannel: ReturnType<RTCPeerConnection['createDataChannel']> | null = null;
+  const pendingProbes = new Map<string, () => void>();
+
+  const wireProbeChannel = (
+    channel: ReturnType<RTCPeerConnection['createDataChannel']>,
+  ) => {
+    probeChannel = channel;
+    channel.addEventListener('message', (event) => {
+      const nonce = String((event as unknown as { data: unknown }).data);
+      const resolve = pendingProbes.get(nonce);
+      if (resolve) {
+        // Offerer side: the echo for a nonce we sent has returned.
+        pendingProbes.delete(nonce);
+        resolve();
+      } else {
+        // Answerer side: echo the nonce straight back.
+        channel.send(nonce);
+      }
+    });
+  };
+
+  if (isOfferer) {
+    wireProbeChannel(pc.createDataChannel('probe'));
+  } else {
+    pc.addEventListener('datachannel', (event) => {
+      wireProbeChannel((event as unknown as { channel: RTCDataChannel }).channel);
+    });
+  }
 
   // react-native-webrtc emits events via addEventListener.
   pc.addEventListener('track', (event) => {
@@ -78,6 +111,20 @@ export async function startVoicePeer(
     localStream,
     get remoteStream() {
       return remoteStream;
+    },
+    echoTransport() {
+      return {
+        now: () => Date.now(),
+        roundTrip: (nonce: string) =>
+          new Promise<void>((resolve, reject) => {
+            if (!probeChannel || probeChannel.readyState !== 'open') {
+              reject(new Error('probe channel not open'));
+              return;
+            }
+            pendingProbes.set(nonce, resolve);
+            probeChannel.send(nonce);
+          }),
+      };
     },
     close() {
       localStream.getTracks().forEach((t) => t.stop());
