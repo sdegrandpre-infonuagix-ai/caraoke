@@ -12,7 +12,7 @@
   > So that later epics can deploy services into a residency-compliant environment.
   > AC: Given AWS credentials and the `infra/` Terraform modules, When `terraform apply` runs for the `dev` env, Then a VPC, ECS Express service placeholder, Aurora Serverless (PostgreSQL 17.9), Redis, Cognito user pool, and Secrets Manager are provisioned in `ca-central-1`, And all data stores are KMS-encrypted at rest (NFR6), And no resources are provisioned outside Canada (NFR10).
   > Spec: specs/planning-artifacts/epics.md#story-1-2
-- [ ] Story 1.3: Phase 0 duet harness (manual two-phone prototype)
+- [x] Story 1.3: Phase 0 duet harness (manual two-phone prototype)
   > As a founder
   > I want a throwaway two-phone harness with manual simultaneous start, WebRTC voice, and dual independent Spotify playback
   > So that I can experience and measure a real duet without the full stack.

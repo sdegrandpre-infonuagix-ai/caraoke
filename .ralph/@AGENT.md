@@ -51,6 +51,15 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   the real image ships; it `ignore_changes` on task_definition/desired_count so deploys don't
   fight Terraform.
 
+## Phase 0 harness (throwaway)
+- `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
+  intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&
+  npm install`). NFR21 invariant: WebRTC carries voice only; each phone plays its own Spotify
+  via the Web API — the song is never sent peer-to-peer (see `app/src/lib/voicePeer.ts`).
+- Pure clock/scheduling logic is unit-tested: `pnpm --dir tools/phase0-harness test`
+  (runs node:test via tsx; no phones/RN install required). Story 1.4 adds drift/latency
+  sampling under `measure/` + `results/`.
+
 ## Feature Development Quality Standards
 
 **CRITICAL**: All new features MUST meet the following mandatory requirements before being considered complete.
