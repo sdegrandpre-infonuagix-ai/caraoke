@@ -1,0 +1,34 @@
+{
+  "name": "@caraoke/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Caraoke core API — modular monolith (Express + TypeScript) on ECS Express Mode.",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@caraoke/shared": "workspace:*",
+    "express": "4.21.2",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@caraoke/config": "workspace:*",
+    "@types/express": "5.0.0",
+    "@types/node": "22.10.5",
+    "@types/supertest": "6.0.2",
+    "eslint": "9.18.0",
+    "rimraf": "6.0.1",
+    "supertest": "7.0.0",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3",
+    "vitest": "2.1.8"
+  }
+}

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caraoke — Design Directions (Warm Dusk)</title>
+<style>
+  :root {
+    --base: #1A1A2E;
+    --surface: #16213E;
+    --surface-raised: #1F2B47;
+    --accent: #FF6B6B;
+    --accent-muted: rgba(255,107,107,0.25);
+    --secondary: #FFD93D;
+    --text-primary: #F0E6D3;
+    --text-secondary: #9B8E82;
+    --text-disabled: #5A5067;
+    --border: #2D2844;
+    --error: #FF4D4D;
+    --success: #4ADE80;
+    --black: #000000;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0D0B15; color: var(--text-primary); font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+  .page-header { max-width: 1200px; margin: 0 auto; padding: 48px 32px 32px; }
+  .page-header h1 { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
+  .page-header h1 span { color: var(--accent); }
+  .page-header p { color: var(--text-secondary); font-size: 16px; margin-top: 8px; max-width: 640px; line-height: 1.5; }
+
+  .section { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+  .section-title { font-size: 24px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .section-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+
+  .directions { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; margin-bottom: 60px; }
+
+  .phone { flex: none; width: 300px; }
+  .phone-label { font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--accent); }
+  .phone-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+  .phone-frame { border: 3px solid #3a3555; border-radius: 38px; padding: 8px; background: var(--base); }
+  .phone-screen { border-radius: 30px; overflow: hidden; background: var(--base); height: 580px; display: flex; flex-direction: column; }
+
+  .status-bar { display: flex; justify-content: space-between; padding: 12px 20px 6px; font-size: 11px; color: var(--text-disabled); }
+
+  /* Waveform bars */
+  .wave { display: flex; align-items: center; gap: 3px; justify-content: center; }
+  .wave span { border-radius: 2px; }
+  .wave-sm span { width: 4px; }
+  .wave-md span { width: 5px; }
+  .wave-lg span { width: 6px; }
+
+  .avatar { border-radius: 50%; flex: none; }
+  .avatar-accent { border: 2px solid var(--accent); background: var(--surface); }
+  .avatar-secondary { border: 2px solid var(--secondary); background: var(--surface); }
+
+  .btn-primary { height: 48px; border-radius: 24px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }
+  .btn-outline { height: 48px; border-radius: 24px; border: 2px solid var(--border); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .btn-voice { border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+
+  .tag { font-size: 12px; border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; color: var(--text-secondary); }
+  .tag-active { border-color: var(--accent); color: var(--accent); background: var(--accent-muted); }
+
+  .note { font-size: 13px; color: var(--accent); margin-top: 10px; font-style: italic; }
+
+  .tab-bar { display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); }
+  .tab-icon { width: 24px; height: 24px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Caraoke <span>Design Directions</span></h1>
+  <p>Six visual approaches for the key screens, all using the Warm Dusk palette. Each direction explores a different philosophy for how the visual UI should feel when the user is stationary.</p>
+</div>
+
+<!-- ===== SESSION SCREEN DIRECTIONS ===== -->
+<div class="section">
+  <div class="section-title">Session Screen (Stationary)</div>
+  <div class="section-sub">The screen visible when parked or stopped during a duet. In motion, this is replaced by pure black.</div>
+</div>
+
+<div class="directions">
+
+  <!-- D1: The Orb -->
+  <div class="phone">
+    <div class="phone-label">D1 · The Orb</div>
+    <div class="phone-desc">Everything radiates from a central circle. Ultra-minimal.</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:20px">
+          <!-- Partner indicators -->
+          <div style="display:flex; gap:48px; align-items:center;">
+            <div style="text-align:center">
+              <div class="avatar avatar-accent" style="width:44px;height:44px;"></div>
+              <div style="font-size:12px;color:var(--accent);margin-top:6px">Liam</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-disabled)">duet</div>
+            <div style="text-align:center">
+              <div class="avatar avatar-secondary" style="width:44px;height:44px;"></div>
+              <div style="font-size:12px;color:var(--secondary);margin-top:6px">Sofia</div>
+            </div>
+          </div>
+          <!-- Central orb -->
+          <div style="position:relative; width:180px; height:180px;">
+            <div style="position:absolute;inset:0;border-radius:50%;background:var(--accent-muted);"></div>
+            <div style="position:absolute;inset:20px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;">
+              <div class="wave wave-lg" style="height:80px">
+                <span style="height:30px;background:var(--text-disabled)"></span>
+                <span style="height:55px;background:var(--accent)"></span>
+                <span style="height:75px;background:var(--secondary)"></span>
+                <span style="height:45px;background:var(--accent)"></span>
+                <span style="height:65px;background:var(--secondary)"></span>
+                <span style="height:35px;background:var(--accent)"></span>
+                <span style="height:50px;background:var(--text-disabled)"></span>
+              </div>
+            </div>
+          </div>
+          <!-- Song info -->
+          <div style="text-align:center">
+            <div style="font-size:20px;font-weight:600">Mr. Brightside</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">The Killers · 2:14</div>
+          </div>
+        </div>
+        <!-- Controls -->
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:20px 24px 28px">
+          <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">mute</div>
+          <div class="btn-voice" style="width:64px;height:64px"><div style="width:22px;height:22px;border-radius:6px 6px 11px 11px;background:#fff"></div></div>
+          <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">end</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Central focus · glanceable · iconic</div>
+  </div>
+
+  <!-- D2: The Stage -->
+  <div class="phone">
+    <div class="phone-label">D2 · The Stage</div>
+    <div class="phone-desc">Split duet view — two singers face each other. Theatrical.</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <!-- Partners facing each other -->
+        <div style="display:flex;justify-content:space-between;padding:16px 24px 20px;align-items:flex-start">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div class="avatar avatar-accent" style="width:56px;height:56px"></div>
+            <div style="font-size:14px;font-weight:600">Liam</div>
+            <div class="wave wave-sm" style="height:24px">
+              <span style="height:10px;background:var(--accent)"></span>
+              <span style="height:20px;background:var(--accent)"></span>
+              <span style="height:14px;background:var(--accent)"></span>
+              <span style="height:18px;background:var(--accent)"></span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px">
+            <div style="font-size:11px;color:var(--text-disabled)">♪ duet ♪</div>
+            <div style="width:3px;height:40px;background:var(--border);border-radius:2px"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div class="avatar avatar-secondary" style="width:56px;height:56px"></div>
+            <div style="font-size:14px;font-weight:600">Sofia</div>
+            <div class="wave wave-sm" style="height:24px">
+              <span style="height:16px;background:var(--secondary)"></span>
+              <span style="height:12px;background:var(--secondary)"></span>
+              <span style="height:22px;background:var(--secondary)"></span>
+              <span style="height:8px;background:var(--secondary)"></span>
+            </div>
+          </div>
+        </div>
+        <!-- Central waveform -->
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 24px">
+          <div style="width:100%;height:100px;border-radius:16px;background:var(--surface);display:flex;align-items:center;justify-content:center;gap:4px">
+            <span style="width:5px;height:30px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:5px;height:55px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:5px;height:80px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:5px;height:45px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:5px;height:70px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:5px;height:35px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:5px;height:60px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:5px;height:50px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:5px;height:75px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:5px;height:40px;background:var(--text-disabled);border-radius:3px"></span>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:600">Mr. Brightside</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">The Killers</div>
+          </div>
+          <!-- Progress bar -->
+          <div style="width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="width:45%;height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));border-radius:2px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;width:100%;font-size:11px;color:var(--text-disabled)"><span>1:32</span><span>3:28</span></div>
+        </div>
+        <!-- Controls -->
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:16px 24px 24px">
+          <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">mute</div>
+          <div class="btn-voice" style="width:64px;height:64px"><div style="width:22px;height:22px;border-radius:6px 6px 11px 11px;background:#fff"></div></div>
+          <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">end</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Duet-focused · two voices visualized separately</div>
+  </div>
+
+  <!-- D3: The Dashboard -->
+  <div class="phone">
+    <div class="phone-label">D3 · The Dashboard</div>
+    <div class="phone-desc">Car instrument cluster inspired. Warm glowing elements.</div>
+    <div class="phone-frame">
+      <div class="phone-screen" style="background:var(--black)">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;padding:16px">
+          <!-- Top info -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0 8px 16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--success)"></div>
+              <span style="font-size:12px;color:var(--success)">connected</span>
+            </div>
+            <span style="font-size:12px;color:var(--text-disabled)">drift: 12ms</span>
+          </div>
+          <!-- Central gauge -->
+          <div style="flex:1;display:flex;align-items:center;justify-content:center">
+            <div style="position:relative;width:220px;height:220px">
+              <!-- Outer ring -->
+              <div style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--border)"></div>
+              <!-- Accent arc (simulated) -->
+              <div style="position:absolute;inset:4px;border-radius:50%;border:3px solid transparent;border-top-color:var(--accent);border-right-color:var(--accent);transform:rotate(45deg)"></div>
+              <!-- Secondary arc -->
+              <div style="position:absolute;inset:8px;border-radius:50%;border:3px solid transparent;border-bottom-color:var(--secondary);border-left-color:var(--secondary);transform:rotate(45deg)"></div>
+              <!-- Center content -->
+              <div style="position:absolute;inset:30px;border-radius:50%;background:var(--base);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+                <div style="font-size:28px;font-weight:700;letter-spacing:-1px">2:14</div>
+                <div style="font-size:12px;color:var(--text-secondary)">remaining</div>
+                <div class="wave wave-sm" style="height:20px;margin-top:4px">
+                  <span style="height:8px;background:var(--accent)"></span>
+                  <span style="height:16px;background:var(--secondary)"></span>
+                  <span style="height:12px;background:var(--accent)"></span>
+                  <span style="height:18px;background:var(--secondary)"></span>
+                  <span style="height:10px;background:var(--accent)"></span>
+                </div>
+              </div>
+              <!-- Partner indicators on ring -->
+              <div class="avatar avatar-accent" style="width:36px;height:36px;position:absolute;top:-4px;left:50%;transform:translateX(-50%)"></div>
+              <div class="avatar avatar-secondary" style="width:36px;height:36px;position:absolute;bottom:-4px;left:50%;transform:translateX(-50%)"></div>
+            </div>
+          </div>
+          <!-- Song info -->
+          <div style="text-align:center;padding:16px 0">
+            <div style="font-size:18px;font-weight:600">Mr. Brightside</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">The Killers</div>
+          </div>
+          <!-- Controls -->
+          <div style="display:flex;justify-content:space-around;align-items:center;padding:8px 16px 16px">
+            <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">mute</div>
+            <div class="btn-voice" style="width:64px;height:64px"><div style="width:22px;height:22px;border-radius:6px 6px 11px 11px;background:#fff"></div></div>
+            <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">end</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Car-native · gauge metaphor · night-driving friendly</div>
+  </div>
+</div>
+
+<div class="directions">
+
+  <!-- D4: The Conversation -->
+  <div class="phone">
+    <div class="phone-label">D4 · The Conversation</div>
+    <div class="phone-desc">Riff's messages as the visual thread. Agent IS the UI.</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 20px 12px;border-bottom:1px solid var(--border)">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--secondary));display:flex;align-items:center;justify-content:center;gap:2px">
+            <span style="width:2px;height:8px;background:#fff;border-radius:1px"></span>
+            <span style="width:2px;height:14px;background:#fff;border-radius:1px"></span>
+            <span style="width:2px;height:10px;background:#fff;border-radius:1px"></span>
+          </div>
+          <div>
+            <div style="font-size:16px;font-weight:600">Riff</div>
+            <div style="font-size:11px;color:var(--success)">● listening</div>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:flex;gap:4px">
+            <div class="avatar avatar-accent" style="width:28px;height:28px"></div>
+            <div class="avatar avatar-secondary" style="width:28px;height:28px"></div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px;padding:16px 16px;overflow:hidden">
+          <!-- Riff message -->
+          <div style="align-self:flex-start;max-width:82%;background:var(--surface);border:1px solid var(--border);border-radius:4px 16px 16px 16px;padding:12px 14px">
+            <div style="font-size:14px;line-height:1.4;color:var(--text-primary)">Both here! Playing <b style="color:var(--accent)">Mr. Brightside</b> in 3... 2... 1...</div>
+          </div>
+          <!-- Now playing card -->
+          <div style="background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:14px;margin:0 8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:16px;font-weight:600">Mr. Brightside</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">The Killers · playing</div>
+              </div>
+              <div class="wave wave-sm" style="height:24px">
+                <span style="height:10px;background:var(--accent)"></span>
+                <span style="height:20px;background:var(--secondary)"></span>
+                <span style="height:14px;background:var(--accent)"></span>
+                <span style="height:18px;background:var(--secondary)"></span>
+              </div>
+            </div>
+            <div style="height:3px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden">
+              <div style="width:45%;height:100%;background:var(--accent);border-radius:2px"></div>
+            </div>
+          </div>
+          <!-- Voice activity -->
+          <div style="align-self:flex-end;display:flex;align-items:center;gap:8px;background:var(--accent);border-radius:16px 16px 4px 16px;padding:10px 14px">
+            <div class="wave wave-sm" style="height:18px">
+              <span style="height:8px;background:#fff"></span>
+              <span style="height:14px;background:#fff"></span>
+              <span style="height:6px;background:#fff"></span>
+              <span style="height:12px;background:#fff"></span>
+            </div>
+            <span style="font-size:12px;color:#fff">Liam singing</span>
+          </div>
+          <div style="align-self:flex-start;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--secondary);border-radius:4px 16px 16px 16px;padding:10px 14px">
+            <div class="wave wave-sm" style="height:18px">
+              <span style="height:12px;background:var(--secondary)"></span>
+              <span style="height:8px;background:var(--secondary)"></span>
+              <span style="height:16px;background:var(--secondary)"></span>
+              <span style="height:10px;background:var(--secondary)"></span>
+            </div>
+            <span style="font-size:12px;color:var(--secondary)">Sofia singing</span>
+          </div>
+        </div>
+        <!-- Voice input -->
+        <div style="display:flex;gap:12px;align-items:center;padding:12px 16px 20px">
+          <div style="flex:1;height:44px;border:1px solid var(--border);border-radius:22px;display:flex;align-items:center;padding:0 16px;font-size:13px;color:var(--text-disabled)">Say something to Riff...</div>
+          <div class="btn-voice" style="width:48px;height:48px"><div style="width:16px;height:16px;border-radius:4px 4px 8px 8px;background:#fff"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Chat metaphor · Riff narrates · conversational</div>
+  </div>
+
+  <!-- D5: The Wave -->
+  <div class="phone">
+    <div class="phone-label">D5 · The Wave</div>
+    <div class="phone-desc">Sound dominates. Full-screen ambient waveform visualization.</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <!-- Minimal top bar -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 20px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="avatar avatar-accent" style="width:28px;height:28px"></div>
+            <div class="avatar avatar-secondary" style="width:28px;height:28px;margin-left:-12px"></div>
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary)">Mr. Brightside</div>
+          <div style="font-size:12px;color:var(--text-disabled)">2:14</div>
+        </div>
+        <!-- Giant waveform -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 16px;position:relative">
+          <!-- Background glow -->
+          <div style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,var(--accent-muted) 0%,transparent 70%);"></div>
+          <!-- Waveform bars -->
+          <div style="display:flex;align-items:center;gap:4px;height:200px;z-index:1">
+            <span style="width:6px;height:40px;background:var(--text-disabled);border-radius:3px;opacity:.5"></span>
+            <span style="width:6px;height:80px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:120px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:6px;height:60px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:160px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:90px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:6px;height:140px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:6px;height:70px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:110px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:6px;height:50px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:130px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:75px;background:var(--secondary);border-radius:3px"></span>
+            <span style="width:6px;height:95px;background:var(--accent);border-radius:3px"></span>
+            <span style="width:6px;height:45px;background:var(--text-disabled);border-radius:3px;opacity:.5"></span>
+          </div>
+        </div>
+        <!-- Riff status -->
+        <div style="text-align:center;padding:0 0 8px">
+          <div style="font-size:12px;color:var(--text-disabled)">Riff is here if you need anything</div>
+        </div>
+        <!-- Minimal controls -->
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:12px 24px 24px">
+          <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">mute</div>
+          <div class="btn-voice" style="width:72px;height:72px"><div style="width:26px;height:26px;border-radius:8px 8px 13px 13px;background:#fff"></div></div>
+          <div style="width:48px;height:48px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-secondary)">end</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Sound IS the visual · ambient · immersive</div>
+  </div>
+
+  <!-- D6: The Minimal -->
+  <div class="phone">
+    <div class="phone-label">D6 · The Minimal</div>
+    <div class="phone-desc">Almost nothing. Maximum negative space. Closest to black screen.</div>
+    <div class="phone-frame">
+      <div class="phone-screen" style="background:#0A0A14">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;padding:20px">
+          <!-- Just the two dots -->
+          <div style="display:flex;align-items:center;gap:24px">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)"></div>
+            <div style="width:40px;height:1px;background:var(--border)"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--secondary);box-shadow:0 0 12px var(--secondary)"></div>
+          </div>
+          <!-- Song title only -->
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:500;color:var(--text-primary)">Mr. Brightside</div>
+          </div>
+          <!-- Tiny waveform -->
+          <div class="wave wave-sm" style="height:16px;opacity:.6">
+            <span style="height:6px;background:var(--accent)"></span>
+            <span style="height:12px;background:var(--secondary)"></span>
+            <span style="height:8px;background:var(--accent)"></span>
+            <span style="height:14px;background:var(--secondary)"></span>
+            <span style="height:10px;background:var(--accent)"></span>
+          </div>
+        </div>
+        <!-- One button -->
+        <div style="display:flex;justify-content:center;padding:24px 0 32px">
+          <div class="btn-voice" style="width:56px;height:56px;opacity:.7"><div style="width:18px;height:18px;border-radius:5px 5px 9px 9px;background:#fff"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Near-nothing · trust the voice · breathing room</div>
+  </div>
+</div>
+
+<!-- ===== HOME SCREEN DIRECTIONS ===== -->
+<div class="section">
+  <div class="section-title">Home / Hub Screen</div>
+  <div class="section-sub">The landing screen when opening the app while stationary. Starting point for sessions.</div>
+</div>
+
+<div class="directions">
+
+  <!-- Home A: Voice-first hub -->
+  <div class="phone">
+    <div class="phone-label">Home A · Voice Hub</div>
+    <div class="phone-desc">Giant Riff button dominates. "Tap and say what you want."</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 20px 0">
+          <div style="font-size:22px;font-weight:700">Caraoke</div>
+          <div class="avatar avatar-accent" style="width:32px;height:32px"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px">
+          <div style="font-size:14px;color:var(--text-secondary)">Tap and talk to Riff</div>
+          <div style="position:relative">
+            <div style="width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--secondary));display:flex;align-items:center;justify-content:center">
+              <div style="width:140px;height:140px;border-radius:50%;background:var(--base);display:flex;align-items:center;justify-content:center">
+                <div class="wave wave-lg" style="height:60px">
+                  <span style="height:24px;background:var(--accent)"></span>
+                  <span style="height:44px;background:var(--secondary)"></span>
+                  <span style="height:56px;background:var(--accent)"></span>
+                  <span style="height:32px;background:var(--secondary)"></span>
+                  <span style="height:48px;background:var(--accent)"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-disabled);text-align:center;max-width:200px">Try: "Sing Bohemian Rhapsody with Sofia"</div>
+        </div>
+        <!-- Recent partners -->
+        <div style="padding:0 20px 8px">
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">Recent duets</div>
+          <div style="display:flex;gap:12px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div class="avatar avatar-secondary" style="width:48px;height:48px"></div>
+              <div style="font-size:11px;color:var(--text-secondary)">Sofia</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div class="avatar" style="width:48px;height:48px;border:1px dashed var(--border);background:var(--surface)"></div>
+              <div style="font-size:11px;color:var(--text-disabled)">+ invite</div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-icon" style="background:var(--accent)"></div>
+          <div class="tab-icon" style="border:1px solid var(--border)"></div>
+          <div class="tab-icon" style="border:1px solid var(--border);border-radius:50%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Voice-first · one giant target · recent partners</div>
+  </div>
+
+  <!-- Home B: Partner-focused -->
+  <div class="phone">
+    <div class="phone-label">Home B · Partner List</div>
+    <div class="phone-desc">Partners front and center. "Who do you want to sing with?"</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 20px 12px">
+          <div style="font-size:22px;font-weight:700">Caraoke</div>
+          <div class="btn-voice" style="width:40px;height:40px"><div style="width:14px;height:14px;border-radius:4px 4px 7px 7px;background:#fff"></div></div>
+        </div>
+        <div style="padding:0 20px 12px">
+          <div style="font-size:18px;font-weight:600;margin-bottom:4px">Your duet partners</div>
+          <div style="font-size:13px;color:var(--text-secondary)">Tap to start singing together</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:0 16px;overflow:hidden">
+          <!-- Partner card: online -->
+          <div class="card" style="display:flex;gap:14px;align-items:center;border-color:var(--accent)">
+            <div class="avatar avatar-secondary" style="width:52px;height:52px;position:relative">
+              <div style="position:absolute;bottom:0;right:0;width:14px;height:14px;border-radius:50%;background:var(--success);border:2px solid var(--surface)"></div>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600">Sofia</div>
+              <div style="font-size:12px;color:var(--success)">● online now</div>
+            </div>
+            <div style="height:36px;width:64px;border-radius:18px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:600">Sing</div>
+          </div>
+          <!-- Partner card: offline -->
+          <div class="card" style="display:flex;gap:14px;align-items:center">
+            <div class="avatar" style="width:52px;height:52px;border:1px solid var(--border);background:var(--surface)"></div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600">Marco</div>
+              <div style="font-size:12px;color:var(--text-disabled)">last duet: yesterday</div>
+            </div>
+            <div style="height:36px;width:64px;border-radius:18px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-secondary)">Invite</div>
+          </div>
+          <!-- Add new -->
+          <div class="card" style="display:flex;gap:14px;align-items:center;border-style:dashed;border-color:var(--text-disabled)">
+            <div style="width:52px;height:52px;border-radius:50%;border:1px dashed var(--text-disabled);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-disabled)">+</div>
+            <div style="font-size:15px;color:var(--text-secondary)">Add a duet partner</div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-icon" style="background:var(--accent)"></div>
+          <div class="tab-icon" style="border:1px solid var(--border)"></div>
+          <div class="tab-icon" style="border:1px solid var(--border);border-radius:50%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Social · partner presence · one-tap to sing</div>
+  </div>
+
+  <!-- Home C: Driving-ready -->
+  <div class="phone">
+    <div class="phone-label">Home C · Drive-Ready</div>
+    <div class="phone-desc">One big target. Designed to be the last tap before driving.</div>
+    <div class="phone-frame">
+      <div class="phone-screen" style="background:#0A0A14">
+        <div class="status-bar"><span>9:41</span><span style="letter-spacing:2px">···</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:20px">
+          <!-- Logo -->
+          <div style="width:60px;height:60px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;gap:2px">
+            <span style="width:3px;height:12px;background:var(--accent);border-radius:2px"></span>
+            <span style="width:3px;height:22px;background:var(--secondary);border-radius:2px"></span>
+            <span style="width:3px;height:16px;background:var(--accent);border-radius:2px"></span>
+          </div>
+          <div style="font-size:14px;color:var(--text-secondary);text-align:center">Ready to drive and sing?</div>
+          <!-- Giant button -->
+          <div style="width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#FF8E6B);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="width:40px;height:40px;border-radius:12px 12px 20px 20px;background:#fff"></div>
+            <div style="font-size:16px;color:#fff;font-weight:600">Start</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-disabled);text-align:center;max-width:220px">Screen will go dark when you start driving. Riff takes over.</div>
+        </div>
+        <!-- Quick partner row -->
+        <div style="display:flex;justify-content:center;gap:8px;padding:0 0 16px">
+          <div class="avatar avatar-secondary" style="width:40px;height:40px"></div>
+          <div class="avatar" style="width:40px;height:40px;border:1px dashed var(--border);background:var(--surface)"></div>
+        </div>
+        <div class="tab-bar" style="border-color:#1a1a2e">
+          <div class="tab-icon" style="background:var(--accent)"></div>
+          <div class="tab-icon" style="border:1px solid var(--border)"></div>
+          <div class="tab-icon" style="border:1px solid var(--border);border-radius:50%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Pre-drive launch pad · one tap → voice mode</div>
+  </div>
+</div>
+
+</body>
+</html>

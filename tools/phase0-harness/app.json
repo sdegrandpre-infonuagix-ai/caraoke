@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Phase0 Harness",
+    "slug": "phase0-harness",
+    "scheme": "phase0harness",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "ios": {
+      "bundleIdentifier": "ai.caraoke.phase0",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Phase 0 harness uses the mic for the live duet voice channel."
+      }
+    },
+    "android": {
+      "package": "ai.caraoke.phase0",
+      "permissions": ["RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS"]
+    },
+    "plugins": ["expo-router", "@config-plugins/react-native-webrtc"]
+  }
+}
