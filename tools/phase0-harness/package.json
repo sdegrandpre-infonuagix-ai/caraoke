@@ -19,7 +19,7 @@
     "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-webrtc": "^124.0.0",
-    "@config-plugins/react-native-webrtc": "^11.0.0"
+    "@config-plugins/react-native-webrtc": "^15.0.0"
   },
   "devDependencies": {
     "@types/react": "19.2.17",
