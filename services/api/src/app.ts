@@ -11,6 +11,9 @@ import { CognitoUserDirectory, NoopUserDirectory } from './modules/identity/user
 import { SpotifyService } from './modules/identity/spotify.service.js';
 import { PgSpotifyLinkRepository } from './modules/identity/spotify.repository.js';
 import { getSpotifyProvider } from './integrations/spotify/index.js';
+import { PairingService } from './modules/pairing/pairing.service.js';
+import { PgSessionRepository } from './modules/pairing/pairing.repository.js';
+import { createPairingRouter } from './modules/pairing/pairing.router.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -19,6 +22,8 @@ export interface AppDeps {
   identityService?: IdentityService;
   /** Override the Spotify service (tests). Defaults to provider+Postgres-backed. */
   spotifyService?: SpotifyService;
+  /** Override the pairing service (tests). Defaults to a Postgres-backed service. */
+  pairingService?: PairingService;
 }
 
 /**
@@ -42,6 +47,12 @@ export function createApp(deps: AppDeps = {}): Express {
   const spotifyService =
     deps.spotifyService ??
     new SpotifyService(getSpotifyProvider(env), new PgSpotifyLinkRepository());
+  const pairingService =
+    deps.pairingService ??
+    new PairingService(new PgSessionRepository(), {
+      inviteBaseUrl: env.INVITE_BASE_URL,
+      ttlMinutes: env.SESSION_INVITE_TTL_MINUTES,
+    });
 
   // Liveness/readiness probe for ECS Express health checks.
   app.get('/health', (_req, res) => {
@@ -60,6 +71,9 @@ export function createApp(deps: AppDeps = {}): Express {
 
   // Identity routes (FR1).
   app.use('/', createIdentityRouter({ service: identityService, verifier, spotifyService }));
+
+  // Pairing routes (FR7).
+  app.use('/', createPairingRouter({ verifier, identityService, pairingService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

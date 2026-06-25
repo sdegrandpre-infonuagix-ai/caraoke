@@ -1,0 +1,53 @@
+import type { Pool } from 'pg';
+import { rowToCamel } from '../../db/mapping.js';
+import { getPool } from '../../db/pool.js';
+import type { Session } from './pairing.types.js';
+
+export interface CreateSessionInput {
+  hostUserId: string;
+  status: string;
+  pairingCode: string;
+  inviteToken: string;
+  expiresAt: Date;
+}
+
+export interface SessionRepository {
+  create(input: CreateSessionInput): Promise<Session>;
+  findByPairingCode(code: string): Promise<Session | null>;
+  findByInviteToken(token: string): Promise<Session | null>;
+}
+
+/** Postgres unique-violation error code (used to detect code/token collisions). */
+export const PG_UNIQUE_VIOLATION = '23505';
+
+export class PgSessionRepository implements SessionRepository {
+  constructor(private readonly pool?: Pool) {}
+
+  private db(): Pool {
+    return this.pool ?? getPool();
+  }
+
+  async create(input: CreateSessionInput): Promise<Session> {
+    const { rows } = await this.db().query(
+      `INSERT INTO sessions (host_user_id, status, pairing_code, invite_token, expires_at)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [input.hostUserId, input.status, input.pairingCode, input.inviteToken, input.expiresAt],
+    );
+    return rowToCamel<Session>(rows[0]!);
+  }
+
+  async findByPairingCode(code: string): Promise<Session | null> {
+    const { rows } = await this.db().query('SELECT * FROM sessions WHERE pairing_code = $1', [
+      code,
+    ]);
+    return rows[0] ? rowToCamel<Session>(rows[0]) : null;
+  }
+
+  async findByInviteToken(token: string): Promise<Session | null> {
+    const { rows } = await this.db().query('SELECT * FROM sessions WHERE invite_token = $1', [
+      token,
+    ]);
+    return rows[0] ? rowToCamel<Session>(rows[0]) : null;
+  }
+}

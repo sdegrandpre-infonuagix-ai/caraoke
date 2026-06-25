@@ -16,6 +16,9 @@ const envSchema = z.object({
   // Cognito (Story 2.2). Required to verify JWTs in live mode.
   COGNITO_USER_POOL_ID: z.string().optional(),
   COGNITO_CLIENT_ID: z.string().optional(),
+  // Pairing invites (Story 3.1).
+  INVITE_BASE_URL: z.string().url().default('https://caraoke.app'),
+  SESSION_INVITE_TTL_MINUTES: z.coerce.number().int().positive().default(15),
 });
 
 export type Env = z.infer<typeof envSchema>;

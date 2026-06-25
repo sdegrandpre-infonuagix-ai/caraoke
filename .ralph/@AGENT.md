@@ -121,6 +121,17 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   language.tsx` is the 25-language picker; the home route applies the saved pref on load.
   Add new screens' strings to the locale JSON — do not hardcode.
 
+## Pairing (Story 3.1)
+- New `pairing` module (`services/api/src/modules/pairing`): `POST /sessions` creates a
+  `sessions` row (migration 0004; status from the shared SessionStateMachine, starts
+  `pairing`; host_user_id FK ON DELETE CASCADE) and returns the invite — a 6-char
+  unambiguous pairing code + an invite URL encoding a single-use base64url token — expiring
+  after `SESSION_INVITE_TTL_MINUTES` (default 15). Raw invite token is never on the public
+  session object. `PairingService` retries on the rare code/token unique collision.
+  `INVITE_BASE_URL` (default https://caraoke.app) builds the `/join?token=` URL.
+- Mobile: `src/api/pairing.ts` + `app/session/create.tsx` (create invite, show code + link,
+  native Share), linked from home as "Start a duet". Story 3.2 will add joining.
+
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),
   intentionally OUTSIDE the pnpm workspace. Install separately (`cd tools/phase0-harness &&

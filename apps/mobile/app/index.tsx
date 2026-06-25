@@ -45,7 +45,13 @@ export default function Index() {
         <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? t('home.welcome')}</Text>
         <Text color="secondary">{t('home.signedIn')}</Text>
         <Button
+          label={t('home.startDuet')}
+          accessibilityLabel={t('home.startDuet')}
+          onPress={() => router.push('/session/create')}
+        />
+        <Button
           label={t('home.connectSpotify')}
+          variant="secondary"
           accessibilityLabel={t('home.connectSpotify')}
           onPress={() => router.push('/spotify')}
         />

@@ -16,9 +16,21 @@
   "home": {
     "signedIn": "You're signed in.",
     "welcome": "Welcome",
+    "startDuet": "Start a duet",
     "editProfile": "Edit profile",
     "connectSpotify": "Connect Spotify",
     "language": "Language"
+  },
+  "session": {
+    "title": "Invite a partner",
+    "intro": "Share this link or code with the person you want to sing with.",
+    "start": "Create invite",
+    "creating": "Creating…",
+    "pairingCode": "Pairing code",
+    "inviteLink": "Invite link",
+    "share": "Share invite",
+    "shareMessage": "Sing with me on Caraoke! Open {{url}} or enter code {{code}}.",
+    "error": "Couldn't create the session. Please try again."
   },
   "profile": {
     "title": "Profile",

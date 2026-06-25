@@ -19,15 +19,10 @@
 - [x] Story 2.3: Profile management & account deletion
 - [x] Story 2.4: Connect & verify Spotify Premium
 - [x] Story 2.5: Language preference & i18n foundation
-  > As a user
-  > I want to set my language and have the app and agent speak it
-  > So that Caraoke works in my own tongue regardless of my partner's.
-  > AC: Given onboarding or profile settings, When I select one of 25 supported languages (defaulting to device locale), Then the full UI renders in that language with externalized strings (FR3, FR5, NFR19), And the Voice Agent's speech language is set to my preference, independent of my partner (FR4), And RTL languages mirror layout via logical props (UX-DR13).
-  > Spec: specs/planning-artifacts/epics.md#story-2-5
 ### Pairing & Partner Connection
 > Goal: Two users connect and reach the ready state, hands-free-ready.
 
-- [ ] Story 3.1: Create session & generate invite
+- [x] Story 3.1: Create session & generate invite
   > As a user
   > I want to create a duet session and get an invite link or code
   > So that I can ask someone to sing with me.
