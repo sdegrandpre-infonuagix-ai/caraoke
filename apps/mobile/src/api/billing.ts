@@ -64,3 +64,21 @@ export async function changePlan(
   const json = (await res.json()) as { data: { status: string; currentPeriodEnd: string } };
   return json.data;
 }
+
+export interface InvoiceSummary {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  date: string;
+  receiptUrl: string | null;
+  description: string | null;
+}
+
+export async function getBillingHistory(idToken: string): Promise<InvoiceSummary[]> {
+  const res = await fetch(`${API_BASE}/billing/history`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  const json = (await res.json()) as { data: { invoices: InvoiceSummary[] } };
+  return json.data.invoices;
+}

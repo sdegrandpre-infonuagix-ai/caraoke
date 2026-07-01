@@ -114,7 +114,7 @@
   > So that I control my spending.
   > AC: Given an active subscription, When I change or cancel my plan, Then the change is applied via Stripe and reflected in my account (FR39), And cancellation stops future billing at period end.
   > Spec: specs/planning-artifacts/epics.md#story-7-2
-- [ ] Story 7.3: Billing history & receipts
+- [x] Story 7.3: Billing history & receipts
   > As a subscriber
   > I want to see my billing history and receipts
   > So that I have records of payment.

@@ -1,6 +1,6 @@
 import { AppError } from '@caraoke/shared';
 import type { BillingRepository } from './billing.repository.js';
-import type { StripeBillingProvider } from '../../integrations/stripe/billing.provider.js';
+import type { StripeBillingProvider, InvoiceSummary } from '../../integrations/stripe/billing.provider.js';
 
 export class BillingService {
   constructor(
@@ -58,6 +58,13 @@ export class BillingService {
     const result = await this.stripe.changeSubscriptionPlan(record.subscriptionId, newPriceId);
     await this.repo.updateSubscriptionStatus(userId, result.status, result.currentPeriodEnd);
     return result;
+  }
+
+  /** Retrieve invoice history for the billing-history screen (FR40). */
+  async getBillingHistory(userId: string): Promise<InvoiceSummary[]> {
+    const record = await this.repo.findByUserId(userId);
+    if (!record) return [];
+    return this.stripe.listInvoices(record.stripeCustomerId);
   }
 
   async getStatus(userId: string): Promise<{

@@ -86,6 +86,19 @@ export function createBillingRouter(deps: {
     }
   });
 
+  // GET /billing/history — itemized invoice list with receipt URLs (FR40)
+  router.get('/billing/history', auth, async (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    try {
+      const user = await deps.identityService.findOrCreate(claims);
+      const invoices = await deps.service.getBillingHistory(user.id);
+      res.json(ok({ invoices }));
+    } catch (e) {
+      next(e);
+    }
+  });
+
   router.get('/billing/status', auth, async (req, res, next) => {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));

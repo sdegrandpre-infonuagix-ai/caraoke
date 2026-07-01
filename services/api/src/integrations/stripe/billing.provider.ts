@@ -17,6 +17,19 @@ export interface StripeBillingProvider {
     subscriptionId: string,
     newPriceId: string,
   ): Promise<{ status: string; currentPeriodEnd: Date }>;
+  /** List past invoices for the billing-history screen (FR40). */
+  listInvoices(customerId: string, limit?: number): Promise<InvoiceSummary[]>;
+}
+
+export interface InvoiceSummary {
+  id: string;
+  /** Amount in the currency's smallest unit (e.g. cents). */
+  amount: number;
+  currency: string;
+  status: string;
+  date: string;
+  receiptUrl: string | null;
+  description: string | null;
 }
 
 export class LiveStripeBillingProvider implements StripeBillingProvider {
@@ -92,6 +105,20 @@ export class LiveStripeBillingProvider implements StripeBillingProvider {
     });
     return { status: updated.status, currentPeriodEnd: new Date(updated.current_period_end * 1000) };
   }
+
+  async listInvoices(customerId: string, limit = 24): Promise<InvoiceSummary[]> {
+    const stripe = await this.stripe;
+    const { data } = await stripe.invoices.list({ customer: customerId, limit });
+    return data.map((inv) => ({
+      id: inv.id ?? '',
+      amount: inv.amount_paid,
+      currency: inv.currency,
+      status: inv.status ?? 'unknown',
+      date: new Date((inv.created) * 1000).toISOString(),
+      receiptUrl: inv.hosted_invoice_url ?? null,
+      description: inv.description ?? (inv.lines.data[0]?.description ?? null),
+    }));
+  }
 }
 
 export class MockStripeBillingProvider implements StripeBillingProvider {
@@ -134,6 +161,20 @@ export class MockStripeBillingProvider implements StripeBillingProvider {
     const end = new Date();
     end.setMonth(end.getMonth() + 1);
     return { status: 'active', currentPeriodEnd: end };
+  }
+
+  async listInvoices(_customerId: string, _limit?: number): Promise<InvoiceSummary[]> {
+    return [
+      {
+        id: 'in_mock_001',
+        amount: 999,
+        currency: 'cad',
+        status: 'paid',
+        date: '2026-06-01T00:00:00.000Z',
+        receiptUrl: null,
+        description: 'Caraoke Monthly',
+      },
+    ];
   }
 }
 
