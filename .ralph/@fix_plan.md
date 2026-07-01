@@ -75,7 +75,7 @@
   > So that I can protect myself during or after a session.
   > AC: Given an in-progress or past session, When I mute, block, or report a user, Then mute silences their voice immediately, block prevents future pairing, and report files a record (FR33), And these actions are reachable by a single voice command in-session.
   > Spec: specs/planning-artifacts/epics.md#story-6-1
-- [ ] Story 6.2: Rapid voice-disconnect
+- [x] Story 6.2: Rapid voice-disconnect
   > As a user
   > I want to leave an uncomfortable session instantly by voice
   > So that I'm never trapped.

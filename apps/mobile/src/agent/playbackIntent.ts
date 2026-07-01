@@ -3,7 +3,7 @@
 // these intents are unambiguous enough for device-side classification, which keeps the
 // eyes-free experience immediate (FR17 forbids waiting on a backend round-trip for stop/pause).
 
-export type PlaybackCommand = 'pause' | 'resume' | 'stop';
+export type PlaybackCommand = 'pause' | 'resume' | 'stop' | 'leave';
 
 /**
  * Phrases recognised for each command. Matching is case-insensitive and allows surrounding words
@@ -36,6 +36,15 @@ const STOP_PATTERNS = [
   /\bfinish\b/i,
 ];
 
+// Story 6.2 (FR34): safety-critical immediate disconnect — matched BEFORE stop so they don't
+// collide. "leave" exits the session for the local user instantly without waiting for the backend.
+const LEAVE_PATTERNS = [
+  /\bget\s+me\s+out\b/i,
+  /\bleave\b/i,
+  /\bexit\s+(?:now|immediately|the\s+session)\b/i,
+  /\bi\s+(?:want\s+to\s+)?go\b/i,
+];
+
 /**
  * Classify a raw STT transcript as a playback command.
  * Returns `null` if the transcript doesn't match any known command — the caller should then
@@ -47,6 +56,8 @@ export function classifyPlaybackIntent(transcript: string): PlaybackCommand | nu
   // Resume has highest priority — avoid mis-classifying "stop and resume" as stop.
   for (const p of RESUME_PATTERNS) if (p.test(transcript)) return 'resume';
   for (const p of PAUSE_PATTERNS)  if (p.test(transcript)) return 'pause';
+  // leave checked before stop: "leave now" is more urgent than generic "end"
+  for (const p of LEAVE_PATTERNS)  if (p.test(transcript)) return 'leave';
   for (const p of STOP_PATTERNS)   if (p.test(transcript)) return 'stop';
   return null;
 }
@@ -56,4 +67,5 @@ export const COMMAND_CONFIRMATIONS: Record<PlaybackCommand, string> = {
   pause: 'Pausing.',
   resume: 'Resuming.',
   stop: 'Stopping the session.',
+  leave: 'Leaving.',
 };

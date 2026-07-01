@@ -58,6 +58,12 @@ export function usePlaybackControls(sessionId: string): PlaybackControlState & P
           await stopSession(idToken, sessionId);
           transition('ended');
           break;
+        case 'leave':
+          // FR34: immediate local disconnect — transition first, then best-effort backend call.
+          // Works even without network, so the user is NEVER trapped.
+          transition('ended');
+          stopSession(idToken, sessionId).catch(() => {});
+          break;
       }
       setState({ status: 'applied', lastCommand: command });
     } catch {

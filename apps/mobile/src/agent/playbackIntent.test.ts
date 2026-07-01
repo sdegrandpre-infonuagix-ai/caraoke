@@ -35,11 +35,19 @@ test('null: unrelated transcript', () => assert.equal(classifyPlaybackIntent('si
 test('null: empty string', () => assert.equal(classifyPlaybackIntent(''), null));
 test('null: background noise placeholder', () => assert.equal(classifyPlaybackIntent('um'), null));
 
+// --- leave (Story 6.2 rapid voice-disconnect, FR34) ---
+test('leave: bare "leave"', () => assert.equal(classifyPlaybackIntent('leave'), 'leave'));
+test('leave: "leave now"', () => assert.equal(classifyPlaybackIntent('leave now'), 'leave'));
+test('leave: "get me out"', () => assert.equal(classifyPlaybackIntent('get me out'), 'leave'));
+test('leave: "exit now"', () => assert.equal(classifyPlaybackIntent('exit now'), 'leave'));
+test('leave: "I want to leave"', () => assert.equal(classifyPlaybackIntent('I want to leave'), 'leave'));
+
 // --- confirmation messages present ---
-test('COMMAND_CONFIRMATIONS has all three commands', () => {
+test('COMMAND_CONFIRMATIONS has all four commands', () => {
   assert.ok(COMMAND_CONFIRMATIONS.pause.length > 0);
   assert.ok(COMMAND_CONFIRMATIONS.resume.length > 0);
   assert.ok(COMMAND_CONFIRMATIONS.stop.length > 0);
+  assert.ok(COMMAND_CONFIRMATIONS.leave.length > 0);
 });
 
 // case-insensitivity
