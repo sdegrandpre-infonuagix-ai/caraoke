@@ -50,6 +50,140 @@ pnpm dev           # api (tsx watch) + mobile (expo start) — persistent tasks
   committed. The ECS API service is a placeholder (`desired_count = 0`, `busybox` image) until
   the real image ships; it `ignore_changes` on task_definition/desired_count so deploys don't
   fight Terraform.
+- `modules/livekit` is the self-hosted SFU (Story 1.5): Fargate behind an NLB (TCP signaling
+  7880/7881 + UDP media 7882), config via `LIVEKIT_CONFIG_BODY`, keys via the KMS-encrypted
+  `<prefix>/livekit` secret, distributed state on the existing Redis over TLS. Media is
+  SRTP/DTLS by construction (NFR6). Set the keys secret out-of-band before the service starts.
+- The API reaches the SFU ONLY via the media integration abstraction
+  (`services/api/src/integrations/media`, live|mock by `CARAOKE_INTEGRATIONS`). `GET
+  /health/livekit` reports SFU reachability (200 healthy / 503 unhealthy, uniform envelope).
+  Set `LIVEKIT_URL` for the live adapter.
+- `services/spotify-mcp` is the Spotify MCP server (Story 1.6): streamable-http transport
+  (`POST /mcp`, stateless) exposing playback-control tools (play/pause/resume/state). Spotify
+  behind an integration abstraction (live Web-API + sandbox mock, `CARAOKE_INTEGRATIONS`).
+  App credentials load from Secrets Manager (`SPOTIFY_SECRET_ID`) — never hard-coded; mock
+  mode needs no AWS. NFR21: control-plane only, never proxies/re-streams audio. Deployed via
+  the generalized `ecs-express` module (`service_name="spotify-mcp"`, secret-read task role).
+
+## Mobile design system (Story 2.1)
+- NativeWind v4 + "Warm Dusk" tokens in `apps/mobile/tailwind.config.js` (colors, 8px
+  spacing, type scale, radius). `src/theme/tokens.ts` is the programmatic mirror for raw
+  values; `src/theme/variants.ts` holds the pure variant→className maps (unit-tested).
+- Foundation primitives in `src/components/` (UX-DR7): `Text`, `Button` (primary/secondary/
+  voice/icon), `Card`, `ScreenContainer`, `Avatar`, `Toggle`, `Icon`. Interactive ones carry
+  `accessibilityRole`/label, ≥48px targets, and logical start/end insets (UX-DR14).
+- `global.css` is imported once in `app/_layout.tsx`; Metro wires NativeWind via
+  `metro.config.js`; Babel preset uses `jsxImportSource: 'nativewind'`. RN tooling configs
+  (babel/metro/tailwind) are CommonJS and exempted in `eslint.config.mjs`.
+- Mobile has no RN test renderer yet; pure logic (`theme/variants.ts`, `auth/jwt.ts`) is
+  tested via node:test + tsx: `node --import tsx --test src/**/*.test.ts` (from apps/mobile).
+
+## Auth / identity (Story 2.2)
+- API identity module (`services/api/src/modules/identity`): `GET /me` verifies the Cognito
+  ID token (aws-jwt-verify) and find-or-creates the `users` record (FR1) — first call after
+  sign-in creates it, returning sign-ins reuse it. Verifier + service are injectable in
+  `createApp({ verifier, identityService })` for tests (no DB/Cognito needed).
+- DB layer: lazy `pg` pool (`db/pool.ts`), snake↔camel mapping in repositories only
+  (`db/mapping.ts`), forward-only migration runner `pnpm --filter @caraoke/api migrate`
+  (needs `DATABASE_URL`); first migration creates `users`.
+- Cognito module adds federated Apple/Google IdPs + hosted-UI OAuth (code+PKCE). Provider
+  credentials are sensitive vars set out-of-band (empty disables that IdP); never committed.
+- Mobile: `useCognitoSignIn` runs the hosted-UI OAuth via expo-auth-session; the ID token is
+  stored in expo-secure-store and tracked in `useAuthStore` (Zustand). `useMe` (TanStack
+  Query) hits `/me`. `app/(onboarding)/sign-in.tsx` is the one-tap Apple/Google screen; the
+  home route redirects there when signed out. Public config via `EXPO_PUBLIC_*` env.
+- Profile/deletion (Story 2.3): `PATCH /me` (Zod-validated, requires ≥1 field) and
+  `DELETE /me` extend the identity module. Deletion removes personal data first (DB cascade,
+  FR6) then the federated identity via the `UserDirectory` port (live `CognitoUserDirectory`
+  = AdminDeleteUser; `NoopUserDirectory` for mock/test). Migration convention: every
+  personal-data table FKs `users(id) ON DELETE CASCADE`. Mobile `app/profile/index.tsx`
+  edits the display name and has a confirmed, irreversible "Delete account" (Alert →
+  DELETE → signOut).
+- Spotify Premium (Story 2.4, FR2): Spotify behind an integration abstraction in the API
+  (`integrations/spotify`, live Web-API + sandbox mock by `CARAOKE_INTEGRATIONS`; mock token
+  containing "free" → non-Premium). `POST /me/spotify` verifies Premium via the provider and
+  upserts `spotify_accounts` (one per user, FK ON DELETE CASCADE); `GET /me/spotify` returns
+  status. Non-Premium is stored as linked-but-not-premium — never silently accepted. Mobile
+  `useSpotifyAuth` runs Spotify OAuth (code+PKCE); `app/spotify/index.tsx` shows
+  Premium-verified or a non-Premium upgrade path (opens spotify.com/premium). Needs
+  `EXPO_PUBLIC_SPOTIFY_CLIENT_ID`.
+
+## i18n / language (Story 2.5)
+- `packages/shared/languages.ts` is the source of truth: 25 `SUPPORTED_LANGUAGES` (incl. RTL
+  ar/he/fa/ur), `languageSchema` (Zod enum), `resolveLanguage(locale)`, `isRtlLanguage`.
+- API: `users.language_pref` (migration 0003, default 'en'); `PATCH /me` accepts
+  `languagePref` (validated by the shared enum); `/me` returns it. This is the per-user
+  agent speech language (FR4) and UI language (FR5), independent of the partner.
+- Mobile: i18next + react-i18next initialized once in `src/i18n` (default = device locale via
+  expo-localization → `resolveLanguage`); strings externalized in `src/i18n/locales/*.json`
+  (en complete; fr/ar partial, English fallback). `useLocale().change(code)` switches i18next,
+  applies RTL via `I18nManager` (UX-DR13), and persists via `PATCH /me`. `app/settings/
+  language.tsx` is the 25-language picker; the home route applies the saved pref on load.
+  Add new screens' strings to the locale JSON — do not hardcode.
+
+## Pairing (Story 3.1)
+- New `pairing` module (`services/api/src/modules/pairing`): `POST /sessions` creates a
+  `sessions` row (migration 0004; status from the shared SessionStateMachine, starts
+  `pairing`; host_user_id FK ON DELETE CASCADE) and returns the invite — a 6-char
+  unambiguous pairing code + an invite URL encoding a single-use base64url token — expiring
+  after `SESSION_INVITE_TTL_MINUTES` (default 15). Raw invite token is never on the public
+  session object. `PairingService` retries on the rare code/token unique collision.
+  `INVITE_BASE_URL` (default https://caraoke.app) builds the `/join?token=` URL.
+- Mobile: `src/api/pairing.ts` + `app/session/create.tsx` (create invite, show code + link,
+  native Share), linked from home as "Start a duet".
+- Join (Story 3.2, FR8): `POST /sessions/join` accepts `{token}` (link) or `{code}` (typed,
+  case-insensitive). `pairing.validate.ts` is a pure join validator (expired → INVITE_EXPIRED,
+  full/host/ended → CONFLICT, idempotent for the existing guest); errors carry a recovery hint
+  in the message. Migration 0005 adds `guest_user_id` (FK ON DELETE SET NULL). Success returns
+  a `SessionConnection` with both partners connected. Mobile `app/join.tsx` auto-joins from a
+  deep-link `?token=` or takes a 6-char code, surfacing the server's clear error as recovery.
+- Saved partners + fast re-pair (Story 3.3, FR9): migration 0006 `saved_partners`
+  (composite PK, both FKs ON DELETE CASCADE, CHECK user≠partner). Routes: `GET/POST
+  /partners`, `DELETE /partners/:id`, `POST /partners/:id/repair`. `SavedPartnerService.repair`
+  verifies the link then calls `PairingService.createSessionWith(host, guest)` — a session
+  with the guest PRE-ASSIGNED, so re-pair is a single request to an already-connected session
+  (well under the ≤10s target; no invite/code step). `pairing.repository.create` now accepts
+  an optional `guestUserId`. Mobile: `app/partners/index.tsx` (one-tap "Sing again"),
+  `app/join.tsx` gains a "Save partner" button after connecting; linked from home.
+- Ready-handshake (Story 3.4, FR10/UX-DR2): migration 0007 adds `host_ready`/`guest_ready`.
+  `ready.logic.ts` `decideReady` is pure — computes flags + next state, transitions
+  pairing→ready ONLY when both ready (validated by the shared `canTransition` — single source
+  of truth), throws for non-participants/ended. `SessionReadyService.markReady` sets the flag,
+  transitions, and on both-ready publishes `partner.ready` via the events abstraction
+  (`src/events`, live AppSync-Events HTTP / mock by `CARAOKE_INTEGRATIONS`). Routes
+  `POST`/`GET /sessions/:id/ready`. Mobile `app/session/ready.tsx` ("I'm ready", polls
+  `useReadyState` until both ready); reached from join-connected and saved-partner re-pair.
+  Env: `APPSYNC_EVENTS_HTTP_URL`, `APPSYNC_EVENTS_API_KEY`.
+- Push notifications (Story 3.5, FR11/NFR19): `integrations/push` abstraction (live Expo Push
+  → APNs/FCM + mock by `CARAOKE_INTEGRATIONS`); migration 0008 `push_tokens`. `notifications`
+  module: `POST /push-tokens` registers a device; `NotificationService.notify` localizes copy
+  to the recipient's `languagePref` (`push.strings.ts`, en/fr/ar + English fallback) and deep-
+  links (`caraoke://session/ready?id=`). Best-effort delivery (swallows errors). Wired via a
+  `Notifier` port (optional, default Noop): `SavedPartnerService.repair` → `invite` push to the
+  partner; `SessionReadyService.markReady` → `partner.ready` push to the other participant.
+  Mobile `usePushRegistration` (in `_layout`) requests permission just-in-time, registers the
+  Expo push token once signed in, and deep-links on notification tap. Env: `APP_SCHEME`,
+  `EXPO_ACCESS_TOKEN`.
+- Clock-sync (Story 3.6, AR10/NFR1): canonical pure math in `packages/shared/clockSync.ts`
+  (`estimateOffsetMs`, `bestSampleOffsetMs` = NTP lowest-RTT sample, `medianOffsetMs`,
+  `serverNow`, `msUntil`). API `GET /time` → `{ serverTime }` (read at the latest moment).
+  Mobile `src/lib/clockSync.ts` singleton samples `/time` ×5, keeps the offset, refreshes
+  every 60s, and exposes `serverNow()`/`msUntil(targetServerEpoch)` to the playback layer;
+  started by `ClockBridge` in `_layout`. This is what Story 4.4's simultaneous start consumes.
+
+## Live voice (Story 4.1, FR22/FR23/FR24)
+- Media abstraction gains `createVoiceToken(room, identity)`: live signs a LiveKit JWT
+  (`livekit-server-sdk`, roomJoin + canPublish + canSubscribe = full duplex) from
+  `LIVEKIT_API_KEY`/`SECRET`; mock returns a deterministic grant. `POST /sessions/:id/voice-
+  token` is participant-gated (`PairingService.assertParticipant`). Voice is SRTP/DTLS E2E
+  (NFR6) by construction.
+- Mobile uses `@livekit/react-native` (+ `@livekit/react-native-webrtc`, `livekit-client`);
+  Expo config plugins `@livekit/react-native-expo-plugin` + `@config-plugins/react-native-
+  webrtc` (needs a dev client, not Expo Go). `src/voice/voiceRoom.ts` connects + publishes mic
+  + auto-plays remote audio; `useVoiceRoom` is a no-op until explicit mic consent
+  (`useMicConsent`, FR22). `app/session/voice.tsx` is the consent gate → connected view,
+  reached from the ready screen when both are ready. The bespoke local Expo audio module
+  (ducking over Spotify) is Story 4.2.
 
 ## Phase 0 harness (throwaway)
 - `tools/phase0-harness/` is a THROWAWAY two-phone validation prototype (Story 1.3),

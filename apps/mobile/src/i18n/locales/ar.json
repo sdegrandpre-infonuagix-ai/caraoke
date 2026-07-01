@@ -1,0 +1,52 @@
+{
+  "app": { "name": "كاراوكي", "tagline": "غنّوا معًا، رغم المسافة." },
+  "common": {
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "loading": "جارٍ التحميل…",
+    "signOut": "تسجيل الخروج",
+    "tryAgain": "يرجى المحاولة مرة أخرى."
+  },
+  "onboarding": {
+    "continueApple": "المتابعة باستخدام Apple",
+    "continueGoogle": "المتابعة باستخدام Google",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "error": "تم إلغاء تسجيل الدخول أو فشل. يرجى المحاولة مرة أخرى."
+  },
+  "home": {
+    "signedIn": "لقد سجّلت الدخول.",
+    "welcome": "مرحبًا",
+    "editProfile": "تعديل الملف الشخصي",
+    "connectSpotify": "ربط Spotify",
+    "language": "اللغة"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "displayName": "الاسم المعروض",
+    "namePlaceholder": "اسمك",
+    "saveError": "تعذّر الحفظ. يرجى المحاولة مرة أخرى.",
+    "dangerZone": "منطقة الخطر",
+    "deleteAccount": "حذف الحساب",
+    "deleting": "جارٍ الحذف…",
+    "deleteConfirmTitle": "حذف الحساب؟",
+    "deleteConfirmBody": "سيؤدي هذا إلى حذف حسابك وجميع بياناتك نهائيًا. لا يمكن التراجع عن ذلك.",
+    "cancel": "إلغاء",
+    "delete": "حذف"
+  },
+  "spotify": {
+    "title": "ربط Spotify",
+    "intro": "يشغّل كاراوكي الأغنية من حساب Spotify الخاص بك. يلزم حساب Premium للغناء معًا.",
+    "connected": "تم ربط Spotify Premium",
+    "notPremiumTitle": "تم ربط Spotify، لكن ليس Premium",
+    "notPremiumBody": "حساب Spotify الخاص بك هو «{{product}}». تتطلب ثنائيات كاراوكي حساب Spotify Premium.",
+    "upgrade": "الترقية إلى Premium",
+    "connect": "ربط Spotify",
+    "reconnect": "إعادة ربط Spotify",
+    "connecting": "جارٍ الربط…",
+    "error": "تعذّر ربط Spotify. يرجى المحاولة مرة أخرى."
+  },
+  "language": {
+    "title": "اللغة",
+    "subtitle": "اختر لغة التطبيق وصوت كاراوكي الخاص بك."
+  }
+}

@@ -38,6 +38,11 @@ output "cognito_app_client_id" {
   value       = module.cognito.app_client_id
 }
 
+output "cognito_hosted_ui_domain" {
+  description = "Cognito hosted-UI domain prefix."
+  value       = module.cognito.hosted_ui_domain
+}
+
 output "secret_arns" {
   description = "Map of integration secret ARNs."
   value       = module.secrets.secret_arns
@@ -46,4 +51,19 @@ output "secret_arns" {
 output "ecs_cluster_name" {
   description = "ECS cluster name for the core API."
   value       = module.api.cluster_name
+}
+
+output "livekit_signaling_url" {
+  description = "LiveKit SFU signaling URL for the client SDK."
+  value       = module.livekit.signaling_url
+}
+
+output "livekit_keys_secret_arn" {
+  description = "ARN of the LiveKit API keys secret (value set out-of-band)."
+  value       = module.livekit.keys_secret_arn
+}
+
+output "spotify_mcp_cluster_name" {
+  description = "ECS cluster name for the Spotify MCP server."
+  value       = module.spotify_mcp.cluster_name
 }

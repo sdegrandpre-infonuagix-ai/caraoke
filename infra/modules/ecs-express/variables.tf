@@ -3,6 +3,30 @@ variable "name_prefix" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Logical service name (used in resource names and the container name)."
+  type        = string
+  default     = "api"
+}
+
+variable "extra_environment" {
+  description = "Additional container environment variables ([{ name, value }])."
+  type        = list(object({ name = string, value = string }))
+  default     = []
+}
+
+variable "readable_secret_arns" {
+  description = "Secrets Manager ARNs the running task may read at runtime (NFR7)."
+  type        = list(string)
+  default     = []
+}
+
+variable "kms_key_arn" {
+  description = "KMS key ARN to grant Decrypt for the readable secrets (optional)."
+  type        = string
+  default     = null
+}
+
 variable "region" {
   description = "AWS region (for the awslogs driver)."
   type        = string

@@ -12,6 +12,7 @@ This is a [pnpm workspace](https://pnpm.io/workspaces) orchestrated with
 | ------------------ | ------------------ | -------------------------------------------------------------- |
 | `apps/mobile`      | `@caraoke/mobile`  | Expo SDK 56 (React Native 0.85) app, Expo Router.              |
 | `services/api`     | `@caraoke/api`     | Core API — modular monolith (Express + TypeScript).            |
+| `services/spotify-mcp` | `@caraoke/spotify-mcp` | Spotify MCP server (streamable-http) — playback control. |
 | `packages/shared`  | `@caraoke/shared`  | Shared TypeScript types + Zod schemas (the source of truth).   |
 | `packages/config`  | `@caraoke/config`  | Shared ESLint, Prettier, and TypeScript presets.               |
 

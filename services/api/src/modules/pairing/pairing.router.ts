@@ -1,0 +1,153 @@
+import { Router } from 'express';
+import { ok, AppError } from '@caraoke/shared';
+import { requireAuth, type TokenVerifier } from '../../middleware/auth.js';
+import type { IdentityService } from '../identity/identity.service.js';
+import type { PairingService } from './pairing.service.js';
+import type { SavedPartnerService } from './savedPartner.service.js';
+import type { SessionReadyService } from './ready.service.js';
+import type { MediaServer } from '../../integrations/media/index.js';
+import { joinSessionSchema, savePartnerSchema } from './pairing.schema.js';
+
+/**
+ * Pairing routes (FR7, FR8, FR9).
+ * - POST   /sessions               — create a session + invite link/pairing code.
+ * - POST   /sessions/join          — join via invite token or pairing code; both connect.
+ * - GET    /partners               — list saved partners.
+ * - POST   /partners               — save a known partner.
+ * - DELETE /partners/:partnerId    — forget a saved partner.
+ * - POST   /partners/:partnerId/repair — fast re-pair (pre-assigned partner).
+ */
+export function createPairingRouter(deps: {
+  verifier: TokenVerifier;
+  identityService: IdentityService;
+  pairingService: PairingService;
+  savedPartnerService: SavedPartnerService;
+  readyService: SessionReadyService;
+  mediaServer: MediaServer;
+}): Router {
+  const router = Router();
+  const auth = requireAuth(deps.verifier);
+
+  router.post('/sessions', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.pairingService.createSession(user.id))
+      .then((result) => res.status(201).json(ok(result)))
+      .catch(next);
+  });
+
+  router.post('/sessions/join', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+
+    const parsed = joinSessionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return next(
+        new AppError('VALIDATION_FAILED', 'Provide an invite link or a pairing code.', {
+          details: { issues: parsed.error.issues },
+        }),
+      );
+    }
+
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.pairingService.join(parsed.data, user.id))
+      .then((connection) => res.json(ok(connection)))
+      .catch(next);
+  });
+
+  // --- Saved partners + fast re-pair (FR9) ---
+
+  router.get('/partners', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.savedPartnerService.list(user.id))
+      .then((items) => res.json(ok({ items })))
+      .catch(next);
+  });
+
+  router.post('/partners', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+
+    const parsed = savePartnerSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return next(
+        new AppError('VALIDATION_FAILED', 'A valid partnerUserId is required.', {
+          details: { issues: parsed.error.issues },
+        }),
+      );
+    }
+
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.savedPartnerService.save(user.id, parsed.data.partnerUserId))
+      .then(() => res.status(201).json(ok({ saved: true })))
+      .catch(next);
+  });
+
+  router.delete('/partners/:partnerId', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.savedPartnerService.remove(user.id, String(req.params.partnerId)))
+      .then(() => res.json(ok({ removed: true })))
+      .catch(next);
+  });
+
+  router.post('/partners/:partnerId/repair', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.savedPartnerService.repair(user.id, String(req.params.partnerId)))
+      .then((connection) => res.status(201).json(ok(connection)))
+      .catch(next);
+  });
+
+  // --- Ready-handshake (FR10) ---
+
+  router.post('/sessions/:id/ready', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.readyService.markReady(String(req.params.id), user.id))
+      .then((state) => res.json(ok(state)))
+      .catch(next);
+  });
+
+  router.get('/sessions/:id/ready', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.readyService
+      .getReadyState(String(req.params.id))
+      .then((state) => res.json(ok(state)))
+      .catch(next);
+  });
+
+  // --- Live voice plane (FR23/FR24): mint a LiveKit join token for a participant ---
+
+  router.post('/sessions/:id/voice-token', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    const sessionId = String(req.params.id);
+
+    deps.identityService
+      .findOrCreate(claims)
+      .then(async (user) => {
+        await deps.pairingService.assertParticipant(sessionId, user.id);
+        return deps.mediaServer.createVoiceToken(sessionId, user.id);
+      })
+      .then((grant) => res.json(ok(grant)))
+      .catch(next);
+  });
+
+  return router;
+}

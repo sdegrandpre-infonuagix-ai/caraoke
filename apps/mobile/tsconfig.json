@@ -7,7 +7,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@caraoke/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [
@@ -15,7 +16,8 @@
     "src/**/*",
     "app.config.ts",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
   ],
-  "exclude": ["node_modules", "dist", ".expo"]
+  "exclude": ["node_modules", "dist", ".expo", "src/**/*.test.ts"]
 }

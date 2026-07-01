@@ -1,0 +1,19 @@
+{
+  "name": "@caraoke/age-verification",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Age verification Lambda — creates Stripe Identity sessions and retrieves results",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.621.0",
+    "stripe": "^16.2.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.143",
+    "typescript": "5.7.3"
+  }
+}

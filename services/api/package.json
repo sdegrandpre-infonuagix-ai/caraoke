@@ -12,17 +12,26 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
+    "migrate": "tsx src/db/migrate.ts",
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.726.1",
+    "@aws-sdk/client-secrets-manager": "^3.621.0",
     "@caraoke/shared": "workspace:*",
+    "aws-jwt-verify": "5.2.1",
     "express": "4.21.2",
+    "livekit-server-sdk": "2.15.5",
+    "pg": "8.22.0",
+    "ioredis": "^5.3.2",
+    "stripe": "^16.2.0",
     "zod": "3.24.1"
   },
   "devDependencies": {
     "@caraoke/config": "workspace:*",
     "@types/express": "5.0.0",
     "@types/node": "22.10.5",
+    "@types/pg": "8.20.0",
     "@types/supertest": "6.0.2",
     "eslint": "9.18.0",
     "rimraf": "6.0.1",

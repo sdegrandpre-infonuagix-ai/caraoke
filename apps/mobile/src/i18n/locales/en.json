@@ -1,0 +1,124 @@
+{
+  "app": { "name": "Caraoke", "tagline": "Sing together, across distance." },
+  "common": {
+    "save": "Save",
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "signOut": "Sign out",
+    "tryAgain": "Please try again."
+  },
+  "onboarding": {
+    "continueApple": "Continue with Apple",
+    "continueGoogle": "Continue with Google",
+    "signingIn": "Signing in…",
+    "error": "Sign-in was cancelled or failed. Please try again."
+  },
+  "home": {
+    "signedIn": "You're signed in.",
+    "welcome": "Welcome",
+    "startDuet": "Start a duet",
+    "joinDuet": "Join a duet",
+    "savedPartners": "Saved partners",
+    "editProfile": "Edit profile",
+    "connectSpotify": "Connect Spotify",
+    "language": "Language"
+  },
+  "partners": {
+    "title": "Saved partners",
+    "empty": "No saved partners yet. After a duet, save your partner to sing again in one tap.",
+    "unknown": "Partner",
+    "singAgain": "Sing again",
+    "connecting": "Connecting…",
+    "connected": "Connected — get ready to sing!",
+    "save": "Save partner",
+    "saved": "Partner saved",
+    "saveError": "Couldn't save partner."
+  },
+  "voice": {
+    "title": "Live voice",
+    "consentTitle": "Turn on your microphone",
+    "consentBody": "Caraoke needs your microphone so you and your partner can hear each other while you sing. Your voice is live only — it is never recorded or stored.",
+    "allowMic": "Allow microphone",
+    "connecting": "Connecting your voices…",
+    "connected": "Voice connected",
+    "waitingPartner": "Waiting for your partner to join…",
+    "partnerConnected": "Your partner is here — say hi!",
+    "error": "Couldn't open voice. Please try again.",
+    "open": "Open live voice"
+  },
+  "ready": {
+    "title": "Ready to sing?",
+    "intro": "When you're both ready, Caraoke will start the song together.",
+    "imReady": "I'm ready",
+    "youAreReady": "You're ready",
+    "waiting": "Waiting for your partner…",
+    "partnerReady": "Your partner is ready — tap when you are.",
+    "bothReady": "You're both ready! Get ready to sing 🎤"
+  },
+  "join": {
+    "title": "Join a duet",
+    "intro": "Enter the pairing code your partner shared, or open their invite link.",
+    "codeLabel": "Pairing code",
+    "codePlaceholder": "ABC234",
+    "join": "Join",
+    "joining": "Joining…",
+    "connected": "Connected!",
+    "bothConnected": "You and your partner are both connected.",
+    "waiting": "Waiting for your partner to connect…",
+    "error": "Couldn't join. Please check the code and try again."
+  },
+  "session": {
+    "title": "Invite a partner",
+    "intro": "Share this link or code with the person you want to sing with.",
+    "start": "Create invite",
+    "creating": "Creating…",
+    "pairingCode": "Pairing code",
+    "inviteLink": "Invite link",
+    "share": "Share invite",
+    "shareMessage": "Sing with me on Caraoke! Open {{url}} or enter code {{code}}.",
+    "error": "Couldn't create the session. Please try again."
+  },
+  "profile": {
+    "title": "Profile",
+    "displayName": "Display name",
+    "namePlaceholder": "Your name",
+    "saveError": "Couldn't save. Please try again.",
+    "dangerZone": "Danger zone",
+    "deleteAccount": "Delete account",
+    "deleting": "Deleting…",
+    "deleteConfirmTitle": "Delete account?",
+    "deleteConfirmBody": "This permanently deletes your account and all your data. This cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "spotify": {
+    "title": "Connect Spotify",
+    "intro": "Caraoke plays the song from your own Spotify. A Premium account is required to sing together.",
+    "connected": "Spotify Premium connected",
+    "notPremiumTitle": "Spotify connected, but not Premium",
+    "notPremiumBody": "Your Spotify account is \"{{product}}\". Caraoke duets need Spotify Premium.",
+    "upgrade": "Upgrade to Premium",
+    "connect": "Connect Spotify",
+    "reconnect": "Reconnect Spotify",
+    "connecting": "Connecting…",
+    "error": "Couldn't connect Spotify. Please try again."
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose the language for the app and your Caraoke voice."
+  },
+  "discovery": {
+    "title": "Discover nearby singers",
+    "description": "Let other Caraoke singers in your area find you for a spontaneous duet. Off by default — your choice.",
+    "toggleLabel": "Make me discoverable",
+    "toggleSublabel": "Off by default — opt in to be found.",
+    "enabledNote": "You'll appear to nearby Caraoke singers while this is on.",
+    "riffRationale": "You'll now appear to nearby Caraoke singers. Turn this off anytime in settings.",
+    "verifying": "Verifying your age…",
+    "underageTitle": "Caraoke Discovery is for adults",
+    "underageBody": "Discovery connects you with nearby singers. It's available to verified users 18 and over.",
+    "underageRiff": "Discovery is for adult singers — 18 and over. This feature won't be available.",
+    "failedTitle": "Verification didn't complete",
+    "failedBody": "We weren't able to verify your age. Please try again."
+  }
+}

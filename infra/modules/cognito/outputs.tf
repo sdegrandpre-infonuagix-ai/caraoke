@@ -12,3 +12,8 @@ output "app_client_id" {
   description = "Cognito app client ID."
   value       = aws_cognito_user_pool_client.this.id
 }
+
+output "hosted_ui_domain" {
+  description = "Cognito hosted-UI domain prefix (OAuth authorize/token endpoints)."
+  value       = aws_cognito_user_pool_domain.this.domain
+}
