@@ -108,7 +108,7 @@
   > So that I can pay for Caraoke.
   > AC: Given an authenticated user in the billing section, When I add a payment method and subscribe, Then Stripe handles all cardholder data and Caraoke stores none (FR38, FR41, NFR7), And my subscription status is recorded and gates paid features.
   > Spec: specs/planning-artifacts/epics.md#story-7-1
-- [ ] Story 7.2: Plan management
+- [x] Story 7.2: Plan management
   > As a subscriber
   > I want to view, upgrade, downgrade, and cancel my plan
   > So that I control my spending.

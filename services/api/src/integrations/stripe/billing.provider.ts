@@ -10,6 +10,13 @@ export interface StripeBillingProvider {
     paymentMethodId: string,
     priceId: string,
   ): Promise<{ subscriptionId: string; status: string; currentPeriodEnd: Date }>;
+  /** Cancel at period end — subscriber keeps access until currentPeriodEnd (FR39). */
+  cancelSubscription(subscriptionId: string): Promise<{ status: string; currentPeriodEnd: Date }>;
+  /** Swap to a different price (upgrade/downgrade) with prorations (FR39). */
+  changeSubscriptionPlan(
+    subscriptionId: string,
+    newPriceId: string,
+  ): Promise<{ status: string; currentPeriodEnd: Date }>;
 }
 
 export class LiveStripeBillingProvider implements StripeBillingProvider {
@@ -64,6 +71,27 @@ export class LiveStripeBillingProvider implements StripeBillingProvider {
       currentPeriodEnd: new Date(sub.current_period_end * 1000),
     };
   }
+
+  async cancelSubscription(
+    subscriptionId: string,
+  ): Promise<{ status: string; currentPeriodEnd: Date }> {
+    const stripe = await this.stripe;
+    const sub = await stripe.subscriptions.update(subscriptionId, { cancel_at_period_end: true });
+    return { status: sub.status, currentPeriodEnd: new Date(sub.current_period_end * 1000) };
+  }
+
+  async changeSubscriptionPlan(
+    subscriptionId: string,
+    newPriceId: string,
+  ): Promise<{ status: string; currentPeriodEnd: Date }> {
+    const stripe = await this.stripe;
+    const sub = await stripe.subscriptions.retrieve(subscriptionId);
+    const updated = await stripe.subscriptions.update(subscriptionId, {
+      items: [{ id: sub.items.data[0]!.id, price: newPriceId }],
+      proration_behavior: 'create_prorations',
+    });
+    return { status: updated.status, currentPeriodEnd: new Date(updated.current_period_end * 1000) };
+  }
 }
 
 export class MockStripeBillingProvider implements StripeBillingProvider {
@@ -80,7 +108,7 @@ export class MockStripeBillingProvider implements StripeBillingProvider {
   async createSubscription(
     _customerId: string,
     _paymentMethodId: string,
-    priceId: string,
+    _priceId: string,
   ): Promise<{ subscriptionId: string; status: string; currentPeriodEnd: Date }> {
     const end = new Date();
     end.setMonth(end.getMonth() + 1);
@@ -89,6 +117,23 @@ export class MockStripeBillingProvider implements StripeBillingProvider {
       status: 'active',
       currentPeriodEnd: end,
     };
+  }
+
+  async cancelSubscription(
+    _subscriptionId: string,
+  ): Promise<{ status: string; currentPeriodEnd: Date }> {
+    const end = new Date();
+    end.setMonth(end.getMonth() + 1);
+    return { status: 'active', currentPeriodEnd: end };
+  }
+
+  async changeSubscriptionPlan(
+    _subscriptionId: string,
+    _newPriceId: string,
+  ): Promise<{ status: string; currentPeriodEnd: Date }> {
+    const end = new Date();
+    end.setMonth(end.getMonth() + 1);
+    return { status: 'active', currentPeriodEnd: end };
   }
 }
 

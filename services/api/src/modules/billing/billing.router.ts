@@ -9,6 +9,10 @@ const subscribeSchema = z.object({
   paymentMethodId: z.string().min(1),
 });
 
+const planChangeSchema = z.object({
+  priceId: z.string().min(1),
+});
+
 /**
  * Billing routes (Story 7.1, FR38/FR41/NFR7).
  *
@@ -47,6 +51,35 @@ export function createBillingRouter(deps: {
       const user = await deps.identityService.findOrCreate(claims);
       const email = user.email ?? claims.sub;
       const result = await deps.service.subscribe(user.id, email, parsed.data.paymentMethodId);
+      res.json(ok(result));
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  // DELETE /billing/subscription — cancel at period end (FR39)
+  router.delete('/billing/subscription', auth, async (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    try {
+      const user = await deps.identityService.findOrCreate(claims);
+      const result = await deps.service.cancelSubscription(user.id);
+      res.json(ok(result));
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  // PATCH /billing/subscription/plan — upgrade or downgrade (FR39)
+  router.patch('/billing/subscription/plan', auth, async (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    const parsed = planChangeSchema.safeParse(req.body);
+    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'priceId required'));
+    try {
+      const user = await deps.identityService.findOrCreate(claims);
+      const email = user.email ?? claims.sub;
+      const result = await deps.service.changePlan(user.id, email, parsed.data.priceId);
       res.json(ok(result));
     } catch (e) {
       next(e);

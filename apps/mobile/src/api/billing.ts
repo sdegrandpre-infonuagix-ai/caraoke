@@ -40,3 +40,27 @@ export async function getSubscriptionStatus(
   const json = (await res.json()) as { data: SubscriptionStatusResponse };
   return json.data;
 }
+
+export async function cancelSubscription(
+  idToken: string,
+): Promise<{ status: string; currentPeriodEnd: string }> {
+  const res = await fetch(`${API_BASE}/billing/subscription`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  const json = (await res.json()) as { data: { status: string; currentPeriodEnd: string } };
+  return json.data;
+}
+
+export async function changePlan(
+  idToken: string,
+  priceId: string,
+): Promise<{ status: string; currentPeriodEnd: string }> {
+  const res = await fetch(`${API_BASE}/billing/subscription/plan`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ priceId }),
+  });
+  const json = (await res.json()) as { data: { status: string; currentPeriodEnd: string } };
+  return json.data;
+}

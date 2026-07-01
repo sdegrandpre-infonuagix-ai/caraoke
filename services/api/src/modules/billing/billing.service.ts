@@ -1,3 +1,4 @@
+import { AppError } from '@caraoke/shared';
 import type { BillingRepository } from './billing.repository.js';
 import type { StripeBillingProvider } from '../../integrations/stripe/billing.provider.js';
 
@@ -34,6 +35,29 @@ export class BillingService {
     const sub = await this.stripe.createSubscription(customerId, paymentMethodId, this.priceId);
     await this.repo.saveSubscription(userId, sub.subscriptionId, sub.status, sub.currentPeriodEnd);
     return sub;
+  }
+
+  /** Cancel at period end — subscriber keeps access until currentPeriodEnd (FR39). */
+  async cancelSubscription(userId: string): Promise<{ status: string; currentPeriodEnd: Date }> {
+    const record = await this.repo.findByUserId(userId);
+    if (!record?.subscriptionId) throw new AppError('NOT_FOUND', 'No active subscription.');
+    const result = await this.stripe.cancelSubscription(record.subscriptionId);
+    await this.repo.updateSubscriptionStatus(userId, result.status, result.currentPeriodEnd);
+    return result;
+  }
+
+  /** Swap price (upgrade/downgrade) with prorations (FR39). */
+  async changePlan(
+    userId: string,
+    email: string,
+    newPriceId: string,
+  ): Promise<{ status: string; currentPeriodEnd: Date }> {
+    await this.ensureCustomer(userId, email);
+    const record = await this.repo.findByUserId(userId);
+    if (!record?.subscriptionId) throw new AppError('NOT_FOUND', 'No active subscription.');
+    const result = await this.stripe.changeSubscriptionPlan(record.subscriptionId, newPriceId);
+    await this.repo.updateSubscriptionStatus(userId, result.status, result.currentPeriodEnd);
+    return result;
   }
 
   async getStatus(userId: string): Promise<{

@@ -19,6 +19,8 @@ export interface BillingRepository {
     status: string,
     currentPeriodEnd: Date,
   ): Promise<void>;
+  /** Update status and period-end without changing the subscription ID (cancel/plan-change). */
+  updateSubscriptionStatus(userId: string, status: string, currentPeriodEnd: Date): Promise<void>;
 }
 
 export class PgBillingRepository implements BillingRepository {
@@ -76,6 +78,21 @@ export class PgBillingRepository implements BillingRepository {
            updated_at = now()
        WHERE user_id = $1`,
       [userId, subscriptionId, status, currentPeriodEnd],
+    );
+  }
+
+  async updateSubscriptionStatus(
+    userId: string,
+    status: string,
+    currentPeriodEnd: Date,
+  ): Promise<void> {
+    await this.db().query(
+      `UPDATE stripe_customers
+       SET subscription_status = $2,
+           current_period_end = $3,
+           updated_at = now()
+       WHERE user_id = $1`,
+      [userId, status, currentPeriodEnd],
     );
   }
 }
