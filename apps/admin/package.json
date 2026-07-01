@@ -1,0 +1,29 @@
+{
+  "name": "@caraoke/admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Caraoke operator admin console — Vite + React, Cognito admin-group RBAC.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/auth/adminGuard.test.ts src/metrics/metricFormatters.test.ts"
+  },
+  "dependencies": {
+    "@caraoke/shared": "workspace:*",
+    "amazon-cognito-identity-js": "^6.3.12",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-router-dom": "^6.28.2"
+  },
+  "devDependencies": {
+    "@caraoke/config": "workspace:*",
+    "@types/react": "19.2.17",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.19.2",
+    "typescript": "5.7.3",
+    "vite": "^6.3.5"
+  }
+}

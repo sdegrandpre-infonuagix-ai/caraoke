@@ -141,7 +141,7 @@
   > So that I can track the product's truest health metric.
   > AC: Given captured feedback responses (FR42 capture), When aggregation runs, Then the felt-together rate is computed over sessions and time windows (FR42 aggregation), And it is queryable for the admin dashboard.
   > Spec: specs/planning-artifacts/epics.md#story-8-2
-- [ ] Story 8.3: Admin console auth & shell
+- [x] Story 8.3: Admin console auth & shell
   > As founder/Maria
   > I want a secure admin web console
   > So that only authorized operators access ops tools.
