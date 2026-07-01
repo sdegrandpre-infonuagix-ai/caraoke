@@ -39,6 +39,7 @@ import { getStripeBillingProvider } from './integrations/stripe/billing.provider
 import { getFirehoseClient } from './integrations/firehose/index.js';
 import { TelemetryService } from './modules/telemetry/telemetry.service.js';
 import { createTelemetryRouter } from './modules/telemetry/telemetry.router.js';
+import { PgTelemetryRepository } from './modules/telemetry/telemetry.repository.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -173,8 +174,8 @@ export function createApp(deps: AppDeps = {}): Express {
   );
   app.use('/', createBillingRouter({ verifier, service: billingService, identityService }));
 
-  // Telemetry routes (Story 8.1, FR43/AR7): session-health events → Firehose.
-  const telemetryService = new TelemetryService(getFirehoseClient(env));
+  // Telemetry routes (Story 8.1/8.2, FR42/FR43/AR7): session-health + felt-together.
+  const telemetryService = new TelemetryService(getFirehoseClient(env), new PgTelemetryRepository());
   app.use('/', createTelemetryRouter({ verifier, service: telemetryService }));
 
   // Error envelope middleware MUST be last.

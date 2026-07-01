@@ -135,7 +135,7 @@
   > So that I can monitor the product's real-time health.
   > AC: Given active sessions, When events are emitted, Then simultaneous-start accuracy, drift, voice latency, continuity, and failures flow via Firehose → S3 → Athena (FR43, AR7), And live metrics publish to CloudWatch with alarms on p95 breaches, And no PII/voice/precise-location is included in telemetry (NFR6/8/9).
   > Spec: specs/planning-artifacts/epics.md#story-8-1
-- [ ] Story 8.2: "Felt-together" aggregation
+- [x] Story 8.2: "Felt-together" aggregation
   > As an operator
   > I want the "felt together?" responses aggregated
   > So that I can track the product's truest health metric.
