@@ -4,7 +4,7 @@ import { useMicConsent } from './consentStore';
 import { getVoiceToken } from '../api/voice';
 import { connectVoiceRoom, type VoiceConnection } from './voiceRoom';
 
-export type VoiceStatus = 'idle' | 'connecting' | 'connected' | 'error';
+export type VoiceStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
 /**
  * Opens (and tears down) the session's voice plane once the user has consented to the mic
@@ -29,6 +29,8 @@ export function useVoiceRoom(sessionId: string | undefined) {
         if (cancelled) return;
         const conn = await connectVoiceRoom(grant, {
           onRemotePresence: setPartnerPresent,
+          onReconnecting: () => setStatus('reconnecting'),
+          onReconnected: () => setStatus('connected'),
           onDisconnected: () => setStatus('idle'),
         });
         if (cancelled) {

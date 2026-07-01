@@ -38,12 +38,7 @@
 - [x] Story 4.5: Drift monitoring & correction
 - [x] Story 4.6: Voice playback controls
 - [x] Story 4.7: Eyes-free driving mode & session screen
-  > As a driver
-  > I want the screen to go black when moving and Riff to be the only interface
-  > So that I never look away from the road.
-  > AC: Given the device detects sustained vehicle motion, When driving mode activates, Then `DrivingModeScreen` renders a true-black screen with ambient presence and a tap wakes Riff (voice, not UI) (FR17, UX-DR5), And when stationary, the `WaveformVisualizer` (UI-thread) and `SessionControls` render (UX-DR6, UX-DR12), And motion entry/exit is debounced to avoid red-light flicker.
-  > Spec: specs/planning-artifacts/epics.md#story-4-7
-- [ ] Story 4.8: Voice-first errors, reconnect & resync
+- [x] Story 4.8: Voice-first errors, reconnect & resync
   > As a driver
   > I want dropped connections handled calmly by voice with automatic recovery
   > So that a glitch feels like a pause, not a crash.

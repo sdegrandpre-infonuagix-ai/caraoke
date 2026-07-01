@@ -17,6 +17,10 @@ export interface VoiceConnection {
 
 export interface VoiceCallbacks {
   onRemotePresence?: (present: boolean) => void;
+  /** LiveKit is attempting to auto-reconnect (Story 4.8, FR15). */
+  onReconnecting?: () => void;
+  /** LiveKit successfully recovered the connection (Story 4.8, FR25). */
+  onReconnected?: () => void;
   onDisconnected?: () => void;
 }
 
@@ -38,6 +42,8 @@ export async function connectVoiceRoom(
     .on(RoomEvent.ParticipantDisconnected, () =>
       callbacks.onRemotePresence?.(room.remoteParticipants.size > 0),
     )
+    .on(RoomEvent.Reconnecting, () => callbacks.onReconnecting?.())
+    .on(RoomEvent.Reconnected, () => callbacks.onReconnected?.())
     .on(RoomEvent.Disconnected, () => callbacks.onDisconnected?.());
 
   await room.connect(grant.url, grant.token);
