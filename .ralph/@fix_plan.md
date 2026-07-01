@@ -93,7 +93,7 @@
   > So that I can exercise my privacy rights.
   > AC: Given privacy settings, When I view data handling, Then I see consent status, retention, and processors, and can export/delete my data (FR36, NFR10), And voice is shown as ephemeral with no biometric/voiceprint storage (NFR8).
   > Spec: specs/planning-artifacts/epics.md#story-6-4
-- [ ] Story 6.5: Abuse-handling pipeline
+- [x] Story 6.5: Abuse-handling pipeline
   > As an operator
   > I want reported stranger-voice abuse handled systematically
   > So that repeat offenders are managed.

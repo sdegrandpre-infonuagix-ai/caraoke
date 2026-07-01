@@ -30,6 +30,8 @@ const envSchema = z.object({
   // Push notifications (Story 3.5). Deep-link scheme; optional Expo access token.
   APP_SCHEME: z.string().default('caraoke'),
   EXPO_ACCESS_TOKEN: z.string().optional(),
+  // Operator admin key (Story 6.5, FR37). Required to access the moderation queue.
+  ADMIN_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
