@@ -35,12 +35,7 @@
 - [x] Story 4.2: SessionStateMachine & sonic services
 - [x] Story 4.3: Voice-Agent intent & song request
 - [x] Story 4.4: Simultaneous scheduled start
-  > As a pair of singers
-  > I want both phones to start the same song in lockstep
-  > So that it feels like one shared performance.
-  > AC: Given a ready handshake and clock-sync offset, When the agent triggers start, Then both devices pre-buffer the track paused and unpause at the same absolute timestamp T (FR14, FR18), And the two starts occur within ≤200ms of each other (NFR1), And the song plays independently from each user's own Spotify (no re-streaming) (NFR21).
-  > Spec: specs/planning-artifacts/epics.md#story-4-4
-- [ ] Story 4.5: Drift monitoring & correction
+- [x] Story 4.5: Drift monitoring & correction
   > As a singer
   > I want the two backing tracks kept in sync invisibly
   > So that we stay rhythmically together.

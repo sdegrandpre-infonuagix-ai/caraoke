@@ -32,3 +32,16 @@ export function playTrack(idToken: string, sessionId: string): Promise<void> {
     token: idToken,
   });
 }
+
+/**
+ * Seek to a specific position (ms) on the user's Spotify client.
+ * Used by the drift-correction loop (Story 4.5, FR20): a micro-seek on the lagging device
+ * to bring it within the ≤50ms target. Imperceptible for seeks < 500ms.
+ */
+export function seekPlayback(idToken: string, sessionId: string, positionMs: number): Promise<void> {
+  return apiFetch<void>(`/sessions/${sessionId}/playback/seek`, {
+    method: 'POST',
+    token: idToken,
+    body: { positionMs: Math.round(positionMs) },
+  });
+}
