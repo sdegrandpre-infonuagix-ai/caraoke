@@ -63,6 +63,31 @@ export function createIdentityRouter(deps: {
       .catch(next);
   });
 
+  // Data export (Story 6.4, FR36/NFR10) — returns the user's profile data for GDPR portability.
+  router.get('/me/export', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+    deps.service
+      .findOrCreate(claims)
+      .then((user) =>
+        res
+          .header('Content-Disposition', `attachment; filename="caraoke-data-${user.id}.json"`)
+          .header('Content-Type', 'application/json')
+          .json(
+            ok({
+              exportedAt: new Date().toISOString(),
+              profile: user,
+              dataNotice: {
+                voice: 'Live only — never recorded, no biometric/voiceprint storage (NFR8).',
+                location: 'Coarse Plus Code only, 5-min TTL, no persistent trail (NFR9).',
+                retention: 'Profile retained for 90 days post-deletion, then purged (NFR10).',
+              },
+            }),
+          ),
+      )
+      .catch(next);
+  });
+
   // --- Spotify link + Premium verification (FR2) ---
 
   router.get('/me/spotify', auth, (req, res, next) => {

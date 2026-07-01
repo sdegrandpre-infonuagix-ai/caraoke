@@ -87,7 +87,7 @@
   > So that I share only what I'm comfortable with.
   > AC: Given the app, When I manage permissions, Then mic, location, and notifications are requested just-in-time and independently (FR35), And denying optional permissions degrades gracefully (mic is the only hard requirement).
   > Spec: specs/planning-artifacts/epics.md#story-6-3
-- [ ] Story 6.4: Data controls & transparency
+- [x] Story 6.4: Data controls & transparency
   > As a user
   > I want to see and control how my voice, location, and profile data are handled
   > So that I can exercise my privacy rights.
