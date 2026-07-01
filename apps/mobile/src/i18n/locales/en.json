@@ -113,6 +113,12 @@
     "toggleLabel": "Make me discoverable",
     "toggleSublabel": "Off by default — opt in to be found.",
     "enabledNote": "You'll appear to nearby Caraoke singers while this is on.",
-    "riffRationale": "You'll now appear to nearby Caraoke singers. Turn this off anytime in settings."
+    "riffRationale": "You'll now appear to nearby Caraoke singers. Turn this off anytime in settings.",
+    "verifying": "Verifying your age…",
+    "underageTitle": "Caraoke Discovery is for adults",
+    "underageBody": "Discovery connects you with nearby singers. It's available to verified users 18 and over.",
+    "underageRiff": "Discovery is for adult singers — 18 and over. This feature won't be available.",
+    "failedTitle": "Verification didn't complete",
+    "failedBody": "We weren't able to verify your age. Please try again."
   }
 }

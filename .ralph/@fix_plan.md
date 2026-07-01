@@ -47,12 +47,7 @@
 > Goal: Spontaneous duets with nearby strangers — safe by construction.
 
 - [x] Story 5.1: Opt-in discoverability toggle
-  > As a user
-  > I want discovery off by default and an explicit opt-in
-  > So that I am never exposed without choosing to be.
-  > AC: Given a user in Discover settings, When I view discovery, Then discoverability is off by default (FR27), And enabling it requires an explicit toggle with a Riff-voiced rationale.
-  > Spec: specs/planning-artifacts/epics.md#story-5-1
-- [ ] Story 5.2: Age verification (18+) via Stripe Identity
+- [x] Story 5.2: Age verification (18+) via Stripe Identity
   > As the platform
   > I want stranger discovery gated to verified adults
   > So that minors are not exposed to stranger voice interaction.

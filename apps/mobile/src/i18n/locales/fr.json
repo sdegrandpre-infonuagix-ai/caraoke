@@ -55,6 +55,12 @@
     "toggleLabel": "Me rendre découvrable",
     "toggleSublabel": "Désactivé par défaut — vous choisissez d'être trouvé.",
     "enabledNote": "Vous apparaîtrez aux chanteurs Caraoke à proximité.",
-    "riffRationale": "Vous serez désormais visible pour les chanteurs Caraoke à proximité. Vous pouvez désactiver cela à tout moment dans les paramètres."
+    "riffRationale": "Vous serez désormais visible pour les chanteurs Caraoke à proximité. Vous pouvez désactiver cela à tout moment dans les paramètres.",
+    "verifying": "Vérification de votre âge…",
+    "underageTitle": "Caraoke Découverte est réservé aux adultes",
+    "underageBody": "La découverte vous connecte avec des chanteurs proches. Disponible aux utilisateurs vérifiés de 18 ans et plus.",
+    "underageRiff": "La découverte est réservée aux chanteurs adultes — 18 ans et plus. Cette fonctionnalité ne sera pas disponible.",
+    "failedTitle": "Vérification incomplète",
+    "failedBody": "Nous n'avons pas pu vérifier votre âge. Veuillez réessayer."
   }
 }

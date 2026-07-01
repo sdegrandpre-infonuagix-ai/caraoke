@@ -22,6 +22,9 @@ import { NotificationService } from './modules/notifications/notification.servic
 import { PgPushTokenRepository } from './modules/notifications/pushToken.repository.js';
 import { createNotificationRouter } from './modules/notifications/notification.router.js';
 import { getPushSender } from './integrations/push/index.js';
+import { getStripeIdentityProvider } from './integrations/stripe/index.js';
+import { AgeVerificationService } from './modules/ageVerification/ageVerification.service.js';
+import { createAgeVerificationRouter } from './modules/ageVerification/ageVerification.router.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -124,6 +127,10 @@ export function createApp(deps: AppDeps = {}): Express {
 
   // Notification routes (FR11).
   app.use('/', createNotificationRouter({ verifier, identityService, notificationService }));
+
+  // Age-verification routes (Story 5.2, FR32).
+  const ageVerificationService = new AgeVerificationService(getStripeIdentityProvider(env));
+  app.use('/', createAgeVerificationRouter({ verifier, service: ageVerificationService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

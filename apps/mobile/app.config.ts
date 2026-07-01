@@ -30,6 +30,10 @@ const config: ExpoConfig = {
     'expo-notifications',
     '@livekit/react-native-expo-plugin',
     '@config-plugins/react-native-webrtc',
+    [
+      '@stripe/stripe-react-native',
+      { merchantIdentifier: 'merchant.ai.caraoke.app', enableGooglePay: false },
+    ],
   ],
   experiments: {
     typedRoutes: true,
