@@ -34,6 +34,8 @@ const envSchema = z.object({
   ADMIN_API_KEY: z.string().optional(),
   // Stripe subscription price ID (Story 7.1, FR38). The price users subscribe to.
   STRIPE_PRICE_ID: z.string().default('price_caraoke_monthly'),
+  // Stripe webhook signing secret (Story 7.4, AR9). Required to verify webhook authenticity.
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

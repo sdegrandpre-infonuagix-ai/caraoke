@@ -11,6 +11,8 @@ export interface BillingRecord {
 
 export interface BillingRepository {
   findByUserId(userId: string): Promise<BillingRecord | null>;
+  /** Look up a billing record by Stripe customer ID (for webhook event processing). */
+  findByCustomerId(stripeCustomerId: string): Promise<BillingRecord | null>;
   /** Idempotently record the Stripe customer ID for a user. */
   upsertCustomer(userId: string, stripeCustomerId: string): Promise<void>;
   saveSubscription(
@@ -41,6 +43,29 @@ export class PgBillingRepository implements BillingRepository {
       `SELECT user_id, stripe_customer_id, subscription_id, subscription_status, current_period_end
        FROM stripe_customers WHERE user_id = $1`,
       [userId],
+    );
+    const r = rows[0];
+    if (!r) return null;
+    return {
+      userId: r.user_id,
+      stripeCustomerId: r.stripe_customer_id,
+      subscriptionId: r.subscription_id,
+      subscriptionStatus: r.subscription_status,
+      currentPeriodEnd: r.current_period_end,
+    };
+  }
+
+  async findByCustomerId(stripeCustomerId: string): Promise<BillingRecord | null> {
+    const { rows } = await this.db().query<{
+      user_id: string;
+      stripe_customer_id: string;
+      subscription_id: string | null;
+      subscription_status: string | null;
+      current_period_end: Date | null;
+    }>(
+      `SELECT user_id, stripe_customer_id, subscription_id, subscription_status, current_period_end
+       FROM stripe_customers WHERE stripe_customer_id = $1`,
+      [stripeCustomerId],
     );
     const r = rows[0];
     if (!r) return null;

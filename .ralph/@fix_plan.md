@@ -120,7 +120,7 @@
   > So that I have records of payment.
   > AC: Given past transactions, When I open billing history, Then I see itemized charges and downloadable receipts (FR40).
   > Spec: specs/planning-artifacts/epics.md#story-7-3
-- [ ] Story 7.4: Stripe webhook handling
+- [x] Story 7.4: Stripe webhook handling
   > As the system
   > I want to process Stripe webhooks
   > So that subscription state stays accurate.

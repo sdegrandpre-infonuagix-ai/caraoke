@@ -34,6 +34,7 @@ import { createModerationRouter } from './modules/moderation/moderation.router.j
 import { PgBillingRepository } from './modules/billing/billing.repository.js';
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRouter } from './modules/billing/billing.router.js';
+import { createBillingWebhookRouter } from './modules/billing/billing.webhook.router.js';
 import { getStripeBillingProvider } from './integrations/stripe/billing.provider.js';
 
 export interface AppDeps {
@@ -59,6 +60,14 @@ export interface AppDeps {
  */
 export function createApp(deps: AppDeps = {}): Express {
   const app = express();
+
+  // Stripe webhook — must be mounted BEFORE express.json() (raw body required for sig verification).
+  const billingRepo = new PgBillingRepository();
+  app.use(
+    '/',
+    createBillingWebhookRouter({ repo: billingRepo, webhookSecret: loadEnv().STRIPE_WEBHOOK_SECRET }),
+  );
+
   app.use(express.json());
 
   // Media-server (LiveKit) accessed only via the integration abstraction (NFR20).
@@ -153,9 +162,9 @@ export function createApp(deps: AppDeps = {}): Express {
   // Moderation routes (Story 6.1, FR33): block + report (moderationService already instantiated above).
   app.use('/', createModerationRouter({ verifier, service: moderationService, identityService }));
 
-  // Billing routes (Story 7.1, FR38/FR41/NFR7): SetupIntent, subscribe, status.
+  // Billing routes (Story 7.1–7.3, FR38/FR41/NFR7): reuse billingRepo created above for webhook.
   const billingService = new BillingService(
-    new PgBillingRepository(),
+    billingRepo,
     getStripeBillingProvider(env),
     env.STRIPE_PRICE_ID,
   );
