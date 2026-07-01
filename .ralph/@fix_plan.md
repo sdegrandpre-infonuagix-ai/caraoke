@@ -129,7 +129,7 @@
 ### Telemetry & Admin/Ops Console
 > Goal: Run the venture on real numbers.
 
-- [ ] Story 8.1: Session-health telemetry pipeline
+- [x] Story 8.1: Session-health telemetry pipeline
   > As an operator
   > I want session-health metrics captured to an analytics store
   > So that I can monitor the product's real-time health.
