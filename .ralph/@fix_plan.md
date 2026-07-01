@@ -42,12 +42,7 @@
 - [x] Story 4.9: Post-session "felt together?" capture
 - [x] Story 4.10: Sonic verification harness
 - [x] Story 4.11: CaraokeAudio native module — iOS (Swift)
-  > As a driver
-  > I want the CaraokeAudio audio engine implemented as a native Swift local Expo Module for iOS
-  > So that sonic cues, ducking, ambient presence, and Riff TTS actually play with low latency off the JS thread (not the current no-op JS fallback).
-  > AC: Given a local Expo Module named `CaraokeAudio` under `apps/mobile/modules/caraoke-audio/ios` (Swift), When the app runs on iOS, Then `requireOptionalNativeModule('CaraokeAudio')` resolves so `hasNativeSonic === true`, And it fully implements the existing `NativeSonicModule` contract (playCue/setGains/restore/speak/startAmbient/stopAmbient) via AVAudioEngine + AVAudioSession configured to mix with others so Spotify keeps playing (NFR17/NFR21), And ducking ramps -12dB over 500ms on the audio thread, And Riff speech uses AVSpeechSynthesizer honoring the BCP-47 language, And it compiles via `expo prebuild` + dev-client. MUST be verified on a real iPhone (Ralph cannot compile/run native here).
-  > Spec: specs/planning-artifacts/architecture.md (Component Strategy — Sonic services, UX-DR3); contract in apps/mobile/src/sonic/nativeBridge.ts
-- [ ] Story 4.12: CaraokeAudio native module — Android (Kotlin)
+- [x] Story 4.12: CaraokeAudio native module — Android (Kotlin)
   > As a driver
   > I want the CaraokeAudio audio engine implemented as a native Kotlin local Expo Module for Android
   > So that the same sonic contract runs natively with correct audio-focus handling, not the no-op fallback.
