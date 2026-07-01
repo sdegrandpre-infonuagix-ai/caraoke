@@ -33,12 +33,7 @@
 
 - [x] Story 4.1: Native audio module & LiveKit live voice
 - [x] Story 4.2: SessionStateMachine & sonic services
-  > As a developer
-  > I want the session state machine and the sonic services in place
-  > So that visual and audio feedback stay consistent and the eyes-free experience works.
-  > AC: Given the mobile app and native audio module, When sonic services are implemented, Then `SonicEngine`, `RiffVoice`, `AudioDucking`, and `AmbientPresence` exist as native-backed services with TS facades + event bridge (UX-DR3), And ducking lowers the backing track ~12dB / partner ~6dB with 500ms restore and honors the priority stack (UX-DR10), And both visual and sonic layers subscribe to the `SessionStateMachine` (UX-DR2).
-  > Spec: specs/planning-artifacts/epics.md#story-4-2
-- [ ] Story 4.3: Voice-Agent intent & song request
+- [x] Story 4.3: Voice-Agent intent & song request
   > As a user
   > I want to start a session and request a song entirely by voice
   > So that I never touch the screen while driving.
