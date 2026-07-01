@@ -81,7 +81,7 @@
   > So that I'm never trapped.
   > AC: Given an active session, When I issue the disconnect voice command, Then the session ends immediately for me (FR34), And it is the fastest action available, requiring no screen interaction.
   > Spec: specs/planning-artifacts/epics.md#story-6-2
-- [ ] Story 6.3: Independent permission management
+- [x] Story 6.3: Independent permission management
   > As a user
   > I want to grant/deny mic, location, and notifications independently
   > So that I share only what I'm comfortable with.
