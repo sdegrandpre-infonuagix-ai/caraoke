@@ -39,12 +39,7 @@
 - [x] Story 4.6: Voice playback controls
 - [x] Story 4.7: Eyes-free driving mode & session screen
 - [x] Story 4.8: Voice-first errors, reconnect & resync
-  > As a driver
-  > I want dropped connections handled calmly by voice with automatic recovery
-  > So that a glitch feels like a pause, not a crash.
-  > AC: Given an active duet, When the connection drops, Then Riff announces it by voice and auto-reconnects within the continuity window (≤60s), resyncing on recovery (FR15, FR25, NFR15), And if reconnection fails, the agent ends the session gracefully by voice with a warm next step (FR26), And no modal or screen interaction is required while moving (UX-DR11).
-  > Spec: specs/planning-artifacts/epics.md#story-4-8
-- [ ] Story 4.9: Post-session "felt together?" capture
+- [x] Story 4.9: Post-session "felt together?" capture
   > As a user
   > I want Riff to ask how it felt and capture my spoken answer
   > So that the product's truest metric is measured without a survey.
@@ -56,6 +51,18 @@
   > So that the primary interface is verified, not shipped on vibes.
   > AC: Given the sonic services, When the harness runs, Then it asserts cue playback per state, ducking levels/curves (−12dB/500ms), ambient-presence-while-black, and the RiffVoice follow-up window (UX-DR4), And it runs in CI alongside the unit suite.
   > Spec: specs/planning-artifacts/epics.md#story-4-10
+- [ ] Story 4.11: CaraokeAudio native module — iOS (Swift)
+  > As a driver
+  > I want the CaraokeAudio audio engine implemented as a native Swift local Expo Module for iOS
+  > So that sonic cues, ducking, ambient presence, and Riff TTS actually play with low latency off the JS thread (not the current no-op JS fallback).
+  > AC: Given a local Expo Module named `CaraokeAudio` under `apps/mobile/modules/caraoke-audio/ios` (Swift), When the app runs on iOS, Then `requireOptionalNativeModule('CaraokeAudio')` resolves so `hasNativeSonic === true`, And it fully implements the existing `NativeSonicModule` contract (playCue/setGains/restore/speak/startAmbient/stopAmbient) via AVAudioEngine + AVAudioSession configured to mix with others so Spotify keeps playing (NFR17/NFR21), And ducking ramps -12dB over 500ms on the audio thread, And Riff speech uses AVSpeechSynthesizer honoring the BCP-47 language, And it compiles via `expo prebuild` + dev-client. MUST be verified on a real iPhone (Ralph cannot compile/run native here).
+  > Spec: specs/planning-artifacts/architecture.md (Component Strategy — Sonic services, UX-DR3); contract in apps/mobile/src/sonic/nativeBridge.ts
+- [ ] Story 4.12: CaraokeAudio native module — Android (Kotlin)
+  > As a driver
+  > I want the CaraokeAudio audio engine implemented as a native Kotlin local Expo Module for Android
+  > So that the same sonic contract runs natively with correct audio-focus handling, not the no-op fallback.
+  > AC: Given the `CaraokeAudio` local Expo Module under `apps/mobile/modules/caraoke-audio/android` (Kotlin), When the app runs on Android, Then the module resolves so `hasNativeSonic === true`, And it fully implements the `NativeSonicModule` contract via AudioManager audio-focus (transient-may-duck) + SoundPool/ExoPlayer for cues + TextToSpeech for Riff, coexisting with Spotify (NFR17/NFR21), And ducking ramps -12dB over 500ms, And it compiles via `expo prebuild` + dev-client. MUST be verified on a real Android device (Ralph cannot compile/run native here).
+  > Spec: specs/planning-artifacts/architecture.md (Component Strategy — Sonic services, UX-DR3); contract in apps/mobile/src/sonic/nativeBridge.ts
 ### Nearby Discovery
 > Goal: Spontaneous duets with nearby strangers — safe by construction.
 
