@@ -36,12 +36,7 @@
 - [x] Story 4.3: Voice-Agent intent & song request
 - [x] Story 4.4: Simultaneous scheduled start
 - [x] Story 4.5: Drift monitoring & correction
-  > As a singer
-  > I want the two backing tracks kept in sync invisibly
-  > So that we stay rhythmically together.
-  > AC: Given an active duet, When playback positions are reported over the LiveKit data channel, Then the system detects drift between the two streams (FR19), And corrects via micro-seek/nudge on the lagging device, targeting ≤50ms (FR20, NFR2), And correction is imperceptible — no user-facing metric or interruption.
-  > Spec: specs/planning-artifacts/epics.md#story-4-5
-- [ ] Story 4.6: Voice playback controls
+- [x] Story 4.6: Voice playback controls
   > As a user
   > I want to start, pause, and stop playback by voice
   > So that I control the session hands-free.

@@ -34,6 +34,39 @@ export function playTrack(idToken: string, sessionId: string): Promise<void> {
 }
 
 /**
+ * Pause playback on BOTH users' Spotify clients (Story 4.6, FR21).
+ * Backend calls Spotify MCP pause on both devices and publishes `playback.paused` via AppSync.
+ */
+export function pausePlayback(idToken: string, sessionId: string): Promise<void> {
+  return apiFetch<void>(`/sessions/${sessionId}/playback/pause`, {
+    method: 'POST',
+    token: idToken,
+  });
+}
+
+/**
+ * Resume playback on BOTH users' Spotify clients (Story 4.6, FR21).
+ * Backend calls Spotify MCP resume on both devices and publishes `playback.resumed` via AppSync.
+ */
+export function resumePlayback(idToken: string, sessionId: string): Promise<void> {
+  return apiFetch<void>(`/sessions/${sessionId}/playback/resume`, {
+    method: 'POST',
+    token: idToken,
+  });
+}
+
+/**
+ * Stop the session: pause both Spotify clients and end the session (Story 4.6, FR21).
+ * Backend publishes `session.ended` via AppSync. The session machine transitions to `ended`.
+ */
+export function stopSession(idToken: string, sessionId: string): Promise<void> {
+  return apiFetch<void>(`/sessions/${sessionId}/playback/stop`, {
+    method: 'POST',
+    token: idToken,
+  });
+}
+
+/**
  * Seek to a specific position (ms) on the user's Spotify client.
  * Used by the drift-correction loop (Story 4.5, FR20): a micro-seek on the lagging device
  * to bring it within the ≤50ms target. Imperceptible for seeks < 500ms.
