@@ -40,6 +40,7 @@ import { getFirehoseClient } from './integrations/firehose/index.js';
 import { TelemetryService } from './modules/telemetry/telemetry.service.js';
 import { createTelemetryRouter } from './modules/telemetry/telemetry.router.js';
 import { PgTelemetryRepository } from './modules/telemetry/telemetry.repository.js';
+import { createTelemetryAdminRouter } from './modules/telemetry/telemetry.admin.router.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -177,6 +178,7 @@ export function createApp(deps: AppDeps = {}): Express {
   // Telemetry routes (Story 8.1/8.2, FR42/FR43/AR7): session-health + felt-together.
   const telemetryService = new TelemetryService(getFirehoseClient(env), new PgTelemetryRepository());
   app.use('/', createTelemetryRouter({ verifier, service: telemetryService }));
+  app.use('/', createTelemetryAdminRouter({ service: telemetryService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

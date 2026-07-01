@@ -147,7 +147,7 @@
   > So that only authorized operators access ops tools.
   > AC: Given the `apps/admin` web app, When I sign in, Then access is restricted to the `admin` Cognito group via RBAC (NFR11), And the console shell provides navigation to dashboards, billing, and accounts.
   > Spec: specs/planning-artifacts/epics.md#story-8-3
-- [ ] Story 8.4: Metrics dashboards
+- [x] Story 8.4: Metrics dashboards
   > As founder/Maria
   > I want dashboards of the venture's key metrics
   > So that I make decisions on data, not vibes.
