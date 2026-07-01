@@ -54,7 +54,7 @@
   > So that my precise location is never exposed.
   > AC: Given an opted-in, age-verified user with coarse location granted, When discovery is active, Then only a coarse Google Plus-Code area is published to a TTL entry in Redis (FR29, NFR9), And precise coordinates are never stored or transmitted, And the entry expires automatically (no trail).
   > Spec: specs/planning-artifacts/epics.md#story-5-3
-- [ ] Story 5.4: Voice read-out of nearby singers
+- [x] Story 5.4: Voice read-out of nearby singers
   > As a driver
   > I want to ask Riff who's nearby
   > So that I can find a duet partner hands-free.
