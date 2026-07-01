@@ -19,11 +19,14 @@ const config: ExpoConfig = {
       // Mic consent copy (FR22). Caraoke captures the mic only for the live duet voice.
       NSMicrophoneUsageDescription:
         'Caraoke uses your microphone so you and your partner can hear each other while you sing. Your voice is live only and never recorded.',
+      // Location consent copy (Story 5.3, FR29). Only a coarse area is used — never stored.
+      NSLocationWhenInUseUsageDescription:
+        'Caraoke uses your approximate location to show you nearby singers. Only a coarse area code is shared — your exact location is never stored or transmitted.',
     },
   },
   android: {
     package: 'ai.caraoke.app',
-    permissions: ['RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS'],
+    permissions: ['RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS', 'ACCESS_COARSE_LOCATION'],
   },
   plugins: [
     'expo-router',

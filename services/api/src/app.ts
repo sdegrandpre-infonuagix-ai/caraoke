@@ -25,6 +25,9 @@ import { getPushSender } from './integrations/push/index.js';
 import { getStripeIdentityProvider } from './integrations/stripe/index.js';
 import { AgeVerificationService } from './modules/ageVerification/ageVerification.service.js';
 import { createAgeVerificationRouter } from './modules/ageVerification/ageVerification.router.js';
+import { getRedisStore } from './integrations/redis/index.js';
+import { DiscoveryService } from './modules/discovery/discovery.service.js';
+import { createDiscoveryRouter } from './modules/discovery/discovery.router.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -131,6 +134,10 @@ export function createApp(deps: AppDeps = {}): Express {
   // Age-verification routes (Story 5.2, FR32).
   const ageVerificationService = new AgeVerificationService(getStripeIdentityProvider(env));
   app.use('/', createAgeVerificationRouter({ verifier, service: ageVerificationService }));
+
+  // Discovery routes (Story 5.3/5.4, FR28/FR29).
+  const discoveryService = new DiscoveryService(getRedisStore(env));
+  app.use('/', createDiscoveryRouter({ verifier, service: discoveryService, identityService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

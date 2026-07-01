@@ -25,6 +25,8 @@ const envSchema = z.object({
   // AppSync Events (Story 3.4). Required to publish real-time events in live mode.
   APPSYNC_EVENTS_HTTP_URL: z.string().url().optional(),
   APPSYNC_EVENTS_API_KEY: z.string().optional(),
+  // Redis (Story 5.3). TTL-based discovery presence store.
+  REDIS_URL: z.string().url().optional(),
   // Push notifications (Story 3.5). Deep-link scheme; optional Expo access token.
   APP_SCHEME: z.string().default('caraoke'),
   EXPO_ACCESS_TOKEN: z.string().optional(),

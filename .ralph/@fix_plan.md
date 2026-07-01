@@ -48,12 +48,7 @@
 
 - [x] Story 5.1: Opt-in discoverability toggle
 - [x] Story 5.2: Age verification (18+) via Stripe Identity
-  > As the platform
-  > I want stranger discovery gated to verified adults
-  > So that minors are not exposed to stranger voice interaction.
-  > AC: Given a user enabling discovery for the first time, When the age gate triggers, Then a one-time age verification runs via the age-verification abstraction (Stripe Identity) (FR32, NFR11), And only an `is18Plus` result + verification reference is stored — never the ID document, And under-18/failed verification blocks discovery with a warm explanation.
-  > Spec: specs/planning-artifacts/epics.md#story-5-2
-- [ ] Story 5.3: Coarse-location publishing (Plus Codes)
+- [x] Story 5.3: Coarse-location publishing (Plus Codes)
   > As a discoverable user
   > I want to be surfaced only by coarse area
   > So that my precise location is never exposed.

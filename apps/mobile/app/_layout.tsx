@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { useDiscoveryStore } from '../src/stores/useDiscoveryStore';
+import { useLocationPublisher } from '../src/discovery/useLocationPublisher';
 import { usePushRegistration } from '../src/notifications/usePushRegistration';
 import { clockSync } from '../src/lib/clockSync';
 import { attachSonicEngine } from '../src/sonic';
@@ -35,6 +36,12 @@ function SonicBridge() {
   return null;
 }
 
+/** Publish coarse Plus Code while discovery is active (Story 5.3, FR29, NFR9). */
+function LocationBridge() {
+  useLocationPublisher();
+  return null;
+}
+
 /**
  * Root layout (Expo Router). Provides TanStack Query, restores any persisted session on
  * launch, and hosts the navigation stack. Feature route groups — (onboarding)/ (auth)/
@@ -57,6 +64,7 @@ export default function RootLayout() {
           <PushBridge />
           <ClockBridge />
           <SonicBridge />
+          <LocationBridge />
           <Stack screenOptions={{ headerShown: false }} />
         </SafeAreaProvider>
       </StripeProvider>
