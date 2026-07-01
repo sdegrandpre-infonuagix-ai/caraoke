@@ -41,12 +41,7 @@
 - [x] Story 4.8: Voice-first errors, reconnect & resync
 - [x] Story 4.9: Post-session "felt together?" capture
 - [x] Story 4.10: Sonic verification harness
-  > As a developer
-  > I want automated assertions for the sonic layer
-  > So that the primary interface is verified, not shipped on vibes.
-  > AC: Given the sonic services, When the harness runs, Then it asserts cue playback per state, ducking levels/curves (−12dB/500ms), ambient-presence-while-black, and the RiffVoice follow-up window (UX-DR4), And it runs in CI alongside the unit suite.
-  > Spec: specs/planning-artifacts/epics.md#story-4-10
-- [ ] Story 4.11: CaraokeAudio native module — iOS (Swift)
+- [x] Story 4.11: CaraokeAudio native module — iOS (Swift)
   > As a driver
   > I want the CaraokeAudio audio engine implemented as a native Swift local Expo Module for iOS
   > So that sonic cues, ducking, ambient presence, and Riff TTS actually play with low latency off the JS thread (not the current no-op JS fallback).

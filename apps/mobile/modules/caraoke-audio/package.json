@@ -1,0 +1,9 @@
+{
+  "name": "caraoke-audio",
+  "version": "0.1.0",
+  "description": "CaraokeAudio Expo local module — iOS (Swift) and Android (Kotlin) audio engine",
+  "main": "./src/index.js",
+  "peerDependencies": {
+    "expo-modules-core": "*"
+  }
+}
