@@ -31,6 +31,10 @@ import { createDiscoveryRouter } from './modules/discovery/discovery.router.js';
 import { PgModerationRepository } from './modules/moderation/moderation.repository.js';
 import { ModerationService } from './modules/moderation/moderation.service.js';
 import { createModerationRouter } from './modules/moderation/moderation.router.js';
+import { PgBillingRepository } from './modules/billing/billing.repository.js';
+import { BillingService } from './modules/billing/billing.service.js';
+import { createBillingRouter } from './modules/billing/billing.router.js';
+import { getStripeBillingProvider } from './integrations/stripe/billing.provider.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -148,6 +152,14 @@ export function createApp(deps: AppDeps = {}): Express {
 
   // Moderation routes (Story 6.1, FR33): block + report (moderationService already instantiated above).
   app.use('/', createModerationRouter({ verifier, service: moderationService, identityService }));
+
+  // Billing routes (Story 7.1, FR38/FR41/NFR7): SetupIntent, subscribe, status.
+  const billingService = new BillingService(
+    new PgBillingRepository(),
+    getStripeBillingProvider(env),
+    env.STRIPE_PRICE_ID,
+  );
+  app.use('/', createBillingRouter({ verifier, service: billingService, identityService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

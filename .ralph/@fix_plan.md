@@ -102,7 +102,7 @@
 ### Billing & Subscriptions
 > Goal: The monetization rail — pay to sing.
 
-- [ ] Story 7.1: Stripe subscription & payment method
+- [x] Story 7.1: Stripe subscription & payment method
   > As a user
   > I want to add a payment method and start a subscription via Stripe
   > So that I can pay for Caraoke.

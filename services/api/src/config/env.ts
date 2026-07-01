@@ -32,6 +32,8 @@ const envSchema = z.object({
   EXPO_ACCESS_TOKEN: z.string().optional(),
   // Operator admin key (Story 6.5, FR37). Required to access the moderation queue.
   ADMIN_API_KEY: z.string().optional(),
+  // Stripe subscription price ID (Story 7.1, FR38). The price users subscribe to.
+  STRIPE_PRICE_ID: z.string().default('price_caraoke_monthly'),
 });
 
 export type Env = z.infer<typeof envSchema>;
