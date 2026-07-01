@@ -17,6 +17,10 @@ export interface UserRepository {
   update(id: string, patch: UserUpdate): Promise<User | null>;
   /** Delete the user; FK ON DELETE CASCADE removes all associated personal data (FR6). */
   deleteById(id: string): Promise<boolean>;
+  /** Suspend an account (FR48). Sets suspended_at = now(). Returns false if user not found. */
+  suspendUser(id: string): Promise<boolean>;
+  /** Reinstate a suspended account (FR48). Clears suspended_at. Returns false if user not found. */
+  reinstateUser(id: string): Promise<boolean>;
 }
 
 export class PgUserRepository implements UserRepository {
@@ -74,6 +78,22 @@ export class PgUserRepository implements UserRepository {
 
   async deleteById(id: string): Promise<boolean> {
     const { rowCount } = await this.db().query('DELETE FROM users WHERE id = $1', [id]);
+    return (rowCount ?? 0) > 0;
+  }
+
+  async suspendUser(id: string): Promise<boolean> {
+    const { rowCount } = await this.db().query(
+      `UPDATE users SET suspended_at = now(), updated_at = now() WHERE id = $1`,
+      [id],
+    );
+    return (rowCount ?? 0) > 0;
+  }
+
+  async reinstateUser(id: string): Promise<boolean> {
+    const { rowCount } = await this.db().query(
+      `UPDATE users SET suspended_at = NULL, updated_at = now() WHERE id = $1`,
+      [id],
+    );
     return (rowCount ?? 0) > 0;
   }
 }

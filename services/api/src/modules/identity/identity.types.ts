@@ -9,6 +9,8 @@ export interface User {
   authProvider: AuthProvider;
   /** Preferred language (FR3) — drives UI (FR5) and Voice-Agent speech (FR4). */
   languagePref: string;
+  /** Non-null when the account is suspended by an operator (FR48). */
+  suspendedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

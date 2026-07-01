@@ -165,7 +165,7 @@
   > So that I can track the path to two salaries.
   > AC: Given billing data, When I open revenue reporting, Then I see MRR, churn, and failed-payment rate (FR47), And figures reconcile with Stripe.
   > Spec: specs/planning-artifacts/epics.md#story-8-6
-- [ ] Story 8.7: User account administration
+- [x] Story 8.7: User account administration
   > As founder/Maria
   > I want to manage user accounts for billing and safety actions
   > So that I can resolve issues and enforce policy.

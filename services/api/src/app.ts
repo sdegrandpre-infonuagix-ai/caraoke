@@ -7,6 +7,7 @@ import { CognitoTokenVerifier, type TokenVerifier } from './middleware/auth.js';
 import { PgUserRepository } from './modules/identity/identity.repository.js';
 import { IdentityService } from './modules/identity/identity.service.js';
 import { createIdentityRouter } from './modules/identity/identity.router.js';
+import { createIdentityAdminRouter } from './modules/identity/identity.admin.router.js';
 import { CognitoUserDirectory, NoopUserDirectory } from './modules/identity/userDirectory.js';
 import { SpotifyService } from './modules/identity/spotify.service.js';
 import { PgSpotifyLinkRepository } from './modules/identity/spotify.repository.js';
@@ -141,6 +142,8 @@ export function createApp(deps: AppDeps = {}): Express {
 
   // Identity routes (FR1).
   app.use('/', createIdentityRouter({ service: identityService, verifier, spotifyService }));
+  // Account administration routes (Story 8.7, FR48).
+  app.use('/', createIdentityAdminRouter({ repo: new PgUserRepository() }));
 
   // Pairing routes (FR7, FR8, FR9).
   app.use(
