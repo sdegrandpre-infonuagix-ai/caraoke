@@ -32,12 +32,7 @@
 > Goal: The product: two people sing together, hands-free, across distance.
 
 - [x] Story 4.1: Native audio module & LiveKit live voice
-  > As a singer
-  > I want my microphone captured (after consent) and my partner's live voice in full duplex
-  > So that we hear each other while we sing.
-  > AC: Given explicit microphone consent (FR22), When a session's voice plane opens, Then the native audio module captures my mic and transmits full-duplex voice via the LiveKit SFU (FR23), And I hear my partner's live voice layered over my own playback (FR24), And voice media is encrypted end-to-end (SRTP/DTLS) (NFR6).
-  > Spec: specs/planning-artifacts/epics.md#story-4-1
-- [ ] Story 4.2: SessionStateMachine & sonic services
+- [x] Story 4.2: SessionStateMachine & sonic services
   > As a developer
   > I want the session state machine and the sonic services in place
   > So that visual and audio feedback stay consistent and the eyes-free experience works.

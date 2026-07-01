@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { usePushRegistration } from '../src/notifications/usePushRegistration';
 import { clockSync } from '../src/lib/clockSync';
+import { attachSonicEngine } from '../src/sonic';
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,12 @@ function ClockBridge() {
     clockSync.start();
     return () => clockSync.stop();
   }, []);
+  return null;
+}
+
+/** Subscribe the sonic layer to the SessionStateMachine (Story 4.2, UX-DR2). */
+function SonicBridge() {
+  useEffect(() => attachSonicEngine(), []);
   return null;
 }
 
@@ -44,6 +51,7 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <PushBridge />
         <ClockBridge />
+        <SonicBridge />
         <Stack screenOptions={{ headerShown: false }} />
       </SafeAreaProvider>
     </QueryClientProvider>

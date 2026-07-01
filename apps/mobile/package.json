@@ -11,7 +11,7 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@caraoke/mobile: no unit tests in scaffold yet\""
+    "test": "node --import tsx --test src/auth/jwt.test.ts src/theme/variants.test.ts src/sonic/ducking.test.ts src/sonic/cues.test.ts src/stores/useSessionMachine.test.ts"
   },
   "dependencies": {
     "@caraoke/shared": "workspace:*",
@@ -50,6 +50,7 @@
     "@types/react": "19.2.17",
     "eslint": "9.18.0",
     "tailwindcss": "3.4.17",
+    "tsx": "^4.19.2",
     "typescript": "5.7.3"
   }
 }

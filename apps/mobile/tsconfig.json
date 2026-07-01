@@ -7,7 +7,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@caraoke/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [
