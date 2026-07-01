@@ -61,7 +61,7 @@ export function createModerationRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = blockSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'targetUserId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'targetUserId required'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
       await deps.service.block(user.id, parsed.data.targetUserId);
@@ -75,7 +75,7 @@ export function createModerationRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = reportSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'targetUserId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'targetUserId required'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
       const { escalated } = await deps.service.report(

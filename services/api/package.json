@@ -17,13 +17,14 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "3.726.1",
+    "@aws-sdk/client-firehose": "^3.1078.0",
     "@aws-sdk/client-secrets-manager": "^3.621.0",
     "@caraoke/shared": "workspace:*",
     "aws-jwt-verify": "5.2.1",
     "express": "4.21.2",
+    "ioredis": "^5.3.2",
     "livekit-server-sdk": "2.15.5",
     "pg": "8.22.0",
-    "ioredis": "^5.3.2",
     "stripe": "^16.2.0",
     "zod": "3.24.1"
   },

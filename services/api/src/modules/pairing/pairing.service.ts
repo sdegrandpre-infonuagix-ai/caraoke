@@ -63,6 +63,14 @@ export class PairingService {
    * connected session is a single request.
    */
   async createSessionWith(hostUserId: string, guestUserId: string): Promise<SessionConnection> {
+    // Block check (FR33): the fast re-pair path must NOT let a blocked/blocking user force a
+    // live session. isBlocked is bidirectional, so this covers either party having blocked.
+    if (this.opts.blockChecker) {
+      const blocked = await this.opts.blockChecker.isBlocked(hostUserId, guestUserId);
+      if (blocked) {
+        throw new AppError('FORBIDDEN', 'You cannot start a session with this user.');
+      }
+    }
     const session = await this.allocate(hostUserId, guestUserId);
     return toConnection(session);
   }

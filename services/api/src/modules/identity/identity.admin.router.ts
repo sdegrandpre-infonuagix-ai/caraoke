@@ -24,7 +24,7 @@ export function createIdentityAdminRouter(deps: { repo: UserRepository }): Route
 
   router.post('/admin/accounts/:id/suspend', requireAdmin, async (req, res, next) => {
     try {
-      const found = await deps.repo.suspendUser(req.params['id']!);
+      const found = await deps.repo.suspendUser(String(req.params['id']));
       if (!found) {
         res.status(404).json({ error: 'NOT_FOUND', message: 'User not found.' });
         return;
@@ -38,7 +38,7 @@ export function createIdentityAdminRouter(deps: { repo: UserRepository }): Route
 
   router.post('/admin/accounts/:id/reinstate', requireAdmin, async (req, res, next) => {
     try {
-      const found = await deps.repo.reinstateUser(req.params['id']!);
+      const found = await deps.repo.reinstateUser(String(req.params['id']));
       if (!found) {
         res.status(404).json({ error: 'NOT_FOUND', message: 'User not found.' });
         return;

@@ -126,8 +126,9 @@ export function createPairingRouter(deps: {
   router.get('/sessions/:id/ready', auth, (req, res, next) => {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
-    deps.readyService
-      .getReadyState(String(req.params.id))
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.readyService.getReadyState(String(req.params.id), user.id))
       .then((state) => res.json(ok(state)))
       .catch(next);
   });

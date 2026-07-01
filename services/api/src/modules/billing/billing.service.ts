@@ -31,6 +31,13 @@ export class BillingService {
     email: string,
     paymentMethodId: string,
   ): Promise<{ subscriptionId: string; status: string; currentPeriodEnd: Date }> {
+    // Guard against a duplicate subscription (double-tap / retry). Without this, a second
+    // Stripe subscription is created and bills forever while the DB only tracks the latest,
+    // making the orphaned charge invisible and un-cancellable via the API.
+    const existing = await this.repo.findByUserId(userId);
+    if (existing?.subscriptionId && ['active', 'trialing'].includes(existing.subscriptionStatus ?? '')) {
+      throw new AppError('CONFLICT', 'You already have an active subscription.');
+    }
     const customerId = await this.ensureCustomer(userId, email);
     const sub = await this.stripe.createSubscription(customerId, paymentMethodId, this.priceId);
     await this.repo.saveSubscription(userId, sub.subscriptionId, sub.status, sub.currentPeriodEnd);

@@ -34,7 +34,7 @@ export function createBillingRouter(deps: {
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
-      const email = user.email ?? claims.sub;
+      const email = user.email ?? claims.email;
       const { clientSecret } = await deps.service.createSetupIntent(user.id, email);
       res.json(ok({ clientSecret }));
     } catch (e) {
@@ -46,10 +46,10 @@ export function createBillingRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = subscribeSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'paymentMethodId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'paymentMethodId required'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
-      const email = user.email ?? claims.sub;
+      const email = user.email ?? claims.email;
       const result = await deps.service.subscribe(user.id, email, parsed.data.paymentMethodId);
       res.json(ok(result));
     } catch (e) {
@@ -75,10 +75,10 @@ export function createBillingRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = planChangeSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'priceId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'priceId required'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
-      const email = user.email ?? claims.sub;
+      const email = user.email ?? claims.email;
       const result = await deps.service.changePlan(user.id, email, parsed.data.priceId);
       res.json(ok(result));
     } catch (e) {

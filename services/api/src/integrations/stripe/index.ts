@@ -4,8 +4,8 @@ import { MockStripeIdentityProvider } from './mock.js';
 
 /** Minimum surface needed for age verification (Story 5.2). */
 export interface StripeIdentityProvider {
-  createVerificationSession(): Promise<{ clientSecret: string; sessionId: string }>;
-  getVerificationResult(sessionId: string): Promise<{ is18Plus: boolean }>;
+  createVerificationSession(ownerId: string): Promise<{ clientSecret: string; sessionId: string }>;
+  getVerificationResult(sessionId: string): Promise<{ is18Plus: boolean; ownerId?: string }>;
 }
 
 export function getStripeIdentityProvider(env: Env): StripeIdentityProvider {

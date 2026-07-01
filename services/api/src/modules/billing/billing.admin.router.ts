@@ -43,7 +43,7 @@ export function createBillingAdminRouter(deps: {
 
   router.post('/admin/billing/refund', requireAdmin, async (req, res, next) => {
     const parsed = refundSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'chargeId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'chargeId required'));
     try {
       const result = await deps.stripe.createRefund(
         parsed.data.chargeId,

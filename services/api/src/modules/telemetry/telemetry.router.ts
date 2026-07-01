@@ -46,10 +46,10 @@ export function createTelemetryRouter(deps: {
   router.post('/sessions/:sessionId/feedback/felt-together', auth, async (req, res, next) => {
     if (!req.authClaims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = feltTogetherSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'Invalid felt-together payload.'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'Invalid felt-together payload.'));
     try {
       await deps.service.recordFeltTogether(
-        req.authClaims.sub,
+        req.authClaims.cognitoSub,
         String(req.params.sessionId),
         parsed.data.sentiment,
       );
@@ -74,7 +74,7 @@ export function createTelemetryRouter(deps: {
   router.post('/telemetry/session-health', auth, async (req, res, next) => {
     if (!req.authClaims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = sessionHealthSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'Invalid telemetry event.'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'Invalid telemetry event.'));
     try {
       await deps.service.emit(parsed.data as Record<string, unknown>);
       res.json(ok(null));
