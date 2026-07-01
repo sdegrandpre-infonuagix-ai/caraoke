@@ -69,7 +69,7 @@
 ### Trust, Safety & Privacy
 > Goal: Users are safe, in control, and protected.
 
-- [ ] Story 6.1: Mute, block & report
+- [x] Story 6.1: Mute, block & report
   > As a user
   > I want to mute, block, and report another user
   > So that I can protect myself during or after a session.

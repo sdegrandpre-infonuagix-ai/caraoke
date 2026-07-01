@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useMicConsent } from './consentStore';
 import { getVoiceToken } from '../api/voice';
@@ -51,5 +51,16 @@ export function useVoiceRoom(sessionId: string | undefined) {
     };
   }, [sessionId, idToken, micConsented]);
 
-  return { status, partnerPresent };
+  /** Unsubscribe from all remote audio tracks — silences the partner immediately (Story 6.1). */
+  const mutePartner = useCallback(() => {
+    const room = connRef.current?.room;
+    if (!room) return;
+    for (const [, participant] of room.remoteParticipants) {
+      for (const [, pub] of participant.audioTrackPublications) {
+        pub.setSubscribed(false);
+      }
+    }
+  }, []);
+
+  return { status, partnerPresent, mutePartner };
 }

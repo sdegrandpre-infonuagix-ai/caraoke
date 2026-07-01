@@ -28,6 +28,9 @@ import { createAgeVerificationRouter } from './modules/ageVerification/ageVerifi
 import { getRedisStore } from './integrations/redis/index.js';
 import { DiscoveryService } from './modules/discovery/discovery.service.js';
 import { createDiscoveryRouter } from './modules/discovery/discovery.router.js';
+import { PgModerationRepository } from './modules/moderation/moderation.repository.js';
+import { ModerationService } from './modules/moderation/moderation.service.js';
+import { createModerationRouter } from './modules/moderation/moderation.router.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -73,11 +76,15 @@ export function createApp(deps: AppDeps = {}): Express {
   const spotifyService =
     deps.spotifyService ??
     new SpotifyService(getSpotifyProvider(env), new PgSpotifyLinkRepository());
+  // Moderation (Story 6.1): instantiate early so pairingService can use it as a blockChecker.
+  const moderationService = new ModerationService(new PgModerationRepository());
+
   const pairingService =
     deps.pairingService ??
     new PairingService(new PgSessionRepository(), {
       inviteBaseUrl: env.INVITE_BASE_URL,
       ttlMinutes: env.SESSION_INVITE_TTL_MINUTES,
+      blockChecker: moderationService,
     });
   const savedPartnerService =
     deps.savedPartnerService ??
@@ -138,6 +145,9 @@ export function createApp(deps: AppDeps = {}): Express {
   // Discovery routes (Story 5.3/5.4/5.5, FR28/FR29/FR30/FR31).
   const discoveryService = new DiscoveryService(getRedisStore(env));
   app.use('/', createDiscoveryRouter({ verifier, service: discoveryService, identityService, savedPartnerService }));
+
+  // Moderation routes (Story 6.1, FR33): block + report (moderationService already instantiated above).
+  app.use('/', createModerationRouter({ verifier, service: moderationService, identityService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

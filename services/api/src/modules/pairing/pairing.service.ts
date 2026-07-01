@@ -16,11 +16,18 @@ export interface JoinByInvite {
   code?: string;
 }
 
+/** Decoupled check so PairingService doesn't import the moderation module directly. */
+export interface BlockChecker {
+  isBlocked(userA: string, userB: string): Promise<boolean>;
+}
+
 export interface PairingServiceOptions {
   inviteBaseUrl: string;
   ttlMinutes: number;
   /** Injectable clock for deterministic tests. */
   now?: () => Date;
+  /** Optional block enforcement — injected by app.ts after the moderation module is wired. */
+  blockChecker?: BlockChecker;
 }
 
 function isUniqueViolation(err: unknown): boolean {
@@ -94,6 +101,14 @@ export class PairingService {
     const session = await this.resolve(invite);
     if (!session) {
       throw new AppError('SESSION_NOT_FOUND', 'That invite is invalid. Ask your partner for a new one.');
+    }
+
+    // Block check (FR33): reject if either party has blocked the other.
+    if (this.opts.blockChecker) {
+      const blocked = await this.opts.blockChecker.isBlocked(joinerUserId, session.hostUserId);
+      if (blocked) {
+        throw new AppError('FORBIDDEN', 'You cannot join this session.');
+      }
     }
 
     const now = this.opts.now?.() ?? new Date();

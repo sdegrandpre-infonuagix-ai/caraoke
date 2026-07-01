@@ -11,7 +11,7 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --import tsx --test src/auth/jwt.test.ts src/theme/variants.test.ts src/sonic/ducking.test.ts src/sonic/cues.test.ts src/sonic/sonicEngine.test.ts src/stores/useSessionMachine.test.ts src/agent/failureLadder.test.ts src/agent/intentParser.test.ts src/sync/scheduledStart.test.ts src/sync/driftMonitor.test.ts src/agent/playbackIntent.test.ts src/motion/motionDetect.test.ts src/reconnect/reconnectLogic.test.ts src/telemetry/feltTogether.test.ts src/discovery/locationUtils.test.ts src/discovery/nearbyIntent.test.ts src/discovery/connectIntent.test.ts"
+    "test": "node --import tsx --test src/auth/jwt.test.ts src/theme/variants.test.ts src/sonic/ducking.test.ts src/sonic/cues.test.ts src/sonic/sonicEngine.test.ts src/stores/useSessionMachine.test.ts src/agent/failureLadder.test.ts src/agent/intentParser.test.ts src/sync/scheduledStart.test.ts src/sync/driftMonitor.test.ts src/agent/playbackIntent.test.ts src/motion/motionDetect.test.ts src/reconnect/reconnectLogic.test.ts src/telemetry/feltTogether.test.ts src/discovery/locationUtils.test.ts src/discovery/nearbyIntent.test.ts src/discovery/connectIntent.test.ts src/moderation/moderationIntent.test.ts"
   },
   "dependencies": {
     "@caraoke/shared": "workspace:*",
