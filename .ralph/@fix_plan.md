@@ -40,12 +40,7 @@
 - [x] Story 4.7: Eyes-free driving mode & session screen
 - [x] Story 4.8: Voice-first errors, reconnect & resync
 - [x] Story 4.9: Post-session "felt together?" capture
-  > As a user
-  > I want Riff to ask how it felt and capture my spoken answer
-  > So that the product's truest metric is measured without a survey.
-  > AC: Given a song has just ended, When the 2-second afterglow passes, Then `RiffVoice` asks "did that feel like singing together?" and the native module captures the spoken answer (FR16, FR42, UX-DR16), And there is no visual component for this capture, And the response is stored for telemetry.
-  > Spec: specs/planning-artifacts/epics.md#story-4-9
-- [ ] Story 4.10: Sonic verification harness
+- [x] Story 4.10: Sonic verification harness
   > As a developer
   > I want automated assertions for the sonic layer
   > So that the primary interface is verified, not shipped on vibes.
