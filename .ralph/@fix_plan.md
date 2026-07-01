@@ -34,12 +34,7 @@
 - [x] Story 4.1: Native audio module & LiveKit live voice
 - [x] Story 4.2: SessionStateMachine & sonic services
 - [x] Story 4.3: Voice-Agent intent & song request
-  > As a user
-  > I want to start a session and request a song entirely by voice
-  > So that I never touch the screen while driving.
-  > AC: Given an active or pairing session, When I say "sing [song] with [partner]", Then the xAI Voice Agent interprets the intent and confirms by restating it (FR12, FR13, UX-DR9), And the agent initiates the requested song for the session via the Spotify MCP, And the agent uses binary-only choices and a failure ladder on misrecognition (UX-DR9).
-  > Spec: specs/planning-artifacts/epics.md#story-4-3
-- [ ] Story 4.4: Simultaneous scheduled start
+- [x] Story 4.4: Simultaneous scheduled start
   > As a pair of singers
   > I want both phones to start the same song in lockstep
   > So that it feels like one shared performance.
