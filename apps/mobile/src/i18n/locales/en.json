@@ -106,5 +106,13 @@
   "language": {
     "title": "Language",
     "subtitle": "Choose the language for the app and your Caraoke voice."
+  },
+  "discovery": {
+    "title": "Discover nearby singers",
+    "description": "Let other Caraoke singers in your area find you for a spontaneous duet. Off by default — your choice.",
+    "toggleLabel": "Make me discoverable",
+    "toggleSublabel": "Off by default — opt in to be found.",
+    "enabledNote": "You'll appear to nearby Caraoke singers while this is on.",
+    "riffRationale": "You'll now appear to nearby Caraoke singers. Turn this off anytime in settings."
   }
 }

@@ -48,5 +48,13 @@
   "language": {
     "title": "Langue",
     "subtitle": "Choisissez la langue de l'application et de votre voix Caraoke."
+  },
+  "discovery": {
+    "title": "Trouver des chanteurs proches",
+    "description": "Laissez d'autres chanteurs Caraoke dans votre région vous trouver pour un duo spontané. Désactivé par défaut.",
+    "toggleLabel": "Me rendre découvrable",
+    "toggleSublabel": "Désactivé par défaut — vous choisissez d'être trouvé.",
+    "enabledNote": "Vous apparaîtrez aux chanteurs Caraoke à proximité.",
+    "riffRationale": "Vous serez désormais visible pour les chanteurs Caraoke à proximité. Vous pouvez désactiver cela à tout moment dans les paramètres."
   }
 }

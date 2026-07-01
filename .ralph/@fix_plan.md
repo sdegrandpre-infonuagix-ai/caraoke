@@ -43,15 +43,10 @@
 - [x] Story 4.10: Sonic verification harness
 - [x] Story 4.11: CaraokeAudio native module — iOS (Swift)
 - [x] Story 4.12: CaraokeAudio native module — Android (Kotlin)
-  > As a driver
-  > I want the CaraokeAudio audio engine implemented as a native Kotlin local Expo Module for Android
-  > So that the same sonic contract runs natively with correct audio-focus handling, not the no-op fallback.
-  > AC: Given the `CaraokeAudio` local Expo Module under `apps/mobile/modules/caraoke-audio/android` (Kotlin), When the app runs on Android, Then the module resolves so `hasNativeSonic === true`, And it fully implements the `NativeSonicModule` contract via AudioManager audio-focus (transient-may-duck) + SoundPool/ExoPlayer for cues + TextToSpeech for Riff, coexisting with Spotify (NFR17/NFR21), And ducking ramps -12dB over 500ms, And it compiles via `expo prebuild` + dev-client. MUST be verified on a real Android device (Ralph cannot compile/run native here).
-  > Spec: specs/planning-artifacts/architecture.md (Component Strategy — Sonic services, UX-DR3); contract in apps/mobile/src/sonic/nativeBridge.ts
 ### Nearby Discovery
 > Goal: Spontaneous duets with nearby strangers — safe by construction.
 
-- [ ] Story 5.1: Opt-in discoverability toggle
+- [x] Story 5.1: Opt-in discoverability toggle
   > As a user
   > I want discovery off by default and an explicit opt-in
   > So that I am never exposed without choosing to be.

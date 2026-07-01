@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../src/stores/useAuthStore';
+import { useDiscoveryStore } from '../src/stores/useDiscoveryStore';
 import { usePushRegistration } from '../src/notifications/usePushRegistration';
 import { clockSync } from '../src/lib/clockSync';
 import { attachSonicEngine } from '../src/sonic';
@@ -40,10 +41,12 @@ function SonicBridge() {
  */
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
+  const hydrateDiscovery = useDiscoveryStore((s) => s.hydrate);
 
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateDiscovery();
+  }, [hydrate, hydrateDiscovery]);
 
   return (
     <QueryClientProvider client={queryClient}>
