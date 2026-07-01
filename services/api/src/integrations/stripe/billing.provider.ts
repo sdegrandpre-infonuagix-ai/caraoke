@@ -19,6 +19,21 @@ export interface StripeBillingProvider {
   ): Promise<{ status: string; currentPeriodEnd: Date }>;
   /** List past invoices for the billing-history screen (FR40). */
   listInvoices(customerId: string, limit?: number): Promise<InvoiceSummary[]>;
+  /** List customers for the admin billing console (FR45). */
+  listAdminCustomers(limit: number): Promise<AdminCustomerSummary[]>;
+  /** Issue a refund (FR45). Partial if amountCents provided; full otherwise. */
+  createRefund(
+    chargeId: string,
+    amountCents?: number,
+    reason?: string,
+  ): Promise<{ refundId: string; status: string; amountCents: number }>;
+}
+
+export interface AdminCustomerSummary {
+  customerId: string;
+  email: string | null;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
 }
 
 export interface InvoiceSummary {
@@ -119,6 +134,34 @@ export class LiveStripeBillingProvider implements StripeBillingProvider {
       description: inv.description ?? (inv.lines.data[0]?.description ?? null),
     }));
   }
+
+  async listAdminCustomers(limit: number): Promise<AdminCustomerSummary[]> {
+    const stripe = await this.stripe;
+    const { data } = await stripe.customers.list({ limit, expand: ['data.subscriptions'] });
+    return data.map((c) => {
+      const sub = (c.subscriptions as Stripe.ApiList<Stripe.Subscription> | undefined)?.data[0];
+      return {
+        customerId: c.id,
+        email: c.email,
+        subscriptionId: sub?.id ?? null,
+        subscriptionStatus: sub?.status ?? null,
+      };
+    });
+  }
+
+  async createRefund(
+    chargeId: string,
+    amountCents?: number,
+    reason?: string,
+  ): Promise<{ refundId: string; status: string; amountCents: number }> {
+    const stripe = await this.stripe;
+    const refund = await stripe.refunds.create({
+      charge: chargeId,
+      ...(amountCents != null ? { amount: amountCents } : {}),
+      ...(reason ? { reason: reason as Stripe.RefundCreateParams.Reason } : {}),
+    });
+    return { refundId: refund.id, status: refund.status ?? 'pending', amountCents: refund.amount };
+  }
 }
 
 export class MockStripeBillingProvider implements StripeBillingProvider {
@@ -175,6 +218,30 @@ export class MockStripeBillingProvider implements StripeBillingProvider {
         description: 'Caraoke Monthly',
       },
     ];
+  }
+
+  async listAdminCustomers(_limit: number): Promise<AdminCustomerSummary[]> {
+    return [
+      {
+        customerId: 'cus_mock_001',
+        email: 'founder@caraoke.app',
+        subscriptionId: 'sub_mock_001',
+        subscriptionStatus: 'active',
+      },
+    ];
+  }
+
+  async createRefund(
+    chargeId: string,
+    amountCents?: number,
+    _reason?: string,
+  ): Promise<{ refundId: string; status: string; amountCents: number }> {
+    return {
+      refundId: `re_mock_${++this.counter}`,
+      status: 'succeeded',
+      amountCents: amountCents ?? 999,
+    };
+    void chargeId;
   }
 }
 

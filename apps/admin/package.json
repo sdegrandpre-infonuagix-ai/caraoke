@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/auth/adminGuard.test.ts src/metrics/metricFormatters.test.ts src/metrics/dashboardData.test.ts"
+    "test": "node --import tsx --test src/auth/adminGuard.test.ts src/metrics/metricFormatters.test.ts src/metrics/dashboardData.test.ts src/billing/billingAdmin.test.ts"
   },
   "dependencies": {
     "@caraoke/shared": "workspace:*",

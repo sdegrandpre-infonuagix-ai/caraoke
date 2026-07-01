@@ -153,7 +153,7 @@
   > So that I make decisions on data, not vibes.
   > AC: Given the telemetry pipeline and aggregations, When I open the dashboard, Then I see felt-together rate, simultaneous-start/drift/voice-latency distributions, paired 4-week retention, active pairs, and Premium-funnel drop-off (FR44), And data is filterable by time range.
   > Spec: specs/planning-artifacts/epics.md#story-8-4
-- [ ] Story 8.5: Billing administration
+- [x] Story 8.5: Billing administration
   > As founder/Maria
   > I want to manage subscriptions, refunds, and disputes
   > So that I can run billing operations.
