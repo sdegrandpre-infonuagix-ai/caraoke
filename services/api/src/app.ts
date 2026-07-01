@@ -135,9 +135,9 @@ export function createApp(deps: AppDeps = {}): Express {
   const ageVerificationService = new AgeVerificationService(getStripeIdentityProvider(env));
   app.use('/', createAgeVerificationRouter({ verifier, service: ageVerificationService }));
 
-  // Discovery routes (Story 5.3/5.4, FR28/FR29).
+  // Discovery routes (Story 5.3/5.4/5.5, FR28/FR29/FR30/FR31).
   const discoveryService = new DiscoveryService(getRedisStore(env));
-  app.use('/', createDiscoveryRouter({ verifier, service: discoveryService, identityService }));
+  app.use('/', createDiscoveryRouter({ verifier, service: discoveryService, identityService, savedPartnerService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

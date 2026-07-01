@@ -30,3 +30,15 @@ export function getNearbyUsers(idToken: string, plusCode: string): Promise<Nearb
     { token: idToken },
   );
 }
+
+/**
+ * One-shot handshake: save targetUserId as a partner and revoke their discovery entry
+ * so their location is never surfaced again (Story 5.5, FR30/FR31, go-dark).
+ */
+export function connectNearby(idToken: string, targetUserId: string): Promise<void> {
+  return apiFetch<void>('/discovery/connect', {
+    method: 'POST',
+    token: idToken,
+    body: { targetUserId },
+  });
+}

@@ -3,7 +3,7 @@
 // the discovery API, and reads the result aloud via Riff. Always returns true to consume
 // the transcript so the xAI agent (Story 4.3) is not invoked for nearby queries.
 
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import * as Location from 'expo-location';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useDiscoveryStore } from '../stores/useDiscoveryStore';
@@ -20,6 +20,8 @@ export interface NearbyQueryActions {
    * general xAI pipeline). Returns `false` when the transcript is unrelated.
    */
   handleTranscript: (transcript: string) => Promise<boolean>;
+  /** The most recent nearby-user list — populated after the first successful query. */
+  nearbyUsers: NearbyUser[];
 }
 
 export function useNearbyQuery(): NearbyQueryActions {
@@ -27,6 +29,9 @@ export function useNearbyQuery(): NearbyQueryActions {
   const discoverabilityEnabled = useDiscoveryStore((s) => s.discoverabilityEnabled);
   const is18Plus = useDiscoveryStore((s) => s.is18Plus);
   const { locale } = useLocale();
+  const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
+  // Keep a ref so the callback closure always reads the latest list without re-creating.
+  const nearbyRef = useRef<NearbyUser[]>([]);
 
   const handleTranscript = useCallback(async (transcript: string): Promise<boolean> => {
     if (!classifyNearbyIntent(transcript)) return false;
@@ -54,6 +59,8 @@ export function useNearbyQuery(): NearbyQueryActions {
       });
       const plusCode = toCoarsePlusCode(loc.coords.latitude, loc.coords.longitude);
       const users = await getNearbyUsers(idToken, plusCode);
+      nearbyRef.current = users;
+      setNearbyUsers(users);
       sonicEngine.riff.speak(buildNearbyResponse(users), locale);
     } catch {
       sonicEngine.riff.speak(
@@ -65,5 +72,5 @@ export function useNearbyQuery(): NearbyQueryActions {
     return true;
   }, [idToken, discoverabilityEnabled, is18Plus, locale]);
 
-  return { handleTranscript };
+  return { handleTranscript, nearbyUsers };
 }

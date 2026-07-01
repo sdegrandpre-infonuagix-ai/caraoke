@@ -60,7 +60,7 @@
   > So that I can find a duet partner hands-free.
   > AC: Given an opted-in user while driving, When I ask "any Caraokes nearby?", Then Riff reads out opted-in users within my coarse area by name (FR28), And an empty pool is handled warmly, never "0 found" (UX-DR8), And only coarse-area matches are surfaced (FR29).
   > Spec: specs/planning-artifacts/epics.md#story-5-4
-- [ ] Story 5.5: Add nearby partner & go-dark
+- [x] Story 5.5: Add nearby partner & go-dark
   > As a user
   > I want to add a nearby singer and have their location then disappear
   > So that discovery can't become tracking.
