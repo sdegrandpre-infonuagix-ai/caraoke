@@ -37,12 +37,7 @@
 - [x] Story 4.4: Simultaneous scheduled start
 - [x] Story 4.5: Drift monitoring & correction
 - [x] Story 4.6: Voice playback controls
-  > As a user
-  > I want to start, pause, and stop playback by voice
-  > So that I control the session hands-free.
-  > AC: Given an active session, When I say pause/stop/resume, Then the action applies and is reflected on both devices (FR21), And all controls are operable eyes-free (FR17).
-  > Spec: specs/planning-artifacts/epics.md#story-4-6
-- [ ] Story 4.7: Eyes-free driving mode & session screen
+- [x] Story 4.7: Eyes-free driving mode & session screen
   > As a driver
   > I want the screen to go black when moving and Riff to be the only interface
   > So that I never look away from the road.
