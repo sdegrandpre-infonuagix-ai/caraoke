@@ -36,6 +36,7 @@ import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRouter } from './modules/billing/billing.router.js';
 import { createBillingWebhookRouter } from './modules/billing/billing.webhook.router.js';
 import { createBillingAdminRouter } from './modules/billing/billing.admin.router.js';
+import { createBillingRevenueRouter } from './modules/billing/billing.revenue.router.js';
 import { getStripeBillingProvider } from './integrations/stripe/billing.provider.js';
 import { getFirehoseClient } from './integrations/firehose/index.js';
 import { TelemetryService } from './modules/telemetry/telemetry.service.js';
@@ -176,6 +177,7 @@ export function createApp(deps: AppDeps = {}): Express {
   );
   app.use('/', createBillingRouter({ verifier, service: billingService, identityService }));
   app.use('/', createBillingAdminRouter({ repo: billingRepo, stripe: getStripeBillingProvider(env) }));
+  app.use('/', createBillingRevenueRouter({ repo: billingRepo, monthlyPriceCents: env.STRIPE_MONTHLY_PRICE_CENTS }));
 
   // Telemetry routes (Story 8.1/8.2, FR42/FR43/AR7): session-health + felt-together.
   const telemetryService = new TelemetryService(getFirehoseClient(env), new PgTelemetryRepository());

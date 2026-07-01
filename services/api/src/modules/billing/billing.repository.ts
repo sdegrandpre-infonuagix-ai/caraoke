@@ -23,6 +23,8 @@ export interface BillingRepository {
   ): Promise<void>;
   /** Update status and period-end without changing the subscription ID (cancel/plan-change). */
   updateSubscriptionStatus(userId: string, status: string, currentPeriodEnd: Date): Promise<void>;
+  /** Count subscriptions by status for revenue reporting (FR47). */
+  getSubscriptionCounts(): Promise<Record<string, number>>;
 }
 
 export class PgBillingRepository implements BillingRepository {
@@ -119,5 +121,18 @@ export class PgBillingRepository implements BillingRepository {
        WHERE user_id = $1`,
       [userId, status, currentPeriodEnd],
     );
+  }
+
+  async getSubscriptionCounts(): Promise<Record<string, number>> {
+    const { rows } = await this.db().query<{ status: string; count: string }>(
+      `SELECT COALESCE(subscription_status, 'none') AS status, COUNT(*) AS count
+       FROM stripe_customers
+       GROUP BY subscription_status`,
+    );
+    const result: Record<string, number> = {};
+    for (const r of rows) {
+      result[r.status] = parseInt(r.count, 10);
+    }
+    return result;
   }
 }

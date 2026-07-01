@@ -159,7 +159,7 @@
   > So that I can run billing operations.
   > AC: Given the admin billing console, When I view a customer, Then I can see and manage subscriptions, transactions, refunds, and failed/disputed payments (FR45, FR46), And actions are logged.
   > Spec: specs/planning-artifacts/epics.md#story-8-5
-- [ ] Story 8.6: Revenue reporting
+- [x] Story 8.6: Revenue reporting
   > As founder/Maria
   > I want revenue and payment reporting
   > So that I can track the path to two salaries.

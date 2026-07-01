@@ -34,6 +34,8 @@ const envSchema = z.object({
   ADMIN_API_KEY: z.string().optional(),
   // Stripe subscription price ID (Story 7.1, FR38). The price users subscribe to.
   STRIPE_PRICE_ID: z.string().default('price_caraoke_monthly'),
+  // Monthly price in cents for MRR calculation (Story 8.6, FR47). Defaults to $9.99 CAD.
+  STRIPE_MONTHLY_PRICE_CENTS: z.coerce.number().int().positive().default(999),
   // Stripe webhook signing secret (Story 7.4, AR9). Required to verify webhook authenticity.
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
