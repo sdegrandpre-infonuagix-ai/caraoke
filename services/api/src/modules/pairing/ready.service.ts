@@ -50,9 +50,14 @@ export class SessionReadyService {
     return state;
   }
 
-  async getReadyState(sessionId: string): Promise<ReadyState> {
+  async getReadyState(sessionId: string, userId: string): Promise<ReadyState> {
     const session = await this.sessions.findById(sessionId);
     if (!session) throw new AppError('SESSION_NOT_FOUND', 'Session not found.');
+    // Participant guard: only the two singers may read a session's ready-state (parity with
+    // the POST route, which validates via decideReady). Prevents leaking other sessions' state.
+    if (session.hostUserId !== userId && session.guestUserId !== userId) {
+      throw new AppError('FORBIDDEN', 'You are not part of this session.');
+    }
     return {
       sessionId,
       status: session.status,

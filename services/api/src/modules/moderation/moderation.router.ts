@@ -1,7 +1,8 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router } from 'express';
 import { z } from 'zod';
 import { ok, AppError } from '@caraoke/shared';
 import { requireAuth, type TokenVerifier } from '../../middleware/auth.js';
+import { requireAdmin } from '../../middleware/adminAuth.js';
 import type { ModerationService } from './moderation.service.js';
 import type { IdentityService } from '../identity/identity.service.js';
 
@@ -18,23 +19,6 @@ const reportSchema = z.object({
 const resolveSchema = z.object({
   note: z.string().max(1000).optional(),
 });
-
-/**
- * Operator admin-key guard (Story 6.5, FR37).
- * Reads ADMIN_API_KEY from the env at request time so the key can be rotated without restart.
- */
-function requireAdmin(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
-  const key = process.env['ADMIN_API_KEY'];
-  if (!key || req.headers['x-admin-key'] !== key) {
-    res.status(403).json({ error: 'FORBIDDEN', message: 'Admin key required.' });
-    return;
-  }
-  next();
-}
 
 /**
  * Moderation routes (Story 6.1/6.5, FR33/FR37).
@@ -61,7 +45,7 @@ export function createModerationRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = blockSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'targetUserId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'targetUserId required'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
       await deps.service.block(user.id, parsed.data.targetUserId);
@@ -75,7 +59,7 @@ export function createModerationRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = reportSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'targetUserId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'targetUserId required'));
     try {
       const user = await deps.identityService.findOrCreate(claims);
       const { escalated } = await deps.service.report(

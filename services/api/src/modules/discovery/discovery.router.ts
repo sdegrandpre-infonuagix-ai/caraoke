@@ -38,11 +38,13 @@ export function createDiscoveryRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = publishSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'plusCode required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'plusCode required'));
 
     try {
       const user = await deps.identityService.findOrCreate(claims);
-      await deps.service.publishLocation(user.id, user.displayName ?? claims.email, parsed.data.plusCode);
+      // Never publish the raw email as a display name — it's returned to nearby strangers (NFR9).
+      // Fall back to a neutral, non-identifying label when the user hasn't set a display name.
+      await deps.service.publishLocation(user.id, user.displayName ?? 'A nearby singer', parsed.data.plusCode);
       res.json(ok(null));
     } catch (e) {
       next(e);
@@ -65,7 +67,7 @@ export function createDiscoveryRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = nearbySchema.safeParse(req.query);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'plusCode required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'plusCode required'));
 
     try {
       const user = await deps.identityService.findOrCreate(claims);
@@ -82,12 +84,20 @@ export function createDiscoveryRouter(deps: {
     const claims = req.authClaims;
     if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = connectSchema.safeParse(req.body);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'targetUserId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'targetUserId required'));
 
     try {
       const user = await deps.identityService.findOrCreate(claims);
-      await deps.savedPartnerService.save(user.id, parsed.data.targetUserId);
-      await deps.service.revokeLocation(parsed.data.targetUserId);
+      // The target must currently be broadcasting discovery, otherwise this endpoint would let
+      // anyone save an arbitrary user as a partner and force-revoke any user's location by id
+      // (griefing / non-consensual go-dark). Requiring a live entry ties connect to a real,
+      // in-progress discovery interaction. save() additionally rejects blocked pairs (FR33).
+      const target = await deps.service.getLocation(parsed.data.targetUserId);
+      if (!target) {
+        return next(new AppError('NOT_FOUND', 'That singer is no longer discoverable.'));
+      }
+      await deps.savedPartnerService.save(user.id, target.userId);
+      await deps.service.revokeLocation(target.userId);
       res.json(ok(null));
     } catch (e) {
       next(e);

@@ -21,7 +21,7 @@ export function createAgeVerificationRouter(deps: {
   router.post('/age-verification/session', auth, (req, res, next) => {
     if (!req.authClaims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     deps.service
-      .createSession()
+      .createSession(req.authClaims.cognitoSub)
       .then((result) => res.status(201).json(ok(result)))
       .catch(next);
   });
@@ -29,9 +29,9 @@ export function createAgeVerificationRouter(deps: {
   router.get('/age-verification/result', auth, (req, res, next) => {
     if (!req.authClaims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
     const parsed = resultQuerySchema.safeParse(req.query);
-    if (!parsed.success) return next(new AppError('BAD_REQUEST', 'sessionId required'));
+    if (!parsed.success) return next(new AppError('VALIDATION_FAILED', 'sessionId required'));
     deps.service
-      .getResult(parsed.data.sessionId)
+      .getResult(parsed.data.sessionId, req.authClaims.cognitoSub)
       .then((result) => res.json(ok(result)))
       .catch(next);
   });

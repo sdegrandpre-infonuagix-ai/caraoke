@@ -44,6 +44,7 @@ import { TelemetryService } from './modules/telemetry/telemetry.service.js';
 import { createTelemetryRouter } from './modules/telemetry/telemetry.router.js';
 import { PgTelemetryRepository } from './modules/telemetry/telemetry.repository.js';
 import { createTelemetryAdminRouter } from './modules/telemetry/telemetry.admin.router.js';
+import { sensitiveLimiter, adminLimiter } from './middleware/rateLimit.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -69,6 +70,10 @@ export interface AppDeps {
 export function createApp(deps: AppDeps = {}): Express {
   const app = express();
 
+  // Behind the ECS Express gateway / ALB (one proxy hop): trust a single X-Forwarded-For hop so
+  // req.ip is the real client for rate limiting, without trusting a spoofable full chain.
+  app.set('trust proxy', 1);
+
   // Stripe webhook — must be mounted BEFORE express.json() (raw body required for sig verification).
   const billingRepo = new PgBillingRepository();
   app.use(
@@ -77,6 +82,14 @@ export function createApp(deps: AppDeps = {}): Express {
   );
 
   app.use(express.json());
+
+  // Per-IP rate limits on the expensive / security-sensitive surfaces (registered before the
+  // routers so they run first). Money + identity mutations and the admin-key routes are the
+  // abuse-worthy targets; everything else stays unthrottled.
+  app.use('/billing/subscribe', sensitiveLimiter());
+  app.use('/billing/setup-intent', sensitiveLimiter());
+  app.use('/age-verification/session', sensitiveLimiter());
+  app.use('/admin', adminLimiter());
 
   // Media-server (LiveKit) accessed only via the integration abstraction (NFR20).
   const media = getMediaServer(loadEnv());
@@ -109,7 +122,12 @@ export function createApp(deps: AppDeps = {}): Express {
     });
   const savedPartnerService =
     deps.savedPartnerService ??
-    new SavedPartnerService(new PgSavedPartnerRepository(), pairingService, notificationService);
+    new SavedPartnerService(
+      new PgSavedPartnerRepository(),
+      pairingService,
+      notificationService,
+      moderationService,
+    );
   const readyService =
     deps.readyService ??
     new SessionReadyService(
@@ -166,7 +184,8 @@ export function createApp(deps: AppDeps = {}): Express {
   app.use('/', createAgeVerificationRouter({ verifier, service: ageVerificationService }));
 
   // Discovery routes (Story 5.3/5.4/5.5, FR28/FR29/FR30/FR31).
-  const discoveryService = new DiscoveryService(getRedisStore(env));
+  // blockChecker hides blocked users from nearby results and blocks connecting to them (FR33).
+  const discoveryService = new DiscoveryService(getRedisStore(env), moderationService);
   app.use('/', createDiscoveryRouter({ verifier, service: discoveryService, identityService, savedPartnerService }));
 
   // Moderation routes (Story 6.1, FR33): block + report (moderationService already instantiated above).
@@ -177,6 +196,9 @@ export function createApp(deps: AppDeps = {}): Express {
     billingRepo,
     getStripeBillingProvider(env),
     env.STRIPE_PRICE_ID,
+    env.STRIPE_ALLOWED_PRICE_IDS
+      ? env.STRIPE_ALLOWED_PRICE_IDS.split(',').map((s) => s.trim()).filter(Boolean)
+      : [env.STRIPE_PRICE_ID],
   );
   app.use('/', createBillingRouter({ verifier, service: billingService, identityService }));
   app.use('/', createBillingAdminRouter({ repo: billingRepo, stripe: getStripeBillingProvider(env) }));
@@ -184,7 +206,16 @@ export function createApp(deps: AppDeps = {}): Express {
 
   // Telemetry routes (Story 8.1/8.2, FR42/FR43/AR7): session-health + felt-together.
   const telemetryService = new TelemetryService(getFirehoseClient(env), new PgTelemetryRepository());
-  app.use('/', createTelemetryRouter({ verifier, service: telemetryService }));
+  app.use(
+    '/',
+    createTelemetryRouter({
+      verifier,
+      service: telemetryService,
+      identityService,
+      // Telemetry writers must be participants of the session they report on.
+      participantGuard: pairingService,
+    }),
+  );
   app.use('/', createTelemetryAdminRouter({ service: telemetryService }));
 
   // Error envelope middleware MUST be last.

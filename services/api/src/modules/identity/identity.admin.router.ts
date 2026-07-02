@@ -1,15 +1,7 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router } from 'express';
 import { ok } from '@caraoke/shared';
+import { requireAdmin } from '../../middleware/adminAuth.js';
 import type { UserRepository } from './identity.repository.js';
-
-function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const key = process.env['ADMIN_API_KEY'];
-  if (!key || req.headers['x-admin-key'] !== key) {
-    res.status(403).json({ error: 'FORBIDDEN', message: 'Admin key required.' });
-    return;
-  }
-  next();
-}
 
 /**
  * Account administration routes (Story 8.7, FR48).
@@ -24,7 +16,7 @@ export function createIdentityAdminRouter(deps: { repo: UserRepository }): Route
 
   router.post('/admin/accounts/:id/suspend', requireAdmin, async (req, res, next) => {
     try {
-      const found = await deps.repo.suspendUser(req.params['id']!);
+      const found = await deps.repo.suspendUser(String(req.params['id']));
       if (!found) {
         res.status(404).json({ error: 'NOT_FOUND', message: 'User not found.' });
         return;
@@ -38,7 +30,7 @@ export function createIdentityAdminRouter(deps: { repo: UserRepository }): Route
 
   router.post('/admin/accounts/:id/reinstate', requireAdmin, async (req, res, next) => {
     try {
-      const found = await deps.repo.reinstateUser(req.params['id']!);
+      const found = await deps.repo.reinstateUser(String(req.params['id']));
       if (!found) {
         res.status(404).json({ error: 'NOT_FOUND', message: 'User not found.' });
         return;
