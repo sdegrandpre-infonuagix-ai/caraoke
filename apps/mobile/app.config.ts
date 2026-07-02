@@ -11,6 +11,13 @@ const config: ExpoConfig = {
   owner: 'infonuagix-ai',
   scheme: 'caraoke',
   version: '0.1.0',
+  // EAS Update (OTA JS updates). runtimeVersion ties an update to a compatible native build.
+  runtimeVersion: {
+    policy: 'appVersion',
+  },
+  updates: {
+    url: 'https://u.expo.dev/a8f9cffe-be6b-44ce-bff3-73fef2b2258e',
+  },
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   ios: {
