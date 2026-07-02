@@ -41,6 +41,12 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
   },
+  // Links this project to its EAS build project (used by `eas build`).
+  extra: {
+    eas: {
+      projectId: '3d74840d-635e-4cec-9319-d498886ad644',
+    },
+  },
 };
 
 export default config;
