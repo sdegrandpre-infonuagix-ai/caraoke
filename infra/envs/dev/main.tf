@@ -42,9 +42,23 @@ module "redis" {
   kms_key_arn    = module.kms.key_arn
 }
 
+# Google OAuth client credentials (populated out-of-band in Secrets Manager) drive the
+# Cognito Google identity provider. Reading the version pulls them into (gitignored) state.
+data "aws_secretsmanager_secret_version" "google_oauth" {
+  secret_id = "caraoke-dev/google-oauth"
+}
+
+locals {
+  google_oauth = jsondecode(data.aws_secretsmanager_secret_version.google_oauth.secret_string)
+}
+
 module "cognito" {
   source      = "../../modules/cognito"
   name_prefix = local.name_prefix
+
+  # Enables the Google IdP + adds "Google" to the app client's supported providers.
+  google_client_id     = local.google_oauth.client_id
+  google_client_secret = local.google_oauth.client_secret
 }
 
 module "secrets" {
