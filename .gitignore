@@ -50,6 +50,13 @@ terraform.rc
 .ralph/.ralph_session
 .ralph/.response_analysis
 
+# Gradle / Android build caches (local module native builds)
+.gradle/
+**/.gradle/
+**/android/build/
+**/android/.cxx/
+local.properties
+
 # OS / editor
 .DS_Store
 Thumbs.db
