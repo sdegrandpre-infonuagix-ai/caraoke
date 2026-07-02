@@ -6,10 +6,10 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.SoundPool
-import android.media.TextToSpeech
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.speech.tts.TextToSpeech
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.util.Locale
