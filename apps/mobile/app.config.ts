@@ -38,6 +38,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    'expo-font',
     'expo-notifications',
     '@livekit/react-native-expo-plugin',
     '@config-plugins/react-native-webrtc',

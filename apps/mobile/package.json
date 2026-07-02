@@ -20,18 +20,18 @@
     "@livekit/react-native-webrtc": "^144.1.1",
     "@stripe/stripe-react-native": "^0.37.0",
     "@tanstack/react-query": "5.101.1",
-    "caraoke-audio": "file:./modules/caraoke-audio",
-    "expo": "56.0.12",
+    "expo": "56.0.13",
     "expo-auth-session": "~56.0.14",
-    "expo-constants": "~56.0.18",
+    "expo-constants": "~56.0.19",
     "expo-crypto": "~56.0.4",
     "expo-dev-client": "~56.0.21",
+    "expo-font": "~56.0.7",
     "expo-linking": "~56.0.14",
     "expo-localization": "~56.0.6",
-    "expo-location": "~17.0.1",
-    "expo-modules-core": "~56.0.17",
-    "expo-notifications": "~56.0.18",
-    "expo-router": "~56.2.11",
+    "expo-location": "~56.0.19",
+    "expo-modules-core": "~56.0.18",
+    "expo-notifications": "~56.0.19",
+    "expo-router": "~56.2.12",
     "expo-secure-store": "~56.0.4",
     "expo-sensors": "~56.0.3",
     "expo-status-bar": "~56.0.4",
@@ -49,6 +49,7 @@
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
+    "react-native-worklets": "0.8.3",
     "zustand": "5.0.14"
   },
   "devDependencies": {
@@ -60,5 +61,13 @@
     "tailwindcss": "3.4.17",
     "tsx": "^4.19.2",
     "typescript": "5.7.3"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "typescript",
+        "@stripe/stripe-react-native"
+      ]
+    }
   }
 }
