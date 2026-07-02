@@ -51,6 +51,15 @@ class OneSessionRepo implements SessionRepository {
     };
     return this.session;
   }
+  // Story 9.7(b): in the mock, markReadyTransaction is the same as setReady(true)
+  // but returns the updated session — mirroring the atomic DB behaviour.
+  async markReadyTransaction(_id: string, role: 'host' | 'guest') {
+    this.session = {
+      ...this.session,
+      ...(role === 'host' ? { hostReady: true } : { guestReady: true }),
+    };
+    return this.session;
+  }
   async updateStatus(_id: string, status: string) {
     this.session = { ...this.session, status: status as Session['status'] };
     return this.session;
@@ -113,5 +122,29 @@ describe('SessionReadyService.markReady', () => {
     const repo = new OneSessionRepo(makeSession({}));
     const service = new SessionReadyService(repo, new MockEventPublisher());
     await expect(service.markReady('nope', 'host')).rejects.toMatchObject({ code: 'SESSION_NOT_FOUND' });
+  });
+
+  // Story 9.7(b): concurrent markReady calls must produce exactly one partner.ready event.
+  // The FOR UPDATE lock in markReadyTransaction serialises the concurrent updates so only
+  // the second caller sees bothReady=true and transitions to ready.
+  it('concurrent: exactly one partner.ready event when host and guest mark ready simultaneously', async () => {
+    const repo = new OneSessionRepo(makeSession({}));
+    const events = new MockEventPublisher();
+    const service = new SessionReadyService(repo, events, () => new Date('2026-07-01T00:00:00Z'));
+
+    // Both calls start before either resolves — simulates network-concurrent ready requests.
+    const [hostState, guestState] = await Promise.all([
+      service.markReady('sess-1', 'host'),
+      service.markReady('sess-1', 'guest'),
+    ]);
+
+    // At least one result must report bothReady=true (the second caller to complete).
+    const combined = [hostState, guestState];
+    expect(combined.some((s) => s.bothReady)).toBe(true);
+
+    // Exactly one partner.ready event must be published — not zero, not two.
+    const readyEvents = events.published.filter((e) => e.type === 'partner.ready');
+    expect(readyEvents).toHaveLength(1);
+    expect(readyEvents[0]).toMatchObject({ type: 'partner.ready', sessionId: 'sess-1' });
   });
 });

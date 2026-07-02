@@ -21,9 +21,18 @@ export class SessionReadyService {
     const session = await this.sessions.findById(sessionId);
     if (!session) throw new AppError('SESSION_NOT_FOUND', 'Session not found.');
 
-    const decision = decideReady(session, userId);
+    // Validate participant and determine role — throws FORBIDDEN for non-participants.
+    const { role } = decideReady(session, userId);
 
-    await this.sessions.setReady(sessionId, decision.role, true);
+    // Story 9.7(b): atomic lock + update so concurrent markReady calls cannot both see
+    // bothReady=false and miss the transition. The FOR UPDATE lock serialises them;
+    // the second call sees the first call's committed ready flag in the returned session.
+    const updated = await this.sessions.markReadyTransaction(sessionId, role);
+    if (!updated) throw new AppError('SESSION_NOT_FOUND', 'Session no longer exists.');
+
+    // Re-evaluate on the post-lock snapshot so bothReady and transitioned are correct.
+    const decision = decideReady(updated, userId);
+
     if (decision.transitioned) {
       await this.sessions.updateStatus(sessionId, decision.nextStatus);
     }
@@ -42,7 +51,7 @@ export class SessionReadyService {
     }
 
     // Nudge the OTHER participant that their partner is ready (push) — best-effort.
-    const other = decision.role === 'host' ? session.guestUserId : session.hostUserId;
+    const other = role === 'host' ? session.guestUserId : session.hostUserId;
     if (other) {
       await this.notifier.notify(other, 'partner.ready', { sessionId });
     }

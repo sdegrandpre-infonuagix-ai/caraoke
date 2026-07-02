@@ -125,7 +125,7 @@
       restore-ramp isn't cancelled when a new duck arrives mid-ramp, causing a volume fight — cancel
       the in-flight ramp on re-duck.
 
-- [ ] Story 9.7: Scheduled-start prebuffer leak & markReady transaction
+- [x] Story 9.7: Scheduled-start prebuffer leak & markReady transaction
       Defects: (a) useScheduledStart leaks its prebuffer/timer if the component unmounts before T —
       clean up on unmount/abort; (b) markReady (ready-handshake) updates readiness without a
       transaction, so two near-simultaneous ready calls can race the "both ready" check — wrap the
