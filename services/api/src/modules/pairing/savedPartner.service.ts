@@ -2,6 +2,7 @@ import { AppError } from '@caraoke/shared';
 import type { SavedPartnerRepository } from './savedPartner.repository.js';
 import type { SavedPartnerView } from './savedPartner.types.js';
 import type { SessionConnection } from './pairing.types.js';
+import type { BlockChecker } from './pairing.service.js';
 import { NoopNotifier, type Notifier } from '../notifications/notifier.js';
 
 /** The subset of PairingService the re-pair path needs. */
@@ -19,11 +20,18 @@ export class SavedPartnerService {
     private readonly repo: SavedPartnerRepository,
     private readonly pairing: PairedSessionFactory,
     private readonly notifier: Notifier = new NoopNotifier(),
+    /** Optional block enforcement — injected by app.ts after the moderation module is wired. */
+    private readonly blockChecker?: BlockChecker,
   ) {}
 
   async save(userId: string, partnerUserId: string): Promise<void> {
     if (userId === partnerUserId) {
       throw new AppError('VALIDATION_FAILED', 'You cannot save yourself as a partner.');
+    }
+    // Don't let a blocked/blocking pair be linked (FR33) — a saved partner is a re-pair
+    // shortcut, so saving one you've blocked would smuggle them past the block on re-pair.
+    if (this.blockChecker && (await this.blockChecker.isBlocked(userId, partnerUserId))) {
+      throw new AppError('FORBIDDEN', 'You cannot save this user as a partner.');
     }
     await this.repo.save(userId, partnerUserId);
   }

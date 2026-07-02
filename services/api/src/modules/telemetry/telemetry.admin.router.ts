@@ -1,5 +1,6 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router } from 'express';
 import { ok } from '@caraoke/shared';
+import { requireAdmin } from '../../middleware/adminAuth.js';
 import type { TelemetryService } from './telemetry.service.js';
 
 /**
@@ -8,14 +9,6 @@ import type { TelemetryService } from './telemetry.service.js';
  *
  *   GET /admin/metrics/dashboard — key venture metrics for the ops console.
  */
-function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const key = process.env['ADMIN_API_KEY'];
-  if (!key || req.headers['x-admin-key'] !== key) {
-    res.status(403).json({ error: 'FORBIDDEN', message: 'Admin key required.' });
-    return;
-  }
-  next();
-}
 
 export function createTelemetryAdminRouter(deps: { service: TelemetryService }): Router {
   const router = Router();

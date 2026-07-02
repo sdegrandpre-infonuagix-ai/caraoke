@@ -88,8 +88,16 @@ export function createDiscoveryRouter(deps: {
 
     try {
       const user = await deps.identityService.findOrCreate(claims);
-      await deps.savedPartnerService.save(user.id, parsed.data.targetUserId);
-      await deps.service.revokeLocation(parsed.data.targetUserId);
+      // The target must currently be broadcasting discovery, otherwise this endpoint would let
+      // anyone save an arbitrary user as a partner and force-revoke any user's location by id
+      // (griefing / non-consensual go-dark). Requiring a live entry ties connect to a real,
+      // in-progress discovery interaction. save() additionally rejects blocked pairs (FR33).
+      const target = await deps.service.getLocation(parsed.data.targetUserId);
+      if (!target) {
+        return next(new AppError('NOT_FOUND', 'That singer is no longer discoverable.'));
+      }
+      await deps.savedPartnerService.save(user.id, target.userId);
+      await deps.service.revokeLocation(target.userId);
       res.json(ok(null));
     } catch (e) {
       next(e);

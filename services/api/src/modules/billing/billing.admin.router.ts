@@ -1,6 +1,7 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router } from 'express';
 import { z } from 'zod';
 import { ok, AppError } from '@caraoke/shared';
+import { requireAdmin } from '../../middleware/adminAuth.js';
 import type { BillingRepository } from './billing.repository.js';
 import type { StripeBillingProvider } from '../../integrations/stripe/billing.provider.js';
 
@@ -9,15 +10,6 @@ const refundSchema = z.object({
   amountCents: z.number().int().positive().optional(),
   reason: z.enum(['duplicate', 'fraudulent', 'requested_by_customer']).optional(),
 });
-
-function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const key = process.env['ADMIN_API_KEY'];
-  if (!key || req.headers['x-admin-key'] !== key) {
-    res.status(403).json({ error: 'FORBIDDEN', message: 'Admin key required.' });
-    return;
-  }
-  next();
-}
 
 /**
  * Billing admin routes (Story 8.5, FR45/FR46).

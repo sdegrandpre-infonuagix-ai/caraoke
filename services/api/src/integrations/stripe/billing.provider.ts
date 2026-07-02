@@ -9,6 +9,7 @@ export interface StripeBillingProvider {
     customerId: string,
     paymentMethodId: string,
     priceId: string,
+    opts?: { idempotencyKey?: string },
   ): Promise<{ subscriptionId: string; status: string; currentPeriodEnd: Date }>;
   /** Cancel at period end — subscriber keeps access until currentPeriodEnd (FR39). */
   cancelSubscription(subscriptionId: string): Promise<{ status: string; currentPeriodEnd: Date }>;
@@ -82,17 +83,21 @@ export class LiveStripeBillingProvider implements StripeBillingProvider {
     customerId: string,
     paymentMethodId: string,
     priceId: string,
+    opts?: { idempotencyKey?: string },
   ): Promise<{ subscriptionId: string; status: string; currentPeriodEnd: Date }> {
     const stripe = await this.stripe;
     await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId },
     });
-    const sub = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: priceId }],
-      expand: ['latest_invoice.payment_intent'],
-    });
+    const sub = await stripe.subscriptions.create(
+      {
+        customer: customerId,
+        items: [{ price: priceId }],
+        expand: ['latest_invoice.payment_intent'],
+      },
+      opts?.idempotencyKey ? { idempotencyKey: opts.idempotencyKey } : undefined,
+    );
     return {
       subscriptionId: sub.id,
       status: sub.status,
@@ -179,6 +184,7 @@ export class MockStripeBillingProvider implements StripeBillingProvider {
     _customerId: string,
     _paymentMethodId: string,
     _priceId: string,
+    _opts?: { idempotencyKey?: string },
   ): Promise<{ subscriptionId: string; status: string; currentPeriodEnd: Date }> {
     const end = new Date();
     end.setMonth(end.getMonth() + 1);

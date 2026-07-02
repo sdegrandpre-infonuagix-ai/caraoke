@@ -1,15 +1,7 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
+import { Router } from 'express';
 import { ok } from '@caraoke/shared';
+import { requireAdmin } from '../../middleware/adminAuth.js';
 import type { UserRepository } from './identity.repository.js';
-
-function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const key = process.env['ADMIN_API_KEY'];
-  if (!key || req.headers['x-admin-key'] !== key) {
-    res.status(403).json({ error: 'FORBIDDEN', message: 'Admin key required.' });
-    return;
-  }
-  next();
-}
 
 /**
  * Account administration routes (Story 8.7, FR48).

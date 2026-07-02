@@ -2,12 +2,31 @@ import { AppError } from '@caraoke/shared';
 import type { BillingRepository } from './billing.repository.js';
 import type { StripeBillingProvider, InvoiceSummary } from '../../integrations/stripe/billing.provider.js';
 
+// A subscription in any of these Stripe statuses still exists at Stripe and would keep billing
+// if we created a second one. `canceled`/`incomplete_expired` are terminal — a new subscription
+// is safe from those states. Blocking only active/trialing (the old guard) let a past_due or
+// unpaid subscriber double-subscribe.
+const LIVE_SUBSCRIPTION_STATUSES = new Set([
+  'active',
+  'trialing',
+  'past_due',
+  'unpaid',
+  'incomplete',
+  'paused',
+]);
+
 export class BillingService {
+  private readonly allowedPriceIds: Set<string>;
+
   constructor(
     private readonly repo: BillingRepository,
     private readonly stripe: StripeBillingProvider,
     private readonly priceId: string,
-  ) {}
+    /** Prices a caller may switch to via changePlan. Defaults to the single configured price. */
+    allowedPriceIds: readonly string[] = [priceId],
+  ) {
+    this.allowedPriceIds = new Set(allowedPriceIds);
+  }
 
   /**
    * Lazily create a Stripe customer for the user if one doesn't exist, then return a
@@ -35,11 +54,17 @@ export class BillingService {
     // Stripe subscription is created and bills forever while the DB only tracks the latest,
     // making the orphaned charge invisible and un-cancellable via the API.
     const existing = await this.repo.findByUserId(userId);
-    if (existing?.subscriptionId && ['active', 'trialing'].includes(existing.subscriptionStatus ?? '')) {
+    if (existing?.subscriptionId && LIVE_SUBSCRIPTION_STATUSES.has(existing.subscriptionStatus ?? '')) {
       throw new AppError('CONFLICT', 'You already have an active subscription.');
     }
     const customerId = await this.ensureCustomer(userId, email);
-    const sub = await this.stripe.createSubscription(customerId, paymentMethodId, this.priceId);
+    // Idempotency key keyed on (user, payment method) collapses a double-tapped subscribe into a
+    // single Stripe subscription, while still allowing a genuine retry with a different card. It
+    // does not close a true concurrent race (that needs a DB uniqueness constraint) but removes
+    // the common duplicate-charge path.
+    const sub = await this.stripe.createSubscription(customerId, paymentMethodId, this.priceId, {
+      idempotencyKey: `sub_create:${userId}:${paymentMethodId}`,
+    });
     await this.repo.saveSubscription(userId, sub.subscriptionId, sub.status, sub.currentPeriodEnd);
     return sub;
   }
@@ -59,6 +84,12 @@ export class BillingService {
     email: string,
     newPriceId: string,
   ): Promise<{ status: string; currentPeriodEnd: Date }> {
+    // Only allow switching to a price we actually offer — otherwise a caller could point their
+    // subscription at any Stripe price id (including a $0 or attacker-created price) and pay
+    // whatever they choose.
+    if (!this.allowedPriceIds.has(newPriceId)) {
+      throw new AppError('VALIDATION_FAILED', 'That subscription plan is not available.');
+    }
     await this.ensureCustomer(userId, email);
     const record = await this.repo.findByUserId(userId);
     if (!record?.subscriptionId) throw new AppError('NOT_FOUND', 'No active subscription.');
