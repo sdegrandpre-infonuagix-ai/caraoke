@@ -22,6 +22,12 @@ export interface SessionRepository {
   addGuest(sessionId: string, guestUserId: string): Promise<Session | null>;
   /** Set a participant's readiness flag (Story 3.4). */
   setReady(sessionId: string, role: 'host' | 'guest', ready: boolean): Promise<Session | null>;
+  /**
+   * Atomically set a participant's ready flag inside a serializable transaction (Story 9.7).
+   * Uses SELECT … FOR UPDATE to prevent concurrent markReady calls from racing the
+   * "both ready" check — returns the post-update session so the caller can re-evaluate.
+   */
+  markReadyTransaction(sessionId: string, role: 'host' | 'guest'): Promise<Session | null>;
   /** Transition the session status (SessionStateMachine). */
   updateStatus(sessionId: string, status: string): Promise<Session | null>;
 }
@@ -88,6 +94,31 @@ export class PgSessionRepository implements SessionRepository {
       [sessionId, ready],
     );
     return rows[0] ? rowToCamel<Session>(rows[0]) : null;
+  }
+
+  async markReadyTransaction(sessionId: string, role: 'host' | 'guest'): Promise<Session | null> {
+    const client = await this.db().connect();
+    try {
+      await client.query('BEGIN');
+      // Lock the row so concurrent markReady calls are serialized (Story 9.7).
+      const lock = await client.query('SELECT * FROM sessions WHERE id = $1 FOR UPDATE', [sessionId]);
+      if (!lock.rows[0]) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+      const column = role === 'host' ? 'host_ready' : 'guest_ready';
+      const { rows } = await client.query(
+        `UPDATE sessions SET ${column} = true, updated_at = now() WHERE id = $1 RETURNING *`,
+        [sessionId],
+      );
+      await client.query('COMMIT');
+      return rows[0] ? rowToCamel<Session>(rows[0]) : null;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   async updateStatus(sessionId: string, status: string): Promise<Session | null> {

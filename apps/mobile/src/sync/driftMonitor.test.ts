@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeDrift,
+  computeScheduleDrift,
   estimatePosition,
   encodePositionMsg,
   decodePositionMsg,
@@ -100,4 +101,63 @@ test('decodePositionMsg: returns null for wrong message type', () => {
 test('decodePositionMsg: returns null when fields are missing', () => {
   const partial = new TextEncoder().encode(JSON.stringify({ t: 'pos', p: 0 }));
   assert.equal(decodePositionMsg(partial), null);
+});
+
+// --- computeScheduleDrift (real sampled position vs. shared scheduled timeline) ---
+// Tests pass explicit sampled position values — never calling estimatePosition() to produce inputs.
+
+test('computeScheduleDrift: no correction when sampled position matches the schedule exactly', () => {
+  const START = 1_000_000;
+  const NOW = START + 3_000; // 3 s elapsed → expected = 3 000 ms
+  const r = computeScheduleDrift(3_000, START, NOW);
+  assert.equal(r.driftMs, 0);
+  assert.equal(r.needsCorrection, false);
+});
+
+test('computeScheduleDrift: positive drift when Spotify is ahead of the schedule', () => {
+  const START = 1_000_000;
+  const NOW = START + 3_000;
+  // Spotify reports 3 100 ms but expected is 3 000 ms — we are 100 ms ahead.
+  const r = computeScheduleDrift(3_100, START, NOW);
+  assert.equal(r.driftMs, 100);
+  assert.equal(r.needsCorrection, false); // leading device never self-corrects
+});
+
+test('computeScheduleDrift: needsCorrection true when Spotify lags the schedule', () => {
+  const START = 1_000_000;
+  const NOW = START + 3_000; // expected = 3 000 ms
+  const lag = DRIFT_THRESHOLD_MS + 1;
+  const r = computeScheduleDrift(3_000 - lag, START, NOW);
+  assert.equal(r.needsCorrection, true);
+  assert.ok(r.driftMs < -DRIFT_THRESHOLD_MS);
+});
+
+test('computeScheduleDrift: needsCorrection false at exactly the threshold boundary', () => {
+  const START = 1_000_000;
+  const NOW = START + 3_000;
+  const r = computeScheduleDrift(3_000 - DRIFT_THRESHOLD_MS, START, NOW);
+  assert.equal(r.needsCorrection, false);
+});
+
+test('computeScheduleDrift: needsCorrection false for oversized drift (MAX_CORRECTION guard)', () => {
+  const START = 1_000_000;
+  const NOW = START + 3_000; // expected = 3 000 ms
+  // Spotify says 0 ms — wildly off, likely bad data; do not seek.
+  const r = computeScheduleDrift(3_000 - (MAX_CORRECTION_MS + 1), START, NOW);
+  assert.equal(r.needsCorrection, false);
+});
+
+test('computeScheduleDrift: correctionTargetMs is the expected timeline position, not the sampled one', () => {
+  const START = 1_000_000;
+  const NOW = START + 5_000; // expected = 5 000 ms
+  const lag = DRIFT_THRESHOLD_MS + 1;
+  const r = computeScheduleDrift(5_000 - lag, START, NOW);
+  assert.equal(r.correctionTargetMs, 5_000); // seek to where we SHOULD be
+});
+
+test('computeScheduleDrift: correctionTargetMs clamped to 0 at session start', () => {
+  const START = 1_000_000;
+  const NOW = START; // elapsed = 0 → expected = 0
+  const r = computeScheduleDrift(0, START, NOW);
+  assert.ok(r.correctionTargetMs >= 0);
 });

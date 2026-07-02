@@ -19,6 +19,9 @@ export interface NativeSonicModule {
   /** Start/stop the subtle ambient-presence bed. */
   startAmbient(): void;
   stopAmbient(): void;
+  // Native modules (SDK 56) extend NativeModule, which provides addListener. Optional here so
+  // the JS fallback (and unit tests) don't have to implement it. Story 9.5 emits `onSpeechEnded`.
+  addListener?(eventName: 'onSpeechEnded', listener: () => void): { remove(): void };
 }
 
 /** JS fallback used when the native module isn't present (dev client not yet built). */
@@ -38,3 +41,18 @@ export const sonicNative: NativeSonicModule = native ?? new FallbackSonicModule(
 
 /** True when the real native audio module is linked. */
 export const hasNativeSonic = native != null;
+
+/** Subscription handle returned by addSpeechEndedListener. */
+export interface SpeechEndedSubscription {
+  remove(): void;
+}
+
+/**
+ * Subscribe to the native `onSpeechEnded` event emitted when AVSpeechSynthesizer (iOS) or
+ * UtteranceProgressListener (Android) reports that TTS playback has finished. In SDK 56 the
+ * native module is itself an event emitter, so we subscribe on it directly. When there's no
+ * native module (unit tests, Expo Go without the custom dev client) callers get a no-op handle.
+ */
+export function addSpeechEndedListener(handler: () => void): SpeechEndedSubscription {
+  return native?.addListener?.('onSpeechEnded', handler) ?? { remove: () => {} };
+}

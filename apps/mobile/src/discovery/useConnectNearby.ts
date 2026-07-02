@@ -20,7 +20,7 @@ export interface ConnectNearbyActions {
 
 export function useConnectNearby(nearbyUsers: NearbyUser[]): ConnectNearbyActions {
   const idToken = useAuthStore((s) => s.idToken);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
 
   const handleTranscript = useCallback(async (transcript: string): Promise<boolean> => {
     const result = classifyConnectIntent(transcript);

@@ -40,6 +40,9 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
   // Refs to cancel in-flight timers when the component unmounts or a new event arrives.
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Story 9.7(a): AbortController per playback.scheduled event so that any pending
+  // prebuffer promise chain is cancelled on unmount or when a superseding event arrives.
+  const abortRef = useRef<AbortController | null>(null);
 
   const clearTimers = useCallback(() => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -59,6 +62,12 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
         if (!trackUri || typeof startAt !== 'number') return;
 
         clearTimers();
+        // Story 9.7(a): abort the previous event's chain (if any) and issue a fresh token
+        // for this event so only the latest scheduled-start drives timers.
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
         const now = Date.now();
         const offsetMs = clockSync.getOffsetMs();
         const delayMs = localDelayMs(startAt, now, offsetMs);
@@ -74,6 +83,10 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
           : Promise.resolve();
 
         void prebufferPromise.then(() => {
+          // Story 9.7(a): if the component unmounted or a newer event arrived while the
+          // prebuffer was in flight, do NOT set timers — that would leak them forever.
+          if (controller.signal.aborted) return;
+
           const msLeft = localDelayMs(startAt, Date.now(), clockSync.getOffsetMs());
           setState((s) => ({ ...s, status: 'scheduled', msRemaining: msLeft }));
 
@@ -104,6 +117,8 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
     );
 
     return () => {
+      // Story 9.7(a): abort the in-flight prebuffer promise chain so its .then() is a no-op.
+      abortRef.current?.abort();
       clearTimers();
       unsub();
     };

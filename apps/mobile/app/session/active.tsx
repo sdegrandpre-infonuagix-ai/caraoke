@@ -11,7 +11,6 @@ import { DrivingModeScreen } from '../../src/components/session/DrivingModeScree
 import { WaveformVisualizer } from '../../src/components/session/WaveformVisualizer';
 import { SessionControls } from '../../src/components/session/SessionControls';
 import { ScreenContainer, Text, Card } from '../../src/components';
-import { useLocale } from '../../src/i18n/useLocale';
 
 /**
  * Active duet screen (Story 4.7/4.8/4.9, FR17/FR15/FR16/FR25/FR26/FR42,

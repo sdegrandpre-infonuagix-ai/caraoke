@@ -9,7 +9,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useDiscoveryStore } from '../stores/useDiscoveryStore';
 import { useLocale } from '../i18n/useLocale';
 import { sonicEngine } from '../sonic';
-import { getNearbyUsers } from '../api/discovery';
+import { getNearbyUsers, type NearbyUser } from '../api/discovery';
 import { toCoarsePlusCode } from './locationUtils';
 import { classifyNearbyIntent, buildNearbyResponse } from './nearbyIntent';
 
@@ -28,7 +28,7 @@ export function useNearbyQuery(): NearbyQueryActions {
   const idToken = useAuthStore((s) => s.idToken);
   const discoverabilityEnabled = useDiscoveryStore((s) => s.discoverabilityEnabled);
   const is18Plus = useDiscoveryStore((s) => s.is18Plus);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
   const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
   // Keep a ref so the callback closure always reads the latest list without re-creating.
   const nearbyRef = useRef<NearbyUser[]>([]);

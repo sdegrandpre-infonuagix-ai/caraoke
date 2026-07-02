@@ -20,7 +20,7 @@ interface SessionControlsProps {
 export function SessionControls({ sessionId }: SessionControlsProps) {
   const idToken = useAuthStore((s) => s.idToken);
   const transition = useSessionMachine((s) => s.transition);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
   const [isPaused, setIsPaused] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 

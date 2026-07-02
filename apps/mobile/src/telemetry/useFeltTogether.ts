@@ -34,7 +34,7 @@ export interface FeltTogetherCapture {
 export function useFeltTogether(sessionId: string): FeltTogetherCapture {
   const sessionState = useSessionMachine((s) => s.state);
   const idToken = useAuthStore((s) => s.idToken);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
 
   const [awaitingAnswer, setAwaitingAnswer] = useState(false);
   const windowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

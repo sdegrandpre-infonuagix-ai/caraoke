@@ -45,6 +45,13 @@ import { createTelemetryRouter } from './modules/telemetry/telemetry.router.js';
 import { PgTelemetryRepository } from './modules/telemetry/telemetry.repository.js';
 import { createTelemetryAdminRouter } from './modules/telemetry/telemetry.admin.router.js';
 import { sensitiveLimiter, adminLimiter } from './middleware/rateLimit.js';
+import { AgentService } from './modules/agent/agent.service.js';
+import { AppSyncScheduledStartProducer } from './modules/agent/scheduledStart.js';
+import { createAgentRouter } from './modules/agent/agent.router.js';
+import { getSpotifySearchProvider } from './integrations/spotify/search.js';
+import { LivePlaybackPositionService, type PlaybackPositionService } from './modules/agent/playback.service.js';
+import { createPlaybackRouter } from './modules/agent/playback.router.js';
+import { getPlaybackPositionProvider } from './integrations/spotify/playback.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -61,6 +68,10 @@ export interface AppDeps {
   readyService?: SessionReadyService;
   /** Override the notification service (tests). Defaults to push + Postgres-backed. */
   notificationService?: NotificationService;
+  /** Override the agent service (tests). Defaults to Spotify-search + NullScheduledStartProducer. */
+  agentService?: AgentService;
+  /** Override the playback-position service (tests). Defaults to live Spotify polling. */
+  playbackPositionService?: PlaybackPositionService;
 }
 
 /**
@@ -217,6 +228,27 @@ export function createApp(deps: AppDeps = {}): Express {
     }),
   );
   app.use('/', createTelemetryAdminRouter({ service: telemetryService }));
+
+  // Voice-agent routes (Story 9.1/9.2): song requests — participant-gated, Spotify track
+  // resolution, and playback.scheduled event publishing (Story 9.2).
+  const agentService =
+    deps.agentService ??
+    new AgentService(
+      pairingService,
+      getSpotifySearchProvider(env),
+      new AppSyncScheduledStartProducer(getEventPublisher(env)),
+    );
+  app.use('/', createAgentRouter({ verifier, identityService, agentService }));
+
+  // Playback position route (Story 9.4): supplies the real Spotify position for drift correction.
+  const playbackPositionService =
+    deps.playbackPositionService ??
+    new LivePlaybackPositionService(
+      pairingService,
+      new PgSpotifyLinkRepository(),
+      getPlaybackPositionProvider(env),
+    );
+  app.use('/', createPlaybackRouter({ verifier, identityService, positionService: playbackPositionService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

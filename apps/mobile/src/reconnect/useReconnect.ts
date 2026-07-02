@@ -22,7 +22,7 @@ export function useReconnect(sessionId: string, voiceStatus: VoiceStatus): void 
   const sessionState = useSessionMachine((s) => s.state);
   const transition = useSessionMachine((s) => s.transition);
   const idToken = useAuthStore((s) => s.idToken);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
 
   // Give-up timer lives in a ref so effect re-runs (caused by state changes) don't cancel it.
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -78,3 +78,22 @@ export function seekPlayback(idToken: string, sessionId: string, positionMs: num
     body: { positionMs: Math.round(positionMs) },
   });
 }
+
+export interface PlaybackPosition {
+  positionMs: number;
+}
+
+/**
+ * Sample the real Spotify playback position for this session's user (Story 9.4, FR20/NFR2).
+ * The backend proxies to the Spotify Web API using the user's stored OAuth refresh token and
+ * returns progress_ms. This replaces the broken estimatePosition() pattern — drift correction
+ * must use the actual Spotify client position, not wall-clock arithmetic.
+ */
+export function getPlaybackPosition(
+  idToken: string,
+  sessionId: string,
+): Promise<PlaybackPosition> {
+  return apiFetch<PlaybackPosition>(`/sessions/${sessionId}/playback/position`, {
+    token: idToken,
+  });
+}

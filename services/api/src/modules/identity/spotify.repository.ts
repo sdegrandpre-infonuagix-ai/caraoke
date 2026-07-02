@@ -14,6 +14,8 @@ export interface SpotifyLinkUpsert {
 
 export interface SpotifyLinkRepository {
   findByUserId(userId: string): Promise<SpotifyLink | null>;
+  /** Returns the stored OAuth refresh token, or null when none was saved or the user is not linked. */
+  findRefreshToken(userId: string): Promise<string | null>;
   upsert(input: SpotifyLinkUpsert): Promise<SpotifyLink>;
 }
 
@@ -31,6 +33,14 @@ export class PgSpotifyLinkRepository implements SpotifyLinkRepository {
       [userId],
     );
     return rows[0] ? rowToCamel<SpotifyLink>(rows[0]) : null;
+  }
+
+  async findRefreshToken(userId: string): Promise<string | null> {
+    const { rows } = await this.db().query(
+      `SELECT refresh_token FROM spotify_accounts WHERE user_id = $1`,
+      [userId],
+    );
+    return (rows[0]?.refresh_token as string | undefined) ?? null;
   }
 
   async upsert(input: SpotifyLinkUpsert): Promise<SpotifyLink> {
