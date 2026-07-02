@@ -70,8 +70,8 @@ importers:
         specifier: ^144.1.1
         version: 144.1.1(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))
       '@stripe/stripe-react-native':
-        specifier: ^0.37.0
-        version: 0.37.3(expo@56.0.13)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+        specifier: ^0.64.0
+        version: 0.64.0(expo@56.0.13)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       '@tanstack/react-query':
         specifier: 5.101.1
         version: 5.101.1(react@19.2.3)
@@ -2402,14 +2402,17 @@ packages:
     resolution: {integrity: sha512-N5CpfaL+/LPQU9PFdOT55ayUo5T0QypG4Almzd1/efJvoDypuT1shkgJk1+hhg/02scYluW6Q2JGnSHIPwCEGQ==}
     engines: {node: '>=18.0.0'}
 
-  '@stripe/stripe-react-native@0.37.3':
-    resolution: {integrity: sha512-9OReixY4bP3ogHUoAmDs+FRKxTCCDz6APep6fn8LAzs5xG5IGDetFb7UlZkigFYqtJgbe3+n4kMS5wIcxKgnLQ==}
+  '@stripe/stripe-react-native@0.64.0':
+    resolution: {integrity: sha512-NQxFUMWJ7W/T1jEho3qd0XRnQGhXG6GdcoieG8JZo3IG/1QggugOVqEzvg1HRAq8S+cAGVXaj5CXfJuJsnF3eg==}
     peerDependencies:
       expo: '>=46.0.9'
       react: '*'
       react-native: '*'
+      react-native-webview: '*'
     peerDependenciesMeta:
       expo:
+        optional: true
+      react-native-webview:
         optional: true
 
   '@tanstack/query-core@5.101.1':
@@ -8699,7 +8702,7 @@ snapshots:
       '@smithy/core': 3.26.0
       tslib: 2.8.1
 
-  '@stripe/stripe-react-native@0.37.3(expo@56.0.13)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
+  '@stripe/stripe-react-native@0.64.0(expo@56.0.13)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
     dependencies:
       react: 19.2.3
       react-native: 0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)

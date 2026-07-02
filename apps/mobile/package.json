@@ -18,7 +18,7 @@
     "@expo/vector-icons": "^15.0.2",
     "@livekit/react-native": "2.11.1",
     "@livekit/react-native-webrtc": "^144.1.1",
-    "@stripe/stripe-react-native": "^0.37.0",
+    "@stripe/stripe-react-native": "^0.64.0",
     "@tanstack/react-query": "5.101.1",
     "expo": "56.0.13",
     "expo-auth-session": "~56.0.14",
@@ -65,8 +65,7 @@
   "expo": {
     "install": {
       "exclude": [
-        "typescript",
-        "@stripe/stripe-react-native"
+        "typescript"
       ]
     }
   }
