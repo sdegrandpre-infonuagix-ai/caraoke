@@ -72,6 +72,31 @@ export function estimatePosition(playStartServerMs: number, nowServerMs: number)
   return Math.max(0, nowServerMs - playStartServerMs);
 }
 
+/**
+ * Compute drift between the real sampled Spotify position and the expected position
+ * on the shared scheduled timeline (T + elapsed).
+ *
+ * This is the corrected drift function for Story 9.4: the input `realPositionMs` MUST come
+ * from the actual Spotify client (via the backend polling endpoint), never from estimatePosition().
+ * Comparing against the schedule keeps both devices aligned to the same absolute timeline even
+ * when one device's Spotify client buffers or starts slightly late.
+ *
+ * @param realPositionMs    Real playback position sampled from the Spotify client (ms).
+ * @param playStartServerMs Server-epoch ms when playback was scheduled to begin (T).
+ * @param nowServerMs       Current server-time estimate (from clockSync.serverNow()).
+ */
+export function computeScheduleDrift(
+  realPositionMs: number,
+  playStartServerMs: number,
+  nowServerMs: number,
+): DriftResult {
+  const expectedPositionMs = estimatePosition(playStartServerMs, nowServerMs);
+  const driftMs = realPositionMs - expectedPositionMs;
+  const needsCorrection = driftMs < -DRIFT_THRESHOLD_MS && Math.abs(driftMs) <= MAX_CORRECTION_MS;
+  const correctionTargetMs = Math.max(0, expectedPositionMs);
+  return { driftMs, needsCorrection, correctionTargetMs };
+}
+
 /** Encode a PositionSample to a compact UTF-8 JSON payload for the LiveKit data channel. */
 export function encodePositionMsg(sample: PositionSample): Uint8Array {
   return new TextEncoder().encode(JSON.stringify({ t: 'pos', p: sample.positionMs, s: sample.sampledAtServerMs }));

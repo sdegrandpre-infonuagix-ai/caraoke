@@ -11,6 +11,7 @@ import type { TokenVerifier } from '../../middleware/auth.js';
 import type { Session } from '../pairing/pairing.types.js';
 import type { SessionParticipantGuard, TrackResolver, ScheduledStartProducer } from './agent.service.js';
 import type { ResolvedTrack, SongRequestResult } from './agent.types.js';
+import type { PlaybackPositionService } from './playback.service.js';
 import { AppError } from '@caraoke/shared';
 
 // ---------------------------------------------------------------------------
@@ -275,6 +276,70 @@ describe('POST /sessions/:id/agent', () => {
       .send({ query: 'asdfghjklzxcvbn' });
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('NOT_FOUND');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /sessions/:id/playback/position HTTP integration tests (Story 9.4)
+// ---------------------------------------------------------------------------
+
+function makePositionService(result: { positionMs: number } | AppError): PlaybackPositionService {
+  return {
+    getPosition: async () => {
+      if (result instanceof AppError) throw result;
+      return result;
+    },
+  };
+}
+
+describe('GET /sessions/:id/playback/position', () => {
+  it('returns 401 when no auth token is provided', async () => {
+    const app = createApp({
+      verifier,
+      playbackPositionService: makePositionService({ positionMs: 5_000 }),
+    });
+    const res = await request(app).get('/sessions/sess-1/playback/position');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 200 with positionMs for a valid participant', async () => {
+    const app = createApp({
+      verifier,
+      identityService: new IdentityService(new InMemoryUsers()),
+      playbackPositionService: makePositionService({ positionMs: 3_000 }),
+    });
+    const res = await request(app)
+      .get('/sessions/sess-1/playback/position')
+      .set('Authorization', 'Bearer good');
+    expect(res.status).toBe(200);
+    expect(res.body.error).toBeNull();
+    expect(res.body.data.positionMs).toBe(3_000);
+  });
+
+  it('returns 403 when the caller is not a session participant', async () => {
+    const app = createApp({
+      verifier,
+      identityService: new IdentityService(new InMemoryUsers()),
+      playbackPositionService: makePositionService(new AppError('FORBIDDEN', 'Not a participant.')),
+    });
+    const res = await request(app)
+      .get('/sessions/sess-1/playback/position')
+      .set('Authorization', 'Bearer good');
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+  });
+
+  it('returns 404 when the session is not found', async () => {
+    const app = createApp({
+      verifier,
+      identityService: new IdentityService(new InMemoryUsers()),
+      playbackPositionService: makePositionService(new AppError('SESSION_NOT_FOUND', 'Session not found.')),
+    });
+    const res = await request(app)
+      .get('/sessions/missing/playback/position')
+      .set('Authorization', 'Bearer good');
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('SESSION_NOT_FOUND');
   });
 });
 
