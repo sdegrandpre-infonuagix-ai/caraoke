@@ -99,7 +99,7 @@
       addressed to both participants. Add a producer-side test asserting the event shape and that T
       is far enough in the future for both clients to prebuffer.
 
-- [ ] Story 9.3: SessionStateMachine wiring to the real event stream
+- [x] Story 9.3: SessionStateMachine wiring to the real event stream
       Defect: SessionStateMachine (Story 4.2) is instantiated but stays at `idle` — no code
       transitions it in response to real events. Wire: ready-handshake → `ready`;
       `playback.scheduled` received → `playing`; drift/disconnect → `reconnecting`; session end →
