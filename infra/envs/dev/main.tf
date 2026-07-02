@@ -81,6 +81,9 @@ module "api" {
     { name = "REDIS_URL", value = "rediss://${module.redis.primary_endpoint}:6379" },
     { name = "APP_SCHEME", value = "caraoke" },
     { name = "INVITE_BASE_URL", value = "https://caraoke.app" },
+    # AppSync Events (real-time delivery of playback.scheduled etc.).
+    { name = "APPSYNC_EVENTS_HTTP_URL", value = "https://${aws_appsync_api.events.dns["HTTP"]}/event" },
+    { name = "APPSYNC_EVENTS_API_KEY", value = aws_appsync_api_key.events.key },
   ]
   container_secrets = [
     { name = "DATABASE_URL", valueFrom = data.aws_secretsmanager_secret.database_url.arn },
