@@ -1,0 +1,22 @@
+# Keep the Docker build context small and secret-free (Dockerfile uses `COPY . .` from root).
+# Terraform state holds secrets and must never enter an image layer.
+**/node_modules
+**/.git
+**/dist
+**/build
+.ralph
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform
+**/.terraform.lock.hcl
+infra/**/*.tfvars
+**/.env
+**/.env.*
+**/*.log
+.expo
+apps/mobile/ios
+apps/mobile/android
+tools
+_bmad
+_bmad-output
+**/.DS_Store

@@ -88,3 +88,33 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "container_image_override" {
+  description = "If set, overrides container_image (used to pass the published ECR image)."
+  type        = string
+  default     = null
+}
+
+variable "target_group_arn" {
+  description = "Optional ALB/NLB target group to register the service with (public ingress)."
+  type        = string
+  default     = null
+}
+
+variable "health_check_grace_period" {
+  description = "Seconds ECS ignores unhealthy LB checks after task start."
+  type        = number
+  default     = 60
+}
+
+variable "container_secrets" {
+  description = "ECS secrets injected as env vars ([{ name, valueFrom }]); valueFrom is a Secrets Manager ARN (optionally :jsonKey::)."
+  type        = list(object({ name = string, valueFrom = string }))
+  default     = []
+}
+
+variable "execution_secret_arns" {
+  description = "Base Secrets Manager ARNs the EXECUTION role may read to inject container_secrets at task start."
+  type        = list(string)
+  default     = []
+}

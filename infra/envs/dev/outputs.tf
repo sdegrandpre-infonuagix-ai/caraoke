@@ -53,17 +53,8 @@ output "ecs_cluster_name" {
   value       = module.api.cluster_name
 }
 
-output "livekit_signaling_url" {
-  description = "LiveKit SFU signaling URL for the client SDK."
-  value       = module.livekit.signaling_url
-}
-
-output "livekit_keys_secret_arn" {
-  description = "ARN of the LiveKit API keys secret (value set out-of-band)."
-  value       = module.livekit.keys_secret_arn
-}
-
-output "spotify_mcp_cluster_name" {
-  description = "ECS cluster name for the Spotify MCP server."
-  value       = module.spotify_mcp.cluster_name
-}
+# LiveKit self-host + Spotify MCP outputs disabled — those modules aren't applied for the
+# road test (voice runs on LiveKit Cloud). Re-enable with the modules in main.tf.
+# output "livekit_signaling_url" { value = module.livekit.signaling_url }
+# output "livekit_keys_secret_arn" { value = module.livekit.keys_secret_arn }
+# output "spotify_mcp_cluster_name" { value = module.spotify_mcp.cluster_name }

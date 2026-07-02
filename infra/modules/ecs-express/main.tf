@@ -45,6 +45,32 @@ resource "aws_iam_role_policy_attachment" "execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# The EXECUTION role (not the task role) fetches container_secrets at task start, so it needs
+# GetSecretValue on those secret ARNs plus KMS Decrypt when they're CMK-encrypted.
+data "aws_iam_policy_document" "execution_secrets" {
+  count = length(var.execution_secret_arns) > 0 ? 1 : 0
+
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = var.execution_secret_arns
+  }
+
+  dynamic "statement" {
+    for_each = var.kms_key_arn == null ? [] : [var.kms_key_arn]
+    content {
+      actions   = ["kms:Decrypt"]
+      resources = [statement.value]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "execution_secrets" {
+  count  = length(var.execution_secret_arns) > 0 ? 1 : 0
+  name   = "${local.service}-exec-secrets"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.execution_secrets[0].json
+}
+
 resource "aws_iam_role" "task" {
   name               = "${local.service}-task"
   assume_role_policy = data.aws_iam_policy_document.assume.json
@@ -113,7 +139,7 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = jsonencode([
     {
       name      = var.service_name
-      image     = var.container_image
+      image     = coalesce(var.container_image_override, var.container_image)
       essential = true
       portMappings = [
         { containerPort = var.container_port, protocol = "tcp" }
@@ -122,6 +148,7 @@ resource "aws_ecs_task_definition" "this" {
         [{ name = "NODE_ENV", value = "production" }],
         var.extra_environment,
       )
+      secrets = var.container_secrets
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -143,16 +170,22 @@ resource "aws_ecs_service" "this" {
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
 
+  health_check_grace_period_seconds = var.target_group_arn == null ? null : var.health_check_grace_period
+
   network_configuration {
     subnets          = var.subnet_ids
     security_groups  = [aws_security_group.service.id]
     assign_public_ip = false
   }
 
-  # The placeholder image/desired_count is replaced by the deploy pipeline;
-  # ignore drift so CI deploys don't fight Terraform.
-  lifecycle {
-    ignore_changes = [task_definition, desired_count]
+  # Register with the ALB/NLB target group when one is provided (public ingress).
+  dynamic "load_balancer" {
+    for_each = var.target_group_arn == null ? [] : [var.target_group_arn]
+    content {
+      target_group_arn = load_balancer.value
+      container_name   = var.service_name
+      container_port   = var.container_port
+    }
   }
 
   tags = var.tags

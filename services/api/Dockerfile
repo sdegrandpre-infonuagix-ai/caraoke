@@ -10,7 +10,11 @@ FROM base AS build
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @caraoke/api... build
-RUN pnpm --filter @caraoke/api deploy --prod /app
+# tsc doesn't emit non-TS assets — copy the SQL migrations next to the compiled runner so the
+# migrate task (node dist/db/migrate.js) can find dist/db/migrations/*.sql.
+RUN cp -r services/api/src/db/migrations services/api/dist/db/migrations
+# pnpm v10 only deploys injected workspaces by default; --legacy keeps the pre-v10 behavior.
+RUN pnpm --filter @caraoke/api deploy --prod --legacy /app
 
 FROM base AS runtime
 ENV NODE_ENV=production

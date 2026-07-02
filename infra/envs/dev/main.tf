@@ -60,37 +60,36 @@ module "api" {
   vpc_id         = module.vpc.vpc_id
   vpc_cidr_block = module.vpc.vpc_cidr_block
   subnet_ids     = module.vpc.private_subnet_ids
-}
 
-module "livekit" {
-  source             = "../../modules/livekit"
-  name_prefix        = local.name_prefix
-  region             = var.region
-  vpc_id             = module.vpc.vpc_id
-  public_subnet_ids  = module.vpc.public_subnet_ids
-  private_subnet_ids = module.vpc.private_subnet_ids
-  redis_address      = module.redis.primary_endpoint
-  kms_key_arn        = module.kms.key_arn
-}
+  # Run the published API image behind the public ALB (api_ingress.tf).
+  container_image_override = "006619322178.dkr.ecr.ca-central-1.amazonaws.com/caraoke-dev-api:latest"
+  desired_count            = 1
+  task_cpu                 = 512
+  task_memory              = 1024
+  target_group_arn         = aws_lb_target_group.api.arn
+  kms_key_arn              = module.kms.key_arn
 
-# Spotify MCP server on ECS Express (Story 1.6). Reads its app credentials from the
-# existing `spotify` Secrets Manager secret at runtime via its task role (NFR7).
-module "spotify_mcp" {
-  source               = "../../modules/ecs-express"
-  name_prefix          = local.name_prefix
-  service_name         = "spotify-mcp"
-  region               = var.region
-  vpc_id               = module.vpc.vpc_id
-  vpc_cidr_block       = module.vpc.vpc_cidr_block
-  subnet_ids           = module.vpc.private_subnet_ids
-  container_port       = 3001
-  readable_secret_arns = [module.secrets.secret_arns["spotify"]]
-  kms_key_arn          = module.kms.key_arn
-
+  # Deploy #1 uses mock integrations so the app boots without AppSync/LiveKit/Spotify config;
+  # this proves the reachable pipeline (ALB -> ECS -> /health). Flip to "live" + inject the
+  # LiveKit/Spotify secrets once those creds are populated.
   extra_environment = [
-    { name = "PORT", value = "3001" },
-    { name = "CARAOKE_INTEGRATIONS", value = "live" },
+    { name = "CARAOKE_INTEGRATIONS", value = "mock" },
     { name = "AWS_REGION", value = var.region },
-    { name = "SPOTIFY_SECRET_ID", value = module.secrets.secret_arns["spotify"] },
+    { name = "API_PORT", value = "3000" },
+    { name = "COGNITO_USER_POOL_ID", value = module.cognito.user_pool_id },
+    { name = "COGNITO_CLIENT_ID", value = module.cognito.app_client_id },
+    { name = "REDIS_URL", value = "rediss://${module.redis.primary_endpoint}:6379" },
+    { name = "APP_SCHEME", value = "caraoke" },
+    { name = "INVITE_BASE_URL", value = "https://caraoke.app" },
   ]
+  container_secrets = [
+    { name = "DATABASE_URL", valueFrom = data.aws_secretsmanager_secret.database_url.arn },
+  ]
+  execution_secret_arns = [data.aws_secretsmanager_secret.database_url.arn]
 }
+
+# LiveKit self-host + Spotify MCP are intentionally NOT applied for the road test:
+# voice runs on LiveKit Cloud (creds injected into the API), and the MCP isn't needed yet.
+# Re-enable these modules when moving to the self-hosted architecture.
+# module "livekit" { ... }        # see git history / modules/livekit
+# module "spotify_mcp" { ... }    # see git history / modules/ecs-express
