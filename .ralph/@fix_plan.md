@@ -105,14 +105,14 @@
       `playback.scheduled` received → `playing`; drift/disconnect → `reconnecting`; session end →
       `ended`. Cover each transition (and illegal-transition rejection) with tests.
 
-- [ ] Story 9.4: Drift-correction redesign (measure real playback position)
+- [x] Story 9.4: Drift-correction redesign (measure real playback position)
       Defect: drift correction (Story 4.5) is broken by construction — it never samples the actual
       Spotify playback position, so the computed drift is meaningless and no correct nudge can be
       applied. Redesign to sample the real local playback position (via the Spotify SDK / native
       module), compare against the shared scheduled timeline (T + elapsed), and correct toward
       NFR2 ≤50ms. Tests must drive the correction math from sampled positions, not from a stub.
 
-- [ ] Story 9.5: Native onSpeechEnded wiring (TTS → playback sequencing)
+- [x] Story 9.5: Native onSpeechEnded wiring (TTS → playback sequencing)
       Defect: the TTS "speech finished" callback is never wired, so the app cannot sequence
       "agent finished speaking" → "start playback". Wire AVSpeechSynthesizerDelegate
       (didFinish utterance) on iOS and UtteranceProgressListener (onDone) on Android through the

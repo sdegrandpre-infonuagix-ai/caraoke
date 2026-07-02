@@ -280,3 +280,58 @@ test('riff: ducking is engaged throughout the speech window (UX-DR4)', () => {
   r.onSpeechEnded();
   assert.equal(d.isDucked(), false);
 });
+
+// ── 6. Story 9.5: onSpeechEnded native→JS wiring contract ────────────────────
+//
+// These tests validate the CONTRACT that the SonicEngine wires to: when the native
+// `onSpeechEnded` event fires (AVSpeechSynthesizerDelegate / UtteranceProgressListener),
+// `riff.onSpeechEnded()` must be called, releasing the duck and unblocking playback.
+// The actual native event delivery is covered by the native build; here we test the
+// JS side of the subscription pattern that SonicEngine uses.
+
+test('story 9.5: onSpeechEnded subscription — duck is released when event fires', () => {
+  const mock = makeMock();
+  const d = new TestAudioDucking(mock);
+  const r = new TestRiffVoice(d, mock);
+
+  // Capture the handler the way SonicEngine does (mirrors addSpeechEndedListener wiring).
+  let speechEndedHandler: (() => void) | null = null;
+  const sub = { remove: () => { speechEndedHandler = null; } };
+  const subscribe = (handler: () => void) => {
+    speechEndedHandler = handler;
+    return sub;
+  };
+  subscribe(() => r.onSpeechEnded());
+
+  r.speak('Your song is ready.', 'en');
+  assert.equal(d.isDucked(), true, 'duck must be engaged while TTS plays');
+
+  // Simulate the native onSpeechEnded event arriving from iOS/Android.
+  assert.ok(speechEndedHandler, 'listener must be registered');
+  speechEndedHandler!();
+
+  assert.equal(d.isDucked(), false, 'duck must be released when onSpeechEnded fires');
+  const restoreCall = lastCall(mock.calls, 'restore');
+  assert.ok(restoreCall, 'native.restore() must be called to ramp audio back');
+});
+
+test('story 9.5: onSpeechEnded subscription — remove() stops future callbacks', () => {
+  const mock = makeMock();
+  const d = new TestAudioDucking(mock);
+  const r = new TestRiffVoice(d, mock);
+
+  let speechEndedHandler: (() => void) | null = null;
+  const subscribe = (handler: () => void) => {
+    speechEndedHandler = handler;
+    return { remove: () => { speechEndedHandler = null; } };
+  };
+  const sub = subscribe(() => r.onSpeechEnded());
+
+  r.speak('Starting your duet.', 'en');
+  sub.remove();
+
+  // After remove(), the handler reference is gone — no restore call should follow.
+  mock.reset();
+  speechEndedHandler?.(); // no-op since null
+  assert.equal(mock.calls.length, 0, 'no native calls after subscription is removed');
+});

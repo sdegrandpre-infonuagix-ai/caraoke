@@ -55,6 +55,9 @@ class CaraokeAudioModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("CaraokeAudio")
 
+    // Declares the event name so Expo Modules Core registers it on the JS emitter (Story 9.5).
+    Events("onSpeechEnded")
+
     OnCreate {
       setupAudio()
     }
@@ -114,6 +117,17 @@ class CaraokeAudioModule : Module() {
 
     tts = TextToSpeech(context) { status ->
       ttsReady = status == TextToSpeech.SUCCESS
+      if (ttsReady) {
+        tts?.setOnUtteranceProgressListener(object : android.speech.tts.UtteranceProgressListener() {
+          override fun onStart(utteranceId: String?) {}
+          override fun onDone(utteranceId: String?) {
+            // Emit to JS so RiffVoice can release the duck and sequence playback (Story 9.5).
+            sendEvent("onSpeechEnded", mapOf<String, Any>())
+          }
+          @Deprecated("Required override for API < 21")
+          override fun onError(utteranceId: String?) {}
+        })
+      }
     }
   }
 
@@ -200,6 +214,7 @@ class CaraokeAudioModule : Module() {
       Locale.US
     }
     tts?.language = locale
+    // "riff" utteranceId is required so UtteranceProgressListener.onDone fires (Story 9.5).
     tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "riff")
   }
 

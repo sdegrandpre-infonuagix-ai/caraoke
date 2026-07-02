@@ -3,7 +3,7 @@
 // Until that native module ships, a JS fallback keeps the app running (no audio, no crash) so
 // the facades, state-machine wiring, and ducking logic are exercised end-to-end on any build.
 
-import { requireOptionalNativeModule } from 'expo-modules-core';
+import { EventEmitter, requireOptionalNativeModule } from 'expo-modules-core';
 import type { SoundLayer } from './ducking';
 
 /** The native module contract the Swift/Kotlin implementation fulfils. */
@@ -38,3 +38,22 @@ export const sonicNative: NativeSonicModule = native ?? new FallbackSonicModule(
 
 /** True when the real native audio module is linked. */
 export const hasNativeSonic = native != null;
+
+// Story 9.5: EventEmitter wrapping the native module so JS can subscribe to `onSpeechEnded`.
+// The emitter is null when running in a JS-only environment (e.g. unit tests, Expo Go without
+// the custom dev client) — callers receive a no-op { remove } handle in that case.
+const sonicEmitter = native ? new EventEmitter(native as Parameters<typeof EventEmitter>[0]) : null;
+
+/** Subscription handle returned by addSpeechEndedListener. */
+export interface SpeechEndedSubscription {
+  remove(): void;
+}
+
+/**
+ * Subscribe to the native `onSpeechEnded` event emitted when AVSpeechSynthesizer (iOS) or
+ * UtteranceProgressListener (Android) reports that TTS playback has finished.
+ * Returns a subscription object; call `.remove()` to unsubscribe.
+ */
+export function addSpeechEndedListener(handler: () => void): SpeechEndedSubscription {
+  return sonicEmitter?.addListener('onSpeechEnded', handler) ?? { remove: () => {} };
+}

@@ -15,8 +15,12 @@ import AVFoundation
 // All AVAudioEngine mutations run on `audioQueue` (serial, userInteractive QoS) so the engine
 // never receives concurrent mutations from the JS bridge. The restore ramp uses a
 // DispatchSourceTimer on that same queue for frame-accurate gain interpolation.
+//
+// Story 9.5: CaraokeAudioModule conforms to AVSpeechSynthesizerDelegate so that the
+// `speechSynthesizer(_:didFinish:)` callback fires when TTS completes, emitting
+// `onSpeechEnded` to JS so RiffVoice can release the duck and sequence playback.
 
-public class CaraokeAudioModule: Module {
+public class CaraokeAudioModule: Module, AVSpeechSynthesizerDelegate {
 
   // MARK: - Audio infrastructure
 
@@ -37,9 +41,13 @@ public class CaraokeAudioModule: Module {
   public func definition() -> ModuleDefinition {
     Name("CaraokeAudio")
 
+    // Declares the event name so Expo Modules Core registers it on the JS emitter.
+    Events("onSpeechEnded")
+
     OnCreate {
       self.setupAudioSession()
       self.setupEngine()
+      self.synthesizer.delegate = self
     }
 
     // Play a one-shot named cue from the app bundle (e.g. "session-start.mp3").
@@ -181,6 +189,12 @@ public class CaraokeAudioModule: Module {
     // Stop any in-progress utterance so a new Riff cue always plays immediately.
     if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
     synthesizer.speak(utterance)
+  }
+
+  // MARK: - AVSpeechSynthesizerDelegate (Story 9.5)
+
+  public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+    sendEvent("onSpeechEnded", [:])
   }
 
   // MARK: - ambient (called on audioQueue)
