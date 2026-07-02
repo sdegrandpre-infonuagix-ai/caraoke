@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../../app.js';
 import { AgentService } from './agent.service.js';
+import { AppSyncScheduledStartProducer, MIN_PREBUFFER_MS } from './scheduledStart.js';
+import { MockEventPublisher } from '../../events/mock.js';
 import { IdentityService } from '../identity/identity.service.js';
 import type { UserRepository } from '../identity/identity.repository.js';
 import type { AuthClaims, User } from '../identity/identity.types.js';
@@ -273,5 +275,107 @@ describe('POST /sessions/:id/agent', () => {
       .send({ query: 'asdfghjklzxcvbn' });
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('NOT_FOUND');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AppSyncScheduledStartProducer (Story 9.2) — producer-side tests
+// ---------------------------------------------------------------------------
+
+describe('AppSyncScheduledStartProducer', () => {
+  it('publishes a playback.scheduled event with the correct envelope shape', async () => {
+    const pub = new MockEventPublisher();
+    const producer = new AppSyncScheduledStartProducer(pub);
+
+    await producer.schedule({
+      sessionId: 'sess-abc',
+      participantIds: ['host-1', 'guest-2'],
+      track: MOCK_TRACK,
+    });
+
+    expect(pub.published).toHaveLength(1);
+    const evt = pub.published[0]!;
+    expect(evt.type).toBe('playback.scheduled');
+    expect(evt.version).toBe(1);
+    expect(evt.sessionId).toBe('sess-abc');
+    expect(evt.occurredAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('event data includes the resolved track fields', async () => {
+    const pub = new MockEventPublisher();
+    const producer = new AppSyncScheduledStartProducer(pub);
+
+    await producer.schedule({
+      sessionId: 'sess-abc',
+      participantIds: ['host-1'],
+      track: MOCK_TRACK,
+    });
+
+    const data = pub.published[0]!.data as Record<string, unknown>;
+    expect(data.trackId).toBe(MOCK_TRACK.trackId);
+    expect(data.trackUri).toBe(MOCK_TRACK.uri);
+    expect(data.trackName).toBe(MOCK_TRACK.name);
+    expect(data.artist).toBe(MOCK_TRACK.artist);
+    expect(data.durationMs).toBe(MOCK_TRACK.durationMs);
+  });
+
+  it('event data includes all participant IDs so clients know who to sync with', async () => {
+    const pub = new MockEventPublisher();
+    const producer = new AppSyncScheduledStartProducer(pub);
+
+    await producer.schedule({
+      sessionId: 'sess-abc',
+      participantIds: ['host-X', 'guest-Y'],
+      track: MOCK_TRACK,
+    });
+
+    const data = pub.published[0]!.data as Record<string, unknown>;
+    expect(data.participantIds).toContain('host-X');
+    expect(data.participantIds).toContain('guest-Y');
+  });
+
+  it('schedules T at least MIN_PREBUFFER_MS in the future (NFR1: clients can prebuffer)', async () => {
+    const before = Date.now();
+    const pub = new MockEventPublisher();
+    const producer = new AppSyncScheduledStartProducer(pub);
+
+    const { scheduledAt } = await producer.schedule({
+      sessionId: 'sess-abc',
+      participantIds: ['host-1'],
+      track: MOCK_TRACK,
+    });
+
+    const T = new Date(scheduledAt).getTime();
+    expect(T).toBeGreaterThanOrEqual(before + MIN_PREBUFFER_MS);
+  });
+
+  it('returns scheduledAt that matches the published event data', async () => {
+    const pub = new MockEventPublisher();
+    const producer = new AppSyncScheduledStartProducer(pub);
+
+    const { scheduledAt } = await producer.schedule({
+      sessionId: 'sess-abc',
+      participantIds: ['host-1'],
+      track: MOCK_TRACK,
+    });
+
+    const data = pub.published[0]!.data as Record<string, unknown>;
+    expect(scheduledAt).toBe(data.scheduledAt);
+  });
+
+  it('uses the configured prebufferMs when provided', async () => {
+    const before = Date.now();
+    const pub = new MockEventPublisher();
+    const CUSTOM_MS = 5_000;
+    const producer = new AppSyncScheduledStartProducer(pub, CUSTOM_MS);
+
+    const { scheduledAt } = await producer.schedule({
+      sessionId: 'sess-abc',
+      participantIds: ['host-1'],
+      track: MOCK_TRACK,
+    });
+
+    const T = new Date(scheduledAt).getTime();
+    expect(T).toBeGreaterThanOrEqual(before + CUSTOM_MS);
   });
 });

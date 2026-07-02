@@ -91,7 +91,7 @@
       Spotify integration, and hand off to the scheduled-start producer (9.2). Uniform {data,error}
       envelope, Zod validation, AppError codes. Wire into app.ts.
 
-- [ ] Story 9.2: `playback.scheduled` event producer & scheduled-start wiring
+- [x] Story 9.2: `playback.scheduled` event producer & scheduled-start wiring
       Defect: the mobile useScheduledStart hook consumes a `playback.scheduled` event that NOTHING
       on the server produces — so the "start at T" instruction is never sent and both phones wait
       forever. Produce `playback.scheduled` (start timestamp T derived from the clock-sync offset,
