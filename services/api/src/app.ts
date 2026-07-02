@@ -45,6 +45,9 @@ import { createTelemetryRouter } from './modules/telemetry/telemetry.router.js';
 import { PgTelemetryRepository } from './modules/telemetry/telemetry.repository.js';
 import { createTelemetryAdminRouter } from './modules/telemetry/telemetry.admin.router.js';
 import { sensitiveLimiter, adminLimiter } from './middleware/rateLimit.js';
+import { AgentService, NullScheduledStartProducer } from './modules/agent/agent.service.js';
+import { createAgentRouter } from './modules/agent/agent.router.js';
+import { getSpotifySearchProvider } from './integrations/spotify/search.js';
 
 export interface AppDeps {
   /** Override the token verifier (tests). Defaults to the live Cognito verifier. */
@@ -61,6 +64,8 @@ export interface AppDeps {
   readyService?: SessionReadyService;
   /** Override the notification service (tests). Defaults to push + Postgres-backed. */
   notificationService?: NotificationService;
+  /** Override the agent service (tests). Defaults to Spotify-search + NullScheduledStartProducer. */
+  agentService?: AgentService;
 }
 
 /**
@@ -217,6 +222,12 @@ export function createApp(deps: AppDeps = {}): Express {
     }),
   );
   app.use('/', createTelemetryAdminRouter({ service: telemetryService }));
+
+  // Voice-agent routes (Story 9.1): song requests — participant-gated, Spotify track resolution.
+  const agentService =
+    deps.agentService ??
+    new AgentService(pairingService, getSpotifySearchProvider(env), new NullScheduledStartProducer());
+  app.use('/', createAgentRouter({ verifier, identityService, agentService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

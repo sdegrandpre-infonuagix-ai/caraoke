@@ -32,6 +32,10 @@ const envSchema = z.object({
   EXPO_ACCESS_TOKEN: z.string().optional(),
   // Operator admin key (Story 6.5, FR37). Required to access the moderation queue.
   ADMIN_API_KEY: z.string().optional(),
+  // Spotify app credentials for server-side track search (Story 9.1, Client Credentials flow).
+  // Required in live integrations mode; unused by the mock provider.
+  SPOTIFY_CLIENT_ID: z.string().optional(),
+  SPOTIFY_CLIENT_SECRET: z.string().optional(),
   // Stripe subscription price ID (Story 7.1, FR38). The price users subscribe to.
   STRIPE_PRICE_ID: z.string().default('price_caraoke_monthly'),
   // Prices a subscriber may switch to via changePlan (FR39), comma-separated. Defaults to

@@ -83,7 +83,7 @@
 > without them the product's central promise (two cars, one song, in sync) does not function.
 > Each story is TDD (red-green-refactor); land failing tests that describe the wired behavior first.
 
-- [ ] Story 9.1: Server-side Voice-Agent module (`/agent`)
+- [x] Story 9.1: Server-side Voice-Agent module (`/agent`)
       Defect: there is no backend `/agent` module. The Voice-Agent song-request flow (Story 4.3)
       has no server endpoint to coordinate a duet, so nothing ever initiates a synchronized start.
       Build a `services/api/src/modules/agent` module: accept a song request for a session (caller
