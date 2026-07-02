@@ -130,6 +130,16 @@ public class CaraokeAudioModule: Module, AVSpeechSynthesizerDelegate {
   // MARK: - setGains (called on audioQueue)
 
   private func applyGains(gains: [String: Double]) {
+    let needsDuck = (gains["backing"] ?? 0) < 0 || (gains["partner"] ?? 0) < 0
+
+    // Story 9.6(c): cancel any in-flight restore ramp the moment a new duck arrives.
+    // Without this, the ramp timer keeps ramping ambientMixer.outputVolume back up while
+    // the new duck is trying to hold it down — causing a volume fight.
+    if needsDuck && !isDucked {
+      restoreSource?.cancel()
+      restoreSource = nil
+    }
+
     // Ambient layer: our AVAudioEngine controls this directly.
     if let ambientDb = gains["ambient"] {
       ambientMixer.outputVolume = dbToLinear(Float(ambientDb))
@@ -139,7 +149,6 @@ public class CaraokeAudioModule: Module, AVSpeechSynthesizerDelegate {
 
     // Backing and partner layers belong to other audio sessions (Spotify, LiveKit).
     // Toggle .duckOthers to request iOS-level attenuation of those sessions.
-    let needsDuck = (gains["backing"] ?? 0) < 0 || (gains["partner"] ?? 0) < 0
     if needsDuck != isDucked {
       isDucked = needsDuck
       updateSessionDucking(duck: needsDuck)

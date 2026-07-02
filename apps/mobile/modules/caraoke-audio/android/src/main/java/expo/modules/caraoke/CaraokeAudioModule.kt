@@ -39,7 +39,11 @@ class CaraokeAudioModule : Module() {
   private var focusRequest: AudioFocusRequest? = null   // API 26+
 
   private var soundPool: SoundPool? = null
-  private val soundIds = mutableMapOf<String, Int>()   // cue name → SoundPool id
+  private val soundIds = mutableMapOf<String, Int>()        // cue name → SoundPool id
+  // Story 9.6(a): track load state so we don't play before the sample is decoded.
+  // All access to these maps is on the main thread (mainHandler.post + listener callback).
+  private val loadedSounds = mutableSetOf<Int>()            // soundPool ids that are ready
+  private val pendingPlays = mutableMapOf<Int, () -> Unit>() // queued plays awaiting load
 
   private var ambientPlayer: MediaPlayer? = null
   private var ambientVolume: Float = 1.0f
@@ -68,8 +72,9 @@ class CaraokeAudioModule : Module() {
 
     // Play a one-shot named cue from res/raw (e.g. "session_start.mp3 / .wav").
     // Cue names from the JS layer use hyphens; Android raw names use underscores.
+    // Story 9.6(a): post to mainHandler so map access is single-threaded with the load listener.
     Function("playCue") { name: String ->
-      playCue(name)
+      mainHandler.post { playCue(name) }
     }
 
     // Apply per-layer gains (dB). Negative backing/partner values request audio focus
@@ -114,6 +119,16 @@ class CaraokeAudioModule : Module() {
       .setMaxStreams(4)
       .setAudioAttributes(attrs)
       .build()
+      .also { pool ->
+        // Story 9.6(a): fire queued play requests once the sample is decoded.
+        // The listener is invoked on the main thread (SoundPool was created there).
+        pool.setOnLoadCompleteListener { _, sampleId, status ->
+          if (status == 0) {
+            loadedSounds.add(sampleId)
+            pendingPlays.remove(sampleId)?.invoke()
+          }
+        }
+      }
 
     tts = TextToSpeech(context) { status ->
       ttsReady = status == TextToSpeech.SUCCESS
@@ -141,20 +156,32 @@ class CaraokeAudioModule : Module() {
     abandonAudioFocus()
   }
 
-  // ── playCue ──────────────────────────────────────────────────────────────────
+  // ── playCue (main thread) ────────────────────────────────────────────────────
 
   private fun playCue(name: String) {
     val pool = soundPool ?: return
     val rawName = name.replace('-', '_')
-    val id = soundIds.getOrPut(rawName) {
-      val resId = context.resources.getIdentifier(rawName, "raw", context.packageName)
-      if (resId == 0) return   // cue file not bundled — silent no-op
-      pool.load(context, resId, 1).also { loadedId ->
-        if (loadedId == 0) return
+
+    // Reuse an already-mapped soundId.
+    val existing = soundIds[rawName]
+    if (existing != null) {
+      if (existing in loadedSounds) {
+        pool.play(existing, 1.0f, 1.0f, 1, 0, 1.0f)
+      } else {
+        // Story 9.6(a): sample still loading — queue the play; OnLoadCompleteListener fires it.
+        pendingPlays[existing] = { pool.play(existing, 1.0f, 1.0f, 1, 0, 1.0f) }
       }
+      return
     }
-    // Play at full volume, no loop, default rate.
-    pool.play(id, 1.0f, 1.0f, 1, 0, 1.0f)
+
+    // First time: resolve the resource and start loading.
+    val resId = context.resources.getIdentifier(rawName, "raw", context.packageName)
+    if (resId == 0) return  // cue file not bundled — silent no-op
+    val soundId = pool.load(context, resId, 1)
+    if (soundId == 0) return
+    soundIds[rawName] = soundId
+    // Queue the play request; OnLoadCompleteListener will fire it once decoding is done.
+    pendingPlays[soundId] = { pool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f) }
   }
 
   // ── setGains (main thread) ───────────────────────────────────────────────────
@@ -169,6 +196,11 @@ class CaraokeAudioModule : Module() {
     if (needsDuck && !isDucked) {
       requestAudioFocus()
       isDucked = true
+    } else if (!needsDuck && isDucked) {
+      // Story 9.6(b): release audio focus as soon as gains return to unity so Spotify and
+      // other apps un-duck immediately — don't wait for the ramp timer to finish.
+      abandonAudioFocus()
+      isDucked = false
     }
   }
 

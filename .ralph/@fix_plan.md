@@ -118,7 +118,7 @@
       (didFinish utterance) on iOS and UtteranceProgressListener (onDone) on Android through the
       NativeSonicModule bridge to a JS `onSpeechEnded` event.
 
-- [ ] Story 9.6: Native audio robustness (async load, un-duck, re-duck)
+- [x] Story 9.6: Native audio robustness (async load, un-duck, re-duck)
       Defects from review of Stories 4.11/4.12: (a) Android SoundPool plays before the sample is
       loaded — gate playback on the load-complete callback; (b) Android never abandons audio focus,
       so other apps stay ducked after a session — abandon focus on stop/teardown; (c) iOS
