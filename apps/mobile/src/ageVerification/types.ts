@@ -12,4 +12,6 @@ export type AgeVerificationStatus =
   | 'verified'
   | 'underage'
   | 'failed'
-  | 'cancelled';
+  | 'cancelled'
+  // Stripe Identity's native document/selfie flow isn't integrated yet (see useAgeVerification).
+  | 'unavailable';

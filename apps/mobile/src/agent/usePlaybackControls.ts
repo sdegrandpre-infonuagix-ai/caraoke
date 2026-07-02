@@ -33,7 +33,7 @@ export interface PlaybackControlActions {
 
 export function usePlaybackControls(sessionId: string): PlaybackControlState & PlaybackControlActions {
   const idToken = useAuthStore((s) => s.idToken);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
   const transition = useSessionMachine((s) => s.transition);
   const [state, setState] = useState<PlaybackControlState>({ status: 'idle', lastCommand: null });
 

@@ -17,7 +17,7 @@ interface DrivingModeScreenProps {
 }
 
 export function DrivingModeScreen({ onWake }: DrivingModeScreenProps) {
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
 
   const handleTap = useCallback(() => {
     // Riff acknowledges by voice — no visual change (UX-DR9 eyes-free immediacy).

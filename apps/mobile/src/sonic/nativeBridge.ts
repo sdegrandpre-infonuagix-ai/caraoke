@@ -3,7 +3,7 @@
 // Until that native module ships, a JS fallback keeps the app running (no audio, no crash) so
 // the facades, state-machine wiring, and ducking logic are exercised end-to-end on any build.
 
-import { EventEmitter, requireOptionalNativeModule } from 'expo-modules-core';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import type { SoundLayer } from './ducking';
 
 /** The native module contract the Swift/Kotlin implementation fulfils. */
@@ -19,6 +19,9 @@ export interface NativeSonicModule {
   /** Start/stop the subtle ambient-presence bed. */
   startAmbient(): void;
   stopAmbient(): void;
+  // Native modules (SDK 56) extend NativeModule, which provides addListener. Optional here so
+  // the JS fallback (and unit tests) don't have to implement it. Story 9.5 emits `onSpeechEnded`.
+  addListener?(eventName: 'onSpeechEnded', listener: () => void): { remove(): void };
 }
 
 /** JS fallback used when the native module isn't present (dev client not yet built). */
@@ -39,11 +42,6 @@ export const sonicNative: NativeSonicModule = native ?? new FallbackSonicModule(
 /** True when the real native audio module is linked. */
 export const hasNativeSonic = native != null;
 
-// Story 9.5: EventEmitter wrapping the native module so JS can subscribe to `onSpeechEnded`.
-// The emitter is null when running in a JS-only environment (e.g. unit tests, Expo Go without
-// the custom dev client) — callers receive a no-op { remove } handle in that case.
-const sonicEmitter = native ? new EventEmitter(native as Parameters<typeof EventEmitter>[0]) : null;
-
 /** Subscription handle returned by addSpeechEndedListener. */
 export interface SpeechEndedSubscription {
   remove(): void;
@@ -51,9 +49,10 @@ export interface SpeechEndedSubscription {
 
 /**
  * Subscribe to the native `onSpeechEnded` event emitted when AVSpeechSynthesizer (iOS) or
- * UtteranceProgressListener (Android) reports that TTS playback has finished.
- * Returns a subscription object; call `.remove()` to unsubscribe.
+ * UtteranceProgressListener (Android) reports that TTS playback has finished. In SDK 56 the
+ * native module is itself an event emitter, so we subscribe on it directly. When there's no
+ * native module (unit tests, Expo Go without the custom dev client) callers get a no-op handle.
  */
 export function addSpeechEndedListener(handler: () => void): SpeechEndedSubscription {
-  return sonicEmitter?.addListener('onSpeechEnded', handler) ?? { remove: () => {} };
+  return native?.addListener?.('onSpeechEnded', handler) ?? { remove: () => {} };
 }

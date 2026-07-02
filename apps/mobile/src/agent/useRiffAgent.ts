@@ -45,7 +45,7 @@ export interface RiffAgentActions {
 
 export function useRiffAgent(sessionId: string): RiffAgentState & RiffAgentActions {
   const idToken = useAuthStore((s) => s.idToken);
-  const { locale } = useLocale();
+  const { current: locale } = useLocale();
   const ladderRef = useRef<LadderState>(initialLadder());
   const [state, setState] = useState<RiffAgentState>({
     rung: 'listening',
