@@ -6,6 +6,17 @@ data "aws_secretsmanager_secret" "database_url" {
   name = "caraoke-dev/database-url"
 }
 
+# LiveKit Cloud creds (JSON: url/api_key/api_secret), populated out-of-band in Secrets Manager.
+data "aws_secretsmanager_secret" "livekit" {
+  name = "caraoke-dev/livekit"
+}
+
+# Stripe key the live Stripe providers fetch at construction. Placeholder value (billing not
+# wired for the road test) — its presence keeps live-mode boot from crashing on a missing secret.
+data "aws_secretsmanager_secret" "stripe_key" {
+  name = "caraoke/stripe-secret-key"
+}
+
 # Hosted zone for the domain. Point your registrar's nameservers at this zone's NS records
 # (output caraoke_nameservers) so the internet resolves caraoke.ai to Route 53.
 resource "aws_route53_zone" "caraoke" {

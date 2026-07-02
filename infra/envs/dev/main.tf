@@ -69,11 +69,11 @@ module "api" {
   target_group_arn         = aws_lb_target_group.api.arn
   kms_key_arn              = module.kms.key_arn
 
-  # Deploy #1 uses mock integrations so the app boots without AppSync/LiveKit/Spotify config;
-  # this proves the reachable pipeline (ALB -> ECS -> /health). Flip to "live" + inject the
-  # LiveKit/Spotify secrets once those creds are populated.
+  # Live integrations: real Cognito/Redis/Spotify/LiveKit. AppSync Events isn't deployed yet
+  # (APPSYNC_EVENTS_HTTP_URL unset) — the publisher is lazy, so the app boots; only the
+  # synchronized-start publish fails until the Events plane is built.
   extra_environment = [
-    { name = "CARAOKE_INTEGRATIONS", value = "mock" },
+    { name = "CARAOKE_INTEGRATIONS", value = "live" },
     { name = "AWS_REGION", value = var.region },
     { name = "API_PORT", value = "3000" },
     { name = "COGNITO_USER_POOL_ID", value = module.cognito.user_pool_id },
@@ -84,8 +84,21 @@ module "api" {
   ]
   container_secrets = [
     { name = "DATABASE_URL", valueFrom = data.aws_secretsmanager_secret.database_url.arn },
+    { name = "LIVEKIT_URL", valueFrom = "${data.aws_secretsmanager_secret.livekit.arn}:url::" },
+    { name = "LIVEKIT_API_KEY", valueFrom = "${data.aws_secretsmanager_secret.livekit.arn}:api_key::" },
+    { name = "LIVEKIT_API_SECRET", valueFrom = "${data.aws_secretsmanager_secret.livekit.arn}:api_secret::" },
+    { name = "SPOTIFY_CLIENT_ID", valueFrom = "${module.secrets.secret_arns["spotify"]}:client_id::" },
+    { name = "SPOTIFY_CLIENT_SECRET", valueFrom = "${module.secrets.secret_arns["spotify"]}:client_secret::" },
   ]
-  execution_secret_arns = [data.aws_secretsmanager_secret.database_url.arn]
+  execution_secret_arns = [
+    data.aws_secretsmanager_secret.database_url.arn,
+    data.aws_secretsmanager_secret.livekit.arn,
+    module.secrets.secret_arns["spotify"],
+  ]
+
+  # The live Stripe providers fetch this secret at boot via the TASK role (SDK call, not ECS
+  # injection) — grant read so live mode doesn't crash. KMS not needed (aws-managed key).
+  readable_secret_arns = [data.aws_secretsmanager_secret.stripe_key.arn]
 }
 
 # LiveKit self-host + Spotify MCP are intentionally NOT applied for the road test:
