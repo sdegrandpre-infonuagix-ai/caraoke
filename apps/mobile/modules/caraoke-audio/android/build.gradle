@@ -1,32 +1,11 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+// Standard Expo module build — the expo-module-gradle-plugin applies the Android library +
+// Kotlin plugins, wires expo-modules-core, and sets compileSdk/minSdk/namespace. Replaces a
+// hand-rolled config that used an undefined safeExtGet() and set no namespace (AGP 8 requires it).
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'expo.modules.caraoke'
+version = '0.1.0'
 
 android {
-  compileSdkVersion safeExtGet("compileSdkVersion", 35)
-
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
-  }
-
-  kotlinOptions {
-    jvmTarget = "17"
-  }
-
-  defaultConfig {
-    minSdkVersion safeExtGet("minSdkVersion", 24)
-    targetSdkVersion safeExtGet("targetSdkVersion", 35)
-  }
-
-  lintOptions {
-    abortOnError false
-  }
-}
-
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  implementation project(':expo-modules-core')
+  namespace 'expo.modules.caraoke'
 }
