@@ -8,6 +8,7 @@ import type { ExpoConfig } from 'expo/config';
 const config: ExpoConfig = {
   name: 'Caraoke',
   slug: 'caraoke',
+  owner: 'infonuagix-ai',
   scheme: 'caraoke',
   version: '0.1.0',
   orientation: 'portrait',
@@ -44,7 +45,7 @@ const config: ExpoConfig = {
   // Links this project to its EAS build project (used by `eas build`).
   extra: {
     eas: {
-      projectId: '3d74840d-635e-4cec-9319-d498886ad644',
+      projectId: 'a8f9cffe-be6b-44ce-bff3-73fef2b2258e',
     },
   },
 };
