@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ResponseType, useAuthRequest, type DiscoveryDocument } from 'expo-auth-session';
+import { AuthRequest, ResponseType, type DiscoveryDocument } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { setSpotifyPending } from './pendingAuth';
 import { completeSpotifyLink, SPOTIFY_REDIRECT_URI } from './completeSignIn';
@@ -20,28 +20,34 @@ const SCOPES = [
 ];
 
 /**
- * Spotify Authorization-Code + PKCE (no client secret on device). The return deep-links back as
- * caraoke://spotify/callback, routed by Expo Router to app/spotify/callback, which exchanges the
- * code and links the account server-side (Story 2.4). We stash the PKCE verifier before opening
- * the browser; if the auth session catches the redirect itself, we complete inline as a fallback
- * (idempotent).
+ * Spotify Authorization-Code + PKCE (no client secret on device). Mirrors the Cognito sign-in
+ * flow (manual AuthRequest + makeAuthUrlAsync) rather than useAuthRequest, so the PKCE verifier
+ * is fully generated before we stash it — a hook-timing gap there caused the token exchange to
+ * fail with a bad code_verifier on iOS. The return deep-links back as caraoke://spotify/callback,
+ * routed to app/spotify/callback, which exchanges the code and links the account server-side. If
+ * the auth session catches the redirect inline, we complete it here as a fallback (idempotent).
  */
 export function useSpotifyAuth() {
   const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '';
 
-  const [request, , promptAsync] = useAuthRequest(
-    { clientId, scopes: SCOPES, usePKCE: true, redirectUri: SPOTIFY_REDIRECT_URI, responseType: ResponseType.Code },
-    discovery,
-  );
-
   const authorize = useCallback(async (): Promise<void> => {
-    if (!request) return;
+    const request = new AuthRequest({
+      clientId,
+      scopes: SCOPES,
+      usePKCE: true,
+      redirectUri: SPOTIFY_REDIRECT_URI,
+      responseType: ResponseType.Code,
+    });
+
+    // Finalize the URL (populates codeVerifier/state), then stash them for the callback screen.
+    await request.makeAuthUrlAsync(discovery);
     await setSpotifyPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
-    const result = await promptAsync();
+
+    const result = await request.promptAsync(discovery);
     if (result.type === 'success' && result.params.code) {
       await completeSpotifyLink(result.params.code, result.params.state);
     }
-  }, [request, promptAsync]);
+  }, [clientId]);
 
-  return { authorize, ready: request != null && clientId !== '' };
+  return { authorize, ready: clientId !== '' };
 }

@@ -85,9 +85,9 @@ export default function SpotifyLinkScreen() {
           disabled={!ready || link.isPending || !idToken}
           onPress={() => link.mutate()}
         />
-        {link.isError || params.error === 'link' ? (
+        {link.isError || params.error ? (
           <Text variant="caption" color="error">
-            {t('spotify.error')}
+            {link.error?.message || (params.error && params.error !== 'link' ? params.error : t('spotify.error'))}
           </Text>
         ) : null}
       </View>

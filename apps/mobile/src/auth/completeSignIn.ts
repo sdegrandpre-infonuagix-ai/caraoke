@@ -42,14 +42,18 @@ export async function completeCognitoSignIn(code: string, state?: string): Promi
   return true;
 }
 
-/** Exchange a Spotify auth code and link the account server-side. Returns true on success. */
+/**
+ * Exchange a Spotify auth code and link the account server-side. Returns true on success, false
+ * when there's no pending flow to complete (the other path — inline vs callback screen — already
+ * handled it). Real failures throw with a specific message so the UI can show the cause.
+ */
 export async function completeSpotifyLink(code: string, state?: string): Promise<boolean> {
   const pending = await takeSpotifyPending();
-  if (!pending) return false;
-  if (state && pending.state && state !== pending.state) return false;
+  if (!pending) return false; // already completed by the other path — not an error
+  if (state && pending.state && state !== pending.state) throw new Error('Spotify: state mismatch');
 
   const idToken = useAuthStore.getState().idToken;
-  if (!idToken) return false;
+  if (!idToken) throw new Error('Spotify: not signed in');
 
   const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '';
   const tokens = await exchangeCodeAsync(
@@ -61,7 +65,7 @@ export async function completeSpotifyLink(code: string, state?: string): Promise
     },
     spotifyDiscovery,
   );
-  if (!tokens.accessToken) return false;
+  if (!tokens.accessToken) throw new Error('Spotify: no access token from exchange');
   await linkSpotify(idToken, {
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken ?? undefined,

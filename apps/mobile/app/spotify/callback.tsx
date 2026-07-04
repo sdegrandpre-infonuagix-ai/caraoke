@@ -38,13 +38,18 @@ export default function SpotifyCallback() {
       const state = typeof params.state === 'string' ? params.state : undefined;
 
       let linked = false;
+      let errMsg = 'link';
       if (code && authStatus === 'signedIn') {
-        linked = await completeSpotifyLink(code, state).catch(() => false);
+        try {
+          linked = await completeSpotifyLink(code, state);
+        } catch (e) {
+          errMsg = e instanceof Error ? e.message : String(e);
+        }
         if (linked) await queryClient.invalidateQueries({ queryKey: ['spotify'] });
       }
-      // Surface a failed exchange/link instead of silently returning to the Connect button
-      // (which reads as an infinite consent loop).
-      router.replace(linked ? '/spotify' : { pathname: '/spotify', params: { error: 'link' } });
+      // Surface a failed exchange/link (with the real reason) instead of silently returning to
+      // the Connect button, which reads as an infinite consent loop.
+      router.replace(linked ? '/spotify' : { pathname: '/spotify', params: { error: errMsg } });
     })();
   }, [authStatus, params.code, params.state, router, queryClient]);
 
