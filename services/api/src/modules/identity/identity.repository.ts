@@ -45,9 +45,13 @@ export class PgUserRepository implements UserRepository {
   }
 
   async create(claims: AuthClaims): Promise<User> {
+    // Upsert on cognito_sub so two concurrent first-login requests (the app fires several
+    // authenticated calls at once on launch) can't collide on users_cognito_sub_key. The
+    // conflicting path refreshes email only — display_name is user-editable, so it's left intact.
     const { rows } = await this.db().query(
       `INSERT INTO users (cognito_sub, email, display_name, auth_provider)
        VALUES ($1, $2, $3, $4)
+       ON CONFLICT (cognito_sub) DO UPDATE SET email = EXCLUDED.email
        RETURNING *`,
       [claims.cognitoSub, claims.email, claims.displayName ?? null, claims.authProvider],
     );
