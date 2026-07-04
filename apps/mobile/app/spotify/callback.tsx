@@ -8,9 +8,9 @@ import { ScreenContainer, Text } from '../../src/components';
 import { completeSpotifyLink } from '../../src/auth/completeSignIn';
 
 /**
- * OAuth return target for Spotify linking (https://api.caraoke.ai/spotify/callback, via App
- * Links). Exchanges the `code`, links the account server-side, then routes back to the Spotify
- * screen where the status query refetches and reflects the connection (Story 2.4).
+ * OAuth return target for Spotify linking (caraoke://spotify/callback). Exchanges the `code`,
+ * links the account server-side, then routes back to the Spotify screen where the status query
+ * refetches and reflects the connection (Story 2.4).
  */
 export default function SpotifyCallback() {
   const params = useLocalSearchParams<{ code?: string; state?: string }>();

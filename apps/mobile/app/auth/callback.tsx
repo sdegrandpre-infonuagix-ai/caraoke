@@ -8,9 +8,9 @@ import { completeCognitoSignIn } from '../../src/auth/completeSignIn';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 
 /**
- * OAuth return target for Cognito sign-in (https://api.caraoke.ai/auth/callback, via Android
- * App Links). Finishes the token exchange from the `code`, then routes into the app. Runs the
- * exchange here because the auth session's redirect lands on this screen, not the sign-in hook.
+ * OAuth return target for Cognito sign-in (caraoke://auth/callback). Finishes the token exchange
+ * from the `code`, then routes into the app. Runs the exchange here because the redirect deep-links
+ * to this screen, not back to the sign-in hook.
  */
 export default function AuthCallback() {
   const params = useLocalSearchParams<{ code?: string; state?: string }>();

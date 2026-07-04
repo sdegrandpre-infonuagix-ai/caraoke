@@ -20,11 +20,11 @@ const SCOPES = [
 ];
 
 /**
- * Spotify Authorization-Code + PKCE (no client secret on device). The return is an HTTPS App
- * Link (https://api.caraoke.ai/spotify/callback) routed by Expo Router to app/spotify/callback,
- * which exchanges the code and links the account server-side (Story 2.4). We stash the PKCE
- * verifier before opening the browser; if the auth session catches the redirect itself, we
- * complete inline as a fallback (idempotent).
+ * Spotify Authorization-Code + PKCE (no client secret on device). The return deep-links back as
+ * caraoke://spotify/callback, routed by Expo Router to app/spotify/callback, which exchanges the
+ * code and links the account server-side (Story 2.4). We stash the PKCE verifier before opening
+ * the browser; if the auth session catches the redirect itself, we complete inline as a fallback
+ * (idempotent).
  */
 export function useSpotifyAuth() {
   const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '';

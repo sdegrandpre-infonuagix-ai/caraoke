@@ -10,11 +10,11 @@ WebBrowser.maybeCompleteAuthSession();
 /**
  * Cognito hosted-UI OAuth (authorization-code + PKCE) for federated Apple/Google sign-in (FR1).
  *
- * The return is an HTTPS App Link (https://api.caraoke.ai/auth/callback) — Chrome blocks
- * custom-scheme redirects from the Cognito hop, and Expo Router routes the App Link to
- * app/auth/callback, which finishes the token exchange. We persist the PKCE verifier before
- * opening the browser so that callback screen can use it. If the auth session happens to catch
- * the redirect itself, we complete inline as a fallback (idempotent — see completeCognitoSignIn).
+ * The return deep-links back into the app (caraoke://auth/callback), which Expo Router routes to
+ * app/auth/callback to finish the token exchange. Because that callback screen is a different
+ * component than this hook, we persist the PKCE verifier before opening the browser so the screen
+ * can use it. If the auth session happens to catch the redirect itself, we complete inline as a
+ * fallback (idempotent — see completeCognitoSignIn).
  */
 export function useCognitoSignIn() {
   const discovery = cognitoDiscovery(authConfig.domain) as DiscoveryDocument;

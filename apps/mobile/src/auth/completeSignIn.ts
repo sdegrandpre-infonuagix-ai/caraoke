@@ -9,8 +9,13 @@ import { takeCognitoPending, takeSpotifyPending } from './pendingAuth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { linkSpotify } from '../api/spotify';
 
-export const COGNITO_REDIRECT_URI = 'https://api.caraoke.ai/auth/callback';
-export const SPOTIFY_REDIRECT_URI = 'https://api.caraoke.ai/spotify/callback';
+// Custom-scheme redirects (proven to deep-link back into the app). Expo Router maps
+// caraoke://auth/callback → /auth/callback (app/auth/callback) and caraoke://spotify/callback →
+// /spotify/callback. The HTTPS App Link forms are also registered (assetlinks + intent filters)
+// as a future hardening path, but the scheme is the primary because it doesn't depend on
+// Android domain-verification succeeding on-device.
+export const COGNITO_REDIRECT_URI = 'caraoke://auth/callback';
+export const SPOTIFY_REDIRECT_URI = 'caraoke://spotify/callback';
 
 const spotifyDiscovery: DiscoveryDocument = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
