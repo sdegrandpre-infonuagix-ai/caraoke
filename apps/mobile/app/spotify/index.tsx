@@ -1,5 +1,5 @@
 import { Linking, View } from 'react-native';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components';
@@ -19,15 +19,17 @@ export default function SpotifyLinkScreen() {
   const authStatus = useAuthStore((s) => s.status);
   const { authorize, ready } = useSpotifyAuth();
   const statusQuery = useSpotifyStatus();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ error?: string }>();
   const { t } = useTranslation();
 
-  // Tapping connect just opens Spotify's consent page. The OAuth return is a caraoke:// deep link
-  // that Expo Router hands to app/spotify/callback, which exchanges the code, links the account,
-  // and navigates back here — where useSpotifyStatus refetches and shows the connected state.
-  // A failed exchange comes back with ?error=link so we can show it rather than silently retry.
+  // Tapping connect opens Spotify's consent page. Two return paths land the link: on Android the
+  // redirect deep-links to app/spotify/callback (which refetches status there); on iOS the auth
+  // session returns inline and authorize() completes the link itself — so we refetch status on
+  // success here too, otherwise the screen stays on "not connected" and re-tapping loops.
   const link = useMutation({
     mutationFn: () => authorize(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['spotify'] }),
   });
 
   if (authStatus === 'signedOut') return <Redirect href="/(onboarding)/sign-in" />;
