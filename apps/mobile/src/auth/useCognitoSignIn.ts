@@ -1,61 +1,49 @@
 import { useCallback } from 'react';
-import {
-  AuthRequest,
-  exchangeCodeAsync,
-  ResponseType,
-  type DiscoveryDocument,
-} from 'expo-auth-session';
+import { AuthRequest, ResponseType, type DiscoveryDocument } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { authConfig, cognitoDiscovery, cognitoIdpName, type FederatedProvider } from './config';
-import { useAuthStore } from '../stores/useAuthStore';
+import { setCognitoPending } from './pendingAuth';
+import { completeCognitoSignIn, COGNITO_REDIRECT_URI } from './completeSignIn';
 
 WebBrowser.maybeCompleteAuthSession();
 
 /**
- * Drives the Cognito hosted-UI OAuth (authorization-code + PKCE) flow for federated
- * Apple/Google sign-in (FR1). A fresh AuthRequest is built per tap so the chosen
- * `identity_provider` is baked into the authorize URL. On success the ID token is persisted
- * to the secure store and the auth store flips to signed-in.
+ * Cognito hosted-UI OAuth (authorization-code + PKCE) for federated Apple/Google sign-in (FR1).
+ *
+ * The return is an HTTPS App Link (https://api.caraoke.ai/auth/callback) — Chrome blocks
+ * custom-scheme redirects from the Cognito hop, and Expo Router routes the App Link to
+ * app/auth/callback, which finishes the token exchange. We persist the PKCE verifier before
+ * opening the browser so that callback screen can use it. If the auth session happens to catch
+ * the redirect itself, we complete inline as a fallback (idempotent — see completeCognitoSignIn).
  */
 export function useCognitoSignIn() {
   const discovery = cognitoDiscovery(authConfig.domain) as DiscoveryDocument;
-  // HTTPS App Link (not a custom scheme): Chrome blocks custom-scheme redirects from the
-  // Cognito hop on Android, so the return goes through a verified https://api.caraoke.ai link.
-  const redirectUri = 'https://api.caraoke.ai/auth/callback';
-  const setSession = useAuthStore((s) => s.setSession);
   const ready = authConfig.domain !== '' && authConfig.clientId !== '';
 
   const signIn = useCallback(
     async (provider: FederatedProvider): Promise<boolean> => {
       const request = new AuthRequest({
         clientId: authConfig.clientId,
-        redirectUri,
+        redirectUri: COGNITO_REDIRECT_URI,
         responseType: ResponseType.Code,
         scopes: ['openid', 'email', 'profile'],
         usePKCE: true,
         extraParams: { identity_provider: cognitoIdpName(provider) },
       });
 
+      // Build the URL first so codeVerifier/state are populated, then stash them for the
+      // callback screen (promptAsync reuses the built url, so it won't regenerate the verifier).
+      await request.makeAuthUrlAsync(discovery);
+      setCognitoPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
+
       const result = await request.promptAsync(discovery);
-      if (result.type !== 'success' || !result.params.code) return false;
-
-      const tokens = await exchangeCodeAsync(
-        {
-          clientId: authConfig.clientId,
-          code: result.params.code,
-          redirectUri,
-          extraParams: request.codeVerifier
-            ? { code_verifier: request.codeVerifier }
-            : undefined,
-        },
-        discovery,
-      );
-
-      if (!tokens.idToken) return false;
-      await setSession(tokens.idToken, tokens.refreshToken ?? undefined);
-      return true;
+      if (result.type === 'success' && result.params.code) {
+        return completeCognitoSignIn(result.params.code, result.params.state);
+      }
+      // Otherwise the App Link → app/auth/callback completes it.
+      return false;
     },
-    [discovery, redirectUri, setSession],
+    [discovery],
   );
 
   return { signIn, ready };

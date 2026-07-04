@@ -1,11 +1,11 @@
 import { Linking, View } from 'react-native';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useSpotifyAuth } from '../../src/auth/useSpotifyAuth';
-import { linkSpotify, useSpotifyStatus, type SpotifyStatus } from '../../src/api/spotify';
+import { useSpotifyStatus, type SpotifyStatus } from '../../src/api/spotify';
 
 const PREMIUM_URL = 'https://www.spotify.com/premium/';
 
@@ -18,22 +18,19 @@ export default function SpotifyLinkScreen() {
   const idToken = useAuthStore((s) => s.idToken);
   const authStatus = useAuthStore((s) => s.status);
   const { authorize, ready } = useSpotifyAuth();
-  const queryClient = useQueryClient();
   const statusQuery = useSpotifyStatus();
   const { t } = useTranslation();
 
+  // Tapping connect just opens Spotify's consent page. The OAuth return is an App Link that
+  // Expo Router hands to app/spotify/callback, which exchanges the code, links the account, and
+  // navigates back here — where useSpotifyStatus refetches and shows the connected state.
   const link = useMutation({
-    mutationFn: async () => {
-      const tokens = await authorize();
-      if (!tokens) throw new Error('cancelled');
-      return linkSpotify(idToken!, tokens);
-    },
-    onSuccess: (status) => queryClient.setQueryData(['spotify'], status),
+    mutationFn: () => authorize(),
   });
 
   if (authStatus === 'signedOut') return <Redirect href="/(onboarding)/sign-in" />;
 
-  const status: SpotifyStatus | undefined = link.data ?? statusQuery.data;
+  const status: SpotifyStatus | undefined = statusQuery.data;
 
   return (
     <ScreenContainer>
@@ -86,7 +83,7 @@ export default function SpotifyLinkScreen() {
           disabled={!ready || link.isPending || !idToken}
           onPress={() => link.mutate()}
         />
-        {link.isError && link.error?.message !== 'cancelled' ? (
+        {link.isError ? (
           <Text variant="caption" color="error">
             {t('spotify.error')}
           </Text>

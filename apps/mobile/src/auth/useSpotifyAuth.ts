@@ -1,11 +1,8 @@
 import { useCallback } from 'react';
-import {
-  exchangeCodeAsync,
-  ResponseType,
-  useAuthRequest,
-  type DiscoveryDocument,
-} from 'expo-auth-session';
+import { ResponseType, useAuthRequest, type DiscoveryDocument } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
+import { setSpotifyPending } from './pendingAuth';
+import { completeSpotifyLink, SPOTIFY_REDIRECT_URI } from './completeSignIn';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -22,44 +19,29 @@ const SCOPES = [
   'user-read-playback-state',
 ];
 
-export interface SpotifyTokens {
-  accessToken: string;
-  refreshToken?: string;
-}
-
 /**
- * Runs the Spotify Authorization-Code + PKCE flow (no client secret on device) and returns
- * the resulting tokens. The API verifies Premium and stores the link (Story 2.4).
+ * Spotify Authorization-Code + PKCE (no client secret on device). The return is an HTTPS App
+ * Link (https://api.caraoke.ai/spotify/callback) routed by Expo Router to app/spotify/callback,
+ * which exchanges the code and links the account server-side (Story 2.4). We stash the PKCE
+ * verifier before opening the browser; if the auth session catches the redirect itself, we
+ * complete inline as a fallback (idempotent).
  */
 export function useSpotifyAuth() {
   const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '';
-  // HTTPS App Link (Spotify requires https redirect URIs, and Android blocks custom-scheme
-  // returns) — register this exact URI in the Spotify dashboard.
-  const redirectUri = 'https://api.caraoke.ai/spotify/callback';
 
   const [request, , promptAsync] = useAuthRequest(
-    { clientId, scopes: SCOPES, usePKCE: true, redirectUri, responseType: ResponseType.Code },
+    { clientId, scopes: SCOPES, usePKCE: true, redirectUri: SPOTIFY_REDIRECT_URI, responseType: ResponseType.Code },
     discovery,
   );
 
-  const authorize = useCallback(async (): Promise<SpotifyTokens | null> => {
+  const authorize = useCallback(async (): Promise<void> => {
+    if (!request) return;
+    setSpotifyPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
     const result = await promptAsync();
-    if (result.type !== 'success' || !result.params.code) return null;
-
-    const tokens = await exchangeCodeAsync(
-      {
-        clientId,
-        code: result.params.code,
-        redirectUri,
-        extraParams: request?.codeVerifier
-          ? { code_verifier: request.codeVerifier }
-          : undefined,
-      },
-      discovery,
-    );
-    if (!tokens.accessToken) return null;
-    return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken ?? undefined };
-  }, [promptAsync, request, redirectUri, clientId]);
+    if (result.type === 'success' && result.params.code) {
+      await completeSpotifyLink(result.params.code, result.params.state);
+    }
+  }, [request, promptAsync]);
 
   return { authorize, ready: request != null && clientId !== '' };
 }

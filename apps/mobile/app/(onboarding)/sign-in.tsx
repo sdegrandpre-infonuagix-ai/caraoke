@@ -19,8 +19,10 @@ export default function SignIn() {
     setBusy(provider);
     setError(null);
     try {
-      const okSignIn = await signIn(provider);
-      if (!okSignIn) setError(t('onboarding.error'));
+      // On the happy path signIn resolves false — the OAuth return is an App Link that Expo
+      // Router hands to app/auth/callback, which finishes the exchange and navigates. Only a
+      // thrown error is a real failure here.
+      await signIn(provider);
     } catch {
       setError(t('onboarding.error'));
     } finally {
