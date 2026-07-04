@@ -34,7 +34,7 @@ export function useCognitoSignIn() {
       // Build the URL first so codeVerifier/state are populated, then stash them for the
       // callback screen (promptAsync reuses the built url, so it won't regenerate the verifier).
       await request.makeAuthUrlAsync(discovery);
-      setCognitoPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
+      await setCognitoPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
 
       const result = await request.promptAsync(discovery);
       if (result.type === 'success' && result.params.code) {

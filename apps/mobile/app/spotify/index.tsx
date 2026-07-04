@@ -1,6 +1,6 @@
 import { Linking, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
-import { Redirect } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components';
 import { useAuthStore } from '../../src/stores/useAuthStore';
@@ -19,11 +19,13 @@ export default function SpotifyLinkScreen() {
   const authStatus = useAuthStore((s) => s.status);
   const { authorize, ready } = useSpotifyAuth();
   const statusQuery = useSpotifyStatus();
+  const params = useLocalSearchParams<{ error?: string }>();
   const { t } = useTranslation();
 
-  // Tapping connect just opens Spotify's consent page. The OAuth return is an App Link that
-  // Expo Router hands to app/spotify/callback, which exchanges the code, links the account, and
-  // navigates back here — where useSpotifyStatus refetches and shows the connected state.
+  // Tapping connect just opens Spotify's consent page. The OAuth return is a caraoke:// deep link
+  // that Expo Router hands to app/spotify/callback, which exchanges the code, links the account,
+  // and navigates back here — where useSpotifyStatus refetches and shows the connected state.
+  // A failed exchange comes back with ?error=link so we can show it rather than silently retry.
   const link = useMutation({
     mutationFn: () => authorize(),
   });
@@ -83,7 +85,7 @@ export default function SpotifyLinkScreen() {
           disabled={!ready || link.isPending || !idToken}
           onPress={() => link.mutate()}
         />
-        {link.isError ? (
+        {link.isError || params.error === 'link' ? (
           <Text variant="caption" color="error">
             {t('spotify.error')}
           </Text>

@@ -24,7 +24,7 @@ const spotifyDiscovery: DiscoveryDocument = {
 
 /** Exchange a Cognito auth code and persist the session. Returns true on success. */
 export async function completeCognitoSignIn(code: string, state?: string): Promise<boolean> {
-  const pending = takeCognitoPending();
+  const pending = await takeCognitoPending();
   if (!pending) return false; // already completed, or no flow in progress
   if (state && pending.state && state !== pending.state) return false; // CSRF guard
 
@@ -44,7 +44,7 @@ export async function completeCognitoSignIn(code: string, state?: string): Promi
 
 /** Exchange a Spotify auth code and link the account server-side. Returns true on success. */
 export async function completeSpotifyLink(code: string, state?: string): Promise<boolean> {
-  const pending = takeSpotifyPending();
+  const pending = await takeSpotifyPending();
   if (!pending) return false;
   if (state && pending.state && state !== pending.state) return false;
 

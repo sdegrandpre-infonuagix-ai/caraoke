@@ -36,7 +36,7 @@ export function useSpotifyAuth() {
 
   const authorize = useCallback(async (): Promise<void> => {
     if (!request) return;
-    setSpotifyPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
+    await setSpotifyPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
     const result = await promptAsync();
     if (result.type === 'success' && result.params.code) {
       await completeSpotifyLink(result.params.code, result.params.state);
