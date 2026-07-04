@@ -2,6 +2,7 @@ import express, { type Express } from 'express';
 import { ok } from '@caraoke/shared';
 import { errorHandler } from './middleware/errorHandler.js';
 import { loadEnv } from './config/env.js';
+import { SETUP_HTML } from './setupPage.js';
 import { getMediaServer } from './integrations/media/index.js';
 import { CognitoTokenVerifier, type TokenVerifier } from './middleware/auth.js';
 import { PgUserRepository } from './modules/identity/identity.repository.js';
@@ -192,6 +193,11 @@ export function createApp(deps: AppDeps = {}): Express {
 <a class="btn" href="${appUrl}">Open in Caraoke</a>
 <script>setTimeout(function(){location.href=${JSON.stringify(appUrl)}},250)</script>
 </main></body></html>`);
+  });
+
+  // Road-test setup guide (shareable link for co-testers). Self-contained HTML.
+  app.get('/setup', (_req, res) => {
+    res.type('html').send(SETUP_HTML);
   });
 
   // Clock-sync primitive (Story 3.6, AR10/NFR1): server time for the client's offset
