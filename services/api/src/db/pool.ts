@@ -9,18 +9,33 @@ let pool: Pool | null = null;
  */
 export function getPool(): Pool {
   if (pool) return pool;
-  const { DATABASE_URL, NODE_ENV } = loadEnv();
-  if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL is not set — a database-backed route was called.');
-  }
+  const env = loadEnv();
   // Aurora enforces TLS (rds.force_ssl=1). Enable SSL in production; rejectUnauthorized:false
   // trusts the in-VPC RDS endpoint without bundling the RDS CA (fine for dev — harden later).
-  pool = new Pool({
-    connectionString: DATABASE_URL,
-    max: 10,
-    ssl: NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
-  });
-  return pool;
+  const ssl = env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined;
+
+  // Prefer discrete DB_* parts: DB_USER/DB_PASSWORD are injected directly from the RDS-managed
+  // master secret, so there's no standalone connection-string secret to drift out of sync.
+  if (env.DB_HOST && env.DB_USER && env.DB_PASSWORD) {
+    pool = new Pool({
+      host: env.DB_HOST,
+      port: env.DB_PORT,
+      user: env.DB_USER,
+      password: env.DB_PASSWORD,
+      database: env.DB_NAME ?? 'caraoke',
+      max: 10,
+      ssl,
+    });
+    return pool;
+  }
+  // Fallback: full connection string (local dev / legacy).
+  if (env.DATABASE_URL) {
+    pool = new Pool({ connectionString: env.DATABASE_URL, max: 10, ssl });
+    return pool;
+  }
+  throw new Error(
+    'No database configuration — set DB_HOST/DB_USER/DB_PASSWORD or DATABASE_URL (a DB-backed route was called).',
+  );
 }
 
 /** Override the pool (tests). */

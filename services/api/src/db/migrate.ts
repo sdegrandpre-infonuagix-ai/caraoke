@@ -1,7 +1,7 @@
 // Minimal forward-only SQL migration runner (Story 2.2). Applies db/migrations/*.sql in
 // filename order, tracking applied files in a schema_migrations table. Idempotent.
 //
-//   pnpm --filter @caraoke/api migrate   (requires DATABASE_URL)
+//   pnpm --filter @caraoke/api migrate   (requires DB_HOST/DB_USER/DB_PASSWORD or DATABASE_URL)
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

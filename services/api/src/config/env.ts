@@ -14,8 +14,15 @@ const envSchema = z.object({
   // LiveKit token-signing credentials (Story 4.1). Required to mint voice tokens in live mode.
   LIVEKIT_API_KEY: z.string().optional(),
   LIVEKIT_API_SECRET: z.string().optional(),
-  // Aurora connection string (Story 2.2+). Optional until a DB-backed route is hit.
+  // Aurora connection (Story 2.2+). Optional until a DB-backed route is hit. Preferred form is
+  // discrete DB_* parts so the password comes straight from the RDS-managed master secret (no
+  // separate connection-string secret to drift). DATABASE_URL remains a fallback for local dev.
   DATABASE_URL: z.string().optional(),
+  DB_HOST: z.string().optional(),
+  DB_PORT: z.coerce.number().int().positive().default(5432),
+  DB_NAME: z.string().optional(),
+  DB_USER: z.string().optional(),
+  DB_PASSWORD: z.string().optional(),
   // Cognito (Story 2.2). Required to verify JWTs in live mode.
   COGNITO_USER_POOL_ID: z.string().optional(),
   COGNITO_CLIENT_ID: z.string().optional(),

@@ -60,11 +60,11 @@ module "cognito" {
   google_client_id     = local.google_oauth.client_id
   google_client_secret = local.google_oauth.client_secret
 
-  # HTTPS App Link is the primary OAuth return (Android blocks custom-scheme redirects from the
-  # Cognito hop); keep the custom scheme as a fallback.
+  # The custom scheme caraoke://auth/callback is the primary OAuth return; the HTTPS App Link is
+  # also allowed so we can harden to domain-bound links later without a Cognito change.
   callback_urls = [
-    "https://api.caraoke.ai/auth/callback",
     "caraoke://auth/callback",
+    "https://api.caraoke.ai/auth/callback",
   ]
 }
 
@@ -105,9 +105,17 @@ module "api" {
     # AppSync Events (real-time delivery of playback.scheduled etc.).
     { name = "APPSYNC_EVENTS_HTTP_URL", value = "https://${aws_appsync_api.events.dns["HTTP"]}/event" },
     { name = "APPSYNC_EVENTS_API_KEY", value = aws_appsync_api_key.events.key },
+    # DB connection parts. Host/port/name are non-secret; the credentials come from the
+    # RDS-managed master secret below, so there's no standalone connection string to drift.
+    { name = "DB_HOST", value = module.aurora.cluster_endpoint },
+    { name = "DB_PORT", value = tostring(module.aurora.port) },
+    { name = "DB_NAME", value = module.aurora.database_name },
   ]
   container_secrets = [
-    { name = "DATABASE_URL", valueFrom = data.aws_secretsmanager_secret.database_url.arn },
+    # Injected straight from the RDS-managed master credentials secret (rds!cluster-…); RDS
+    # rotates it and this is the single source of truth — a task restart picks up the new value.
+    { name = "DB_USER", valueFrom = "${module.aurora.master_user_secret_arn}:username::" },
+    { name = "DB_PASSWORD", valueFrom = "${module.aurora.master_user_secret_arn}:password::" },
     { name = "LIVEKIT_URL", valueFrom = "${data.aws_secretsmanager_secret.livekit.arn}:url::" },
     { name = "LIVEKIT_API_KEY", valueFrom = "${data.aws_secretsmanager_secret.livekit.arn}:api_key::" },
     { name = "LIVEKIT_API_SECRET", valueFrom = "${data.aws_secretsmanager_secret.livekit.arn}:api_secret::" },
@@ -115,7 +123,7 @@ module "api" {
     { name = "SPOTIFY_CLIENT_SECRET", valueFrom = "${module.secrets.secret_arns["spotify"]}:client_secret::" },
   ]
   execution_secret_arns = [
-    data.aws_secretsmanager_secret.database_url.arn,
+    module.aurora.master_user_secret_arn,
     data.aws_secretsmanager_secret.livekit.arn,
     module.secrets.secret_arns["spotify"],
   ]

@@ -2,10 +2,6 @@
 # Route 53 is authoritative for caraoke.ai (delegate the registrar's NS to this zone once).
 # ACM issues a DNS-validated cert; the ALB terminates TLS; port 80 redirects to 443.
 
-data "aws_secretsmanager_secret" "database_url" {
-  name = "caraoke-dev/database-url"
-}
-
 # LiveKit Cloud creds (JSON: url/api_key/api_secret), populated out-of-band in Secrets Manager.
 data "aws_secretsmanager_secret" "livekit" {
   name = "caraoke-dev/livekit"

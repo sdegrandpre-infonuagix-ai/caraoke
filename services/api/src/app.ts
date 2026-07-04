@@ -154,8 +154,9 @@ export function createApp(deps: AppDeps = {}): Express {
   });
 
   // Android App Links: verifies https://api.caraoke.ai/{auth,spotify}/callback deep-links open
-  // the app (used for the OAuth return instead of a custom scheme, which Chrome blocks). The
-  // SHA-256 is the EAS-managed signing cert for ai.caraoke.app. Served as a bare JSON array.
+  // the app. The custom scheme caraoke:// is the primary OAuth return today; this backs an
+  // optional HTTPS return we can harden to later. The SHA-256 is the EAS-managed signing cert
+  // for ai.caraoke.app. Served as a bare JSON array.
   app.get('/.well-known/assetlinks.json', (_req, res) => {
     res.json([
       {
