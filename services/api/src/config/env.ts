@@ -27,7 +27,7 @@ const envSchema = z.object({
   COGNITO_USER_POOL_ID: z.string().optional(),
   COGNITO_CLIENT_ID: z.string().optional(),
   // Pairing invites (Story 3.1).
-  INVITE_BASE_URL: z.string().url().default('https://caraoke.app'),
+  INVITE_BASE_URL: z.string().url().default('https://api.caraoke.ai'),
   SESSION_INVITE_TTL_MINUTES: z.coerce.number().int().positive().default(15),
   // AppSync Events (Story 3.4). Required to publish real-time events in live mode.
   APPSYNC_EVENTS_HTTP_URL: z.string().url().optional(),

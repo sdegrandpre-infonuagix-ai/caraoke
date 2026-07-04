@@ -172,6 +172,28 @@ export function createApp(deps: AppDeps = {}): Express {
     ]);
   });
 
+  // Invite-link landing (Story 3.2). When Caraoke is installed, Android's verified App Link
+  // opens the app at /join?token=… before this route is ever hit; this HTML fallback is for
+  // browsers / uninstalled devices — it bounces into the app via the custom scheme and, failing
+  // that, tells the visitor to install Caraoke. Token is charset-validated to avoid HTML/JS
+  // injection into the page.
+  app.get('/join', (req, res) => {
+    const raw = typeof req.query.token === 'string' ? req.query.token : '';
+    const token = /^[A-Za-z0-9_-]{1,256}$/.test(raw) ? raw : '';
+    const appUrl = token ? `caraoke://join?token=${encodeURIComponent(token)}` : 'caraoke://join';
+    res.type('html').send(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join on Caraoke</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#141026;color:#FAFAFF;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{text-align:center;padding:2rem;max-width:22rem}h1{font-size:1.6rem;margin:0 0 .5rem}p{color:#B9B7C7;line-height:1.5}a.btn{display:inline-block;margin-top:1.25rem;padding:.85rem 1.5rem;background:#FF6B6B;color:#141026;text-decoration:none;border-radius:12px;font-weight:600}</style>
+</head><body><main>
+<h1>Sing together on Caraoke</h1>
+<p>Opening the app&hellip; If nothing happens, install Caraoke and open this link again.</p>
+<a class="btn" href="${appUrl}">Open in Caraoke</a>
+<script>setTimeout(function(){location.href=${JSON.stringify(appUrl)}},250)</script>
+</main></body></html>`);
+  });
+
   // Clock-sync primitive (Story 3.6, AR10/NFR1): server time for the client's offset
   // exchange. Read at the latest possible moment to minimize asymmetric delay.
   app.get('/time', (_req, res) => {

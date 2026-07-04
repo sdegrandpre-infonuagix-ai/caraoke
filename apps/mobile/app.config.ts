@@ -47,6 +47,7 @@ const config: ExpoConfig = {
         data: [
           { scheme: 'https', host: 'api.caraoke.ai', pathPrefix: '/auth/callback' },
           { scheme: 'https', host: 'api.caraoke.ai', pathPrefix: '/spotify/callback' },
+          { scheme: 'https', host: 'api.caraoke.ai', pathPrefix: '/join' },
         ],
       },
     ],
