@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import {
   AuthRequest,
   exchangeCodeAsync,
-  makeRedirectUri,
   ResponseType,
   type DiscoveryDocument,
 } from 'expo-auth-session';
@@ -20,7 +19,9 @@ WebBrowser.maybeCompleteAuthSession();
  */
 export function useCognitoSignIn() {
   const discovery = cognitoDiscovery(authConfig.domain) as DiscoveryDocument;
-  const redirectUri = makeRedirectUri({ scheme: 'caraoke', path: 'auth/callback' });
+  // HTTPS App Link (not a custom scheme): Chrome blocks custom-scheme redirects from the
+  // Cognito hop on Android, so the return goes through a verified https://api.caraoke.ai link.
+  const redirectUri = 'https://api.caraoke.ai/auth/callback';
   const setSession = useAuthStore((s) => s.setSession);
   const ready = authConfig.domain !== '' && authConfig.clientId !== '';
 

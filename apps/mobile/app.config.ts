@@ -35,6 +35,20 @@ const config: ExpoConfig = {
   android: {
     package: 'ai.caraoke.app',
     permissions: ['RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS', 'ACCESS_COARSE_LOCATION'],
+    // Android App Links for the OAuth return (Google via Cognito, Spotify). Verified HTTPS
+    // deep-links open the app directly — Chrome blocks custom-scheme redirects from a server
+    // hop, so we route the callbacks through https://api.caraoke.ai (see /.well-known/assetlinks.json).
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [
+          { scheme: 'https', host: 'api.caraoke.ai', pathPrefix: '/auth/callback' },
+          { scheme: 'https', host: 'api.caraoke.ai', pathPrefix: '/spotify/callback' },
+        ],
+      },
+    ],
   },
   plugins: [
     'expo-router',

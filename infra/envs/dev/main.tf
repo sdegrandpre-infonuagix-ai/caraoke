@@ -59,6 +59,13 @@ module "cognito" {
   # Enables the Google IdP + adds "Google" to the app client's supported providers.
   google_client_id     = local.google_oauth.client_id
   google_client_secret = local.google_oauth.client_secret
+
+  # HTTPS App Link is the primary OAuth return (Android blocks custom-scheme redirects from the
+  # Cognito hop); keep the custom scheme as a fallback.
+  callback_urls = [
+    "https://api.caraoke.ai/auth/callback",
+    "caraoke://auth/callback",
+  ]
 }
 
 module "secrets" {

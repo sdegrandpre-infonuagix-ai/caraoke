@@ -153,6 +153,24 @@ export function createApp(deps: AppDeps = {}): Express {
     res.json(ok({ status: 'ok', service: 'caraoke-api' }));
   });
 
+  // Android App Links: verifies https://api.caraoke.ai/{auth,spotify}/callback deep-links open
+  // the app (used for the OAuth return instead of a custom scheme, which Chrome blocks). The
+  // SHA-256 is the EAS-managed signing cert for ai.caraoke.app. Served as a bare JSON array.
+  app.get('/.well-known/assetlinks.json', (_req, res) => {
+    res.json([
+      {
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: {
+          namespace: 'android_app',
+          package_name: 'ai.caraoke.app',
+          sha256_cert_fingerprints: [
+            '9B:9B:2A:52:87:B7:BF:62:1D:19:D3:74:C1:4A:01:EB:E1:5E:68:E7:18:69:0B:CE:12:C8:0D:B2:C2:39:C3:EB',
+          ],
+        },
+      },
+    ]);
+  });
+
   // Clock-sync primitive (Story 3.6, AR10/NFR1): server time for the client's offset
   // exchange. Read at the latest possible moment to minimize asymmetric delay.
   app.get('/time', (_req, res) => {

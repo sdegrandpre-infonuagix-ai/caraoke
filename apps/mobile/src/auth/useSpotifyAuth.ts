@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import {
   exchangeCodeAsync,
-  makeRedirectUri,
   ResponseType,
   useAuthRequest,
   type DiscoveryDocument,
@@ -34,7 +33,9 @@ export interface SpotifyTokens {
  */
 export function useSpotifyAuth() {
   const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '';
-  const redirectUri = makeRedirectUri({ scheme: 'caraoke', path: 'spotify/callback' });
+  // HTTPS App Link (Spotify requires https redirect URIs, and Android blocks custom-scheme
+  // returns) — register this exact URI in the Spotify dashboard.
+  const redirectUri = 'https://api.caraoke.ai/spotify/callback';
 
   const [request, , promptAsync] = useAuthRequest(
     { clientId, scopes: SCOPES, usePKCE: true, redirectUri, responseType: ResponseType.Code },
