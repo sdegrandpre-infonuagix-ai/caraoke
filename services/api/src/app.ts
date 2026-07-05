@@ -52,6 +52,9 @@ import { createAgentRouter } from './modules/agent/agent.router.js';
 import { getSpotifySearchProvider } from './integrations/spotify/search.js';
 import { LivePlaybackPositionService, type PlaybackPositionService } from './modules/agent/playback.service.js';
 import { createPlaybackRouter } from './modules/agent/playback.router.js';
+import { LivePlaybackControlService, type PlaybackControlService } from './modules/agent/playbackControl.service.js';
+import { createPlaybackControlRouter } from './modules/agent/playbackControl.router.js';
+import { getPlaybackController } from './integrations/spotify/playbackControl.js';
 import { getPlaybackPositionProvider } from './integrations/spotify/playback.js';
 
 export interface AppDeps {
@@ -73,6 +76,8 @@ export interface AppDeps {
   agentService?: AgentService;
   /** Override the playback-position service (tests). Defaults to live Spotify polling. */
   playbackPositionService?: PlaybackPositionService;
+  /** Override the playback-control service (tests). Defaults to live Spotify control. */
+  playbackControlService?: PlaybackControlService;
 }
 
 /**
@@ -283,7 +288,8 @@ export function createApp(deps: AppDeps = {}): Express {
     new AgentService(
       pairingService,
       getSpotifySearchProvider(env),
-      new AppSyncScheduledStartProducer(getEventPublisher(env)),
+      // 4s lead time so both clients can prebuffer the track before the synchronized start.
+      new AppSyncScheduledStartProducer(getEventPublisher(env), 4_000),
     );
   app.use('/', createAgentRouter({ verifier, identityService, agentService }));
 
@@ -296,6 +302,12 @@ export function createApp(deps: AppDeps = {}): Express {
       getPlaybackPositionProvider(env),
     );
   app.use('/', createPlaybackRouter({ verifier, identityService, positionService: playbackPositionService }));
+
+  // Playback control (Story 4.4/4.6): drives each user's Spotify (prebuffer/play/pause/seek).
+  const playbackControlService =
+    deps.playbackControlService ??
+    new LivePlaybackControlService(pairingService, new PgSpotifyLinkRepository(), getPlaybackController(env));
+  app.use('/', createPlaybackControlRouter({ verifier, identityService, controlService: playbackControlService }));
 
   // Error envelope middleware MUST be last.
   app.use(errorHandler);

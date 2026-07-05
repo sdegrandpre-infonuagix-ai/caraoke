@@ -7,9 +7,11 @@ import { useMotionDetection } from '../../src/motion/useMotionDetection';
 import { useVoiceRoom } from '../../src/voice/useVoiceRoom';
 import { useReconnect } from '../../src/reconnect/useReconnect';
 import { useFeltTogether } from '../../src/telemetry/useFeltTogether';
+import { useScheduledStart } from '../../src/sync/useScheduledStart';
 import { DrivingModeScreen } from '../../src/components/session/DrivingModeScreen';
 import { WaveformVisualizer } from '../../src/components/session/WaveformVisualizer';
 import { SessionControls } from '../../src/components/session/SessionControls';
+import { SongRequest } from '../../src/components/session/SongRequest';
 import { ScreenContainer, Text, Card } from '../../src/components';
 
 /**
@@ -39,6 +41,11 @@ export default function ActiveSession() {
   // No-op if id is undefined (guard below redirects before hooks fire).
   useReconnect(id ?? '', voiceStatus);
 
+  // Synchronized song start (Story 4.4): subscribes to playback.scheduled on BOTH phones,
+  // prebuffers, and fires Spotify play at the shared moment T. Mounted before the driving-mode
+  // early return so it stays active whether parked or moving.
+  const scheduled = useScheduledStart(id ?? '');
+
   // Post-session felt-together capture (Story 4.9, FR42/UX-DR16). No visual component.
   // captureAnswer is wired here for the STT pipeline to call when a transcript arrives
   // after the session ends. awaitingAnswer is intentionally unused in the UI (UX-DR16).
@@ -58,6 +65,15 @@ export default function ActiveSession() {
     return <DrivingModeScreen onWake={handleWake} />;
   }
 
+  const countdown =
+    scheduled.status === 'scheduled' && scheduled.msRemaining != null
+      ? `Starting in ${Math.max(0, Math.ceil(scheduled.msRemaining / 1000))}s…`
+      : scheduled.status === 'pre_buffering'
+        ? 'Cueing up the track…'
+        : scheduled.status === 'playing'
+          ? 'Playing together'
+          : null;
+
   return (
     <ScreenContainer>
       <View style={styles.content}>
@@ -66,6 +82,15 @@ export default function ActiveSession() {
         <Card raised style={styles.waveCard}>
           <WaveformVisualizer />
         </Card>
+
+        {countdown ? (
+          <Text variant="body" color="secondary" style={styles.countdown}>
+            {countdown}
+          </Text>
+        ) : null}
+
+        {/* Pick a song → synchronized start on both phones. Voice comes in a later pass. */}
+        <SongRequest sessionId={id} />
 
         <SessionControls sessionId={id} />
       </View>
@@ -82,5 +107,8 @@ const styles = StyleSheet.create({
   waveCard: {
     alignItems: 'center',
     paddingVertical: 24,
+  },
+  countdown: {
+    textAlign: 'center',
   },
 });

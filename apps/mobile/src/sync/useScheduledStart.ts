@@ -57,9 +57,17 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
       (event) => {
         if (event.type !== 'playback.scheduled') return;
 
-        const data = event.data as { trackUri: string; startAt: number };
-        const { trackUri, startAt } = data;
-        if (!trackUri || typeof startAt !== 'number') return;
+        // Backend publishes { trackUri, scheduledAt (ISO, server epoch) }. Accept a numeric
+        // startAt too for forward-compat. Convert to absolute server-epoch ms for clock-sync.
+        const data = event.data as { trackUri?: string; scheduledAt?: string; startAt?: number };
+        const trackUri = data.trackUri;
+        const startAt =
+          typeof data.startAt === 'number'
+            ? data.startAt
+            : data.scheduledAt
+              ? Date.parse(data.scheduledAt)
+              : NaN;
+        if (!trackUri || !Number.isFinite(startAt)) return;
 
         clearTimers();
         // Story 9.7(a): abort the previous event's chain (if any) and issue a fresh token
