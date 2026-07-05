@@ -52,8 +52,36 @@ export class LivePlaybackController implements PlaybackController {
     return accessToken;
   }
 
-  private async command(accessToken: string, method: string, path: string, body?: unknown): Promise<void> {
-    const res = await fetch(`${SPOTIFY_API}${path}`, {
+  /**
+   * Resolve a target device id. The Web API only controls an "active" device, which a phone
+   * drops out of within moments of going idle/backgrounded — so instead we list available
+   * devices and target the phone by id, which ACTIVATES it. Requires the Spotify app to be open
+   * on the phone (it then appears here even when idle).
+   */
+  private async deviceId(accessToken: string): Promise<string> {
+    const res = await fetch(`${SPOTIFY_API}/me/player/devices`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new AppError('INTERNAL', `Spotify devices fetch failed: ${res.status}`);
+    const body = (await res.json()) as {
+      devices?: Array<{ id: string | null; is_active: boolean; type: string; name: string }>;
+    };
+    const devices = (body.devices ?? []).filter((d) => d.id);
+    console.warn('[spotify] devices', { count: devices.length, names: devices.map((d) => `${d.name}:${d.type}:${d.is_active}`) });
+    if (devices.length === 0) {
+      throw new AppError(
+        'CONFLICT',
+        'No Spotify device found. Open the Spotify app on your phone and keep it open, then try again.',
+      );
+    }
+    const active = devices.find((d) => d.is_active);
+    const phone = devices.find((d) => d.type === 'Smartphone');
+    return (active ?? phone ?? devices[0]!).id as string;
+  }
+
+  private async command(accessToken: string, method: string, path: string, deviceId: string, body?: unknown): Promise<void> {
+    const sep = path.includes('?') ? '&' : '?';
+    const res = await fetch(`${SPOTIFY_API}${path}${sep}device_id=${encodeURIComponent(deviceId)}`, {
       method,
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -61,26 +89,16 @@ export class LivePlaybackController implements PlaybackController {
       },
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (![200, 202, 204].includes(res.status)) {
-      // Temporary: capture Spotify's own error body (reason: NO_ACTIVE_DEVICE, PREMIUM_REQUIRED…).
-      const detail = await res.text().catch(() => '');
-      console.warn('[spotify] command failed', { method, path, status: res.status, detail: detail.slice(0, 300) });
-    } else {
-      console.warn('[spotify] command ok', { method, path });
-    }
     if (res.status === 404) {
-      throw new AppError(
-        'CONFLICT',
-        'No active Spotify device. Open Spotify on your phone and play any song once, then try again.',
-      );
+      const detail = await res.text().catch(() => '');
+      console.warn('[spotify] command 404', { method, path, detail: detail.slice(0, 200) });
+      throw new AppError('CONFLICT', 'Spotify device went away. Reopen the Spotify app and try again.');
     }
     if (res.status === 403) {
-      throw new AppError(
-        'FORBIDDEN',
-        'Spotify refused playback control — Premium is required and the app must be the active device.',
-      );
+      const detail = await res.text().catch(() => '');
+      console.warn('[spotify] command 403', { method, path, detail: detail.slice(0, 200) });
+      throw new AppError('FORBIDDEN', 'Spotify refused the command (Premium required).');
     }
-    // 200/202/204 are the documented success codes for player commands.
     if (![200, 202, 204].includes(res.status)) {
       throw new AppError('INTERNAL', `Spotify playback command failed: ${res.status}`);
     }
@@ -88,16 +106,18 @@ export class LivePlaybackController implements PlaybackController {
 
   async prepare(refreshToken: string, trackUri: string): Promise<void> {
     const token = await this.accessToken(refreshToken);
-    // Start the track, then immediately pause so both clients sit ready at ~0 until T.
-    await this.command(token, 'PUT', '/me/player/play', { uris: [trackUri] });
-    await this.command(token, 'PUT', '/me/player/pause');
+    const device = await this.deviceId(token);
+    // Load the track on the target device, then pause so both clients sit ready until T.
+    await this.command(token, 'PUT', '/me/player/play', device, { uris: [trackUri] });
+    await this.command(token, 'PUT', '/me/player/pause', device);
   }
 
   async start(refreshToken: string, trackUri: string, positionMs: number): Promise<void> {
     const token = await this.accessToken(refreshToken);
-    // Authoritative start: play THIS track from the shared position, regardless of what was
-    // loaded/playing before. position_ms lets a slightly-late device catch up to the shared T.
-    await this.command(token, 'PUT', '/me/player/play', {
+    const device = await this.deviceId(token);
+    // Authoritative start: activate the target device and play THIS track from the shared
+    // position, regardless of what was loaded/playing before.
+    await this.command(token, 'PUT', '/me/player/play', device, {
       uris: [trackUri],
       position_ms: Math.max(0, Math.round(positionMs)),
     });
@@ -105,17 +125,17 @@ export class LivePlaybackController implements PlaybackController {
 
   async resume(refreshToken: string): Promise<void> {
     const token = await this.accessToken(refreshToken);
-    await this.command(token, 'PUT', '/me/player/play');
+    await this.command(token, 'PUT', '/me/player/play', await this.deviceId(token));
   }
 
   async pause(refreshToken: string): Promise<void> {
     const token = await this.accessToken(refreshToken);
-    await this.command(token, 'PUT', '/me/player/pause');
+    await this.command(token, 'PUT', '/me/player/pause', await this.deviceId(token));
   }
 
   async seek(refreshToken: string, positionMs: number): Promise<void> {
     const token = await this.accessToken(refreshToken);
-    await this.command(token, 'PUT', `/me/player/seek?position_ms=${Math.max(0, Math.round(positionMs))}`);
+    await this.command(token, 'PUT', `/me/player/seek?position_ms=${Math.max(0, Math.round(positionMs))}`, await this.deviceId(token));
   }
 }
 
