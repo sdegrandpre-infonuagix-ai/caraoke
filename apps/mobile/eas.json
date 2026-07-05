@@ -8,19 +8,12 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "environment": "development",
       "ios": {
         "simulator": false
       },
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.caraoke.ai",
-        "EXPO_PUBLIC_COGNITO_DOMAIN": "caraoke-dev-auth.auth.ca-central-1.amazoncognito.com",
-        "EXPO_PUBLIC_COGNITO_CLIENT_ID": "7n0cpitcstaemq9d2j8pekksqr",
-        "EXPO_PUBLIC_APPSYNC_REALTIME_URL": "wss://4b6ovzxdvzcztgr3maignkcc2u.appsync-realtime-api.ca-central-1.amazonaws.com/event/realtime",
-        "EXPO_PUBLIC_APPSYNC_API_KEY": "da2-zdrpilxvwnfjffe2bur2zqif6a",
-        "EXPO_PUBLIC_SPOTIFY_CLIENT_ID": "e867c98588144777a723752540a67bba"
       }
     },
     "development-sim": {
@@ -32,20 +25,14 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.caraoke.ai",
-        "EXPO_PUBLIC_COGNITO_DOMAIN": "caraoke-dev-auth.auth.ca-central-1.amazoncognito.com",
-        "EXPO_PUBLIC_COGNITO_CLIENT_ID": "7n0cpitcstaemq9d2j8pekksqr",
-        "EXPO_PUBLIC_APPSYNC_REALTIME_URL": "wss://4b6ovzxdvzcztgr3maignkcc2u.appsync-realtime-api.ca-central-1.amazonaws.com/event/realtime",
-        "EXPO_PUBLIC_APPSYNC_API_KEY": "da2-zdrpilxvwnfjffe2bur2zqif6a",
-        "EXPO_PUBLIC_SPOTIFY_CLIENT_ID": "e867c98588144777a723752540a67bba"
       }
     },
     "production": {
       "channel": "production",
+      "environment": "production",
       "autoIncrement": true
     }
   },
