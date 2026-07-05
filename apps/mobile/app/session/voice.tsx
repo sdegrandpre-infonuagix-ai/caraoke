@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components';
 import { colors } from '../../src/theme/tokens';
@@ -15,6 +15,7 @@ export default function Voice() {
   const authStatus = useAuthStore((s) => s.status);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const router = useRouter();
   const micConsented = useMicConsent((s) => s.micConsented);
   const grantMic = useMicConsent((s) => s.grantMic);
 
@@ -70,6 +71,15 @@ export default function Voice() {
           <Text color="secondary">
             {partnerPresent ? t('voice.partnerConnected') : t('voice.waitingPartner')}
           </Text>
+        ) : null}
+
+        {/* Move on to the singing screen (song request + synchronized playback). */}
+        {status === 'connected' ? (
+          <Button
+            label="Start singing"
+            accessibilityLabel="Start singing"
+            onPress={() => router.push(`/session/active?id=${id}`)}
+          />
         ) : null}
       </View>
     </ScreenContainer>
