@@ -78,7 +78,7 @@ export default function Voice() {
           <Button
             label="Start singing"
             accessibilityLabel="Start singing"
-            onPress={() => router.push(`/session/active?id=${id}`)}
+            onPress={() => router.replace(`/session/active?id=${id}`)}
           />
         ) : null}
       </View>
