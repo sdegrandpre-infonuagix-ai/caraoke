@@ -49,6 +49,7 @@ export function createPlaybackControlRouter(deps: {
     const trackUri = typeof req.body?.trackUri === 'string' ? req.body.trackUri : '';
     if (!trackUri) return next(new AppError('VALIDATION_FAILED', 'trackUri is required.'));
     const positionMs = Number.isFinite(Number(req.body?.positionMs)) ? Number(req.body.positionMs) : 0;
+    console.warn('[playback] play', { sessionId: String(req.params.id), trackUri, positionMs });
     run(req, res, next, (sessionId, userId) => deps.controlService.play(sessionId, userId, trackUri, positionMs));
   });
 

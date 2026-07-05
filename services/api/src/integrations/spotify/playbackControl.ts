@@ -61,6 +61,13 @@ export class LivePlaybackController implements PlaybackController {
       },
       body: body ? JSON.stringify(body) : undefined,
     });
+    if (![200, 202, 204].includes(res.status)) {
+      // Temporary: capture Spotify's own error body (reason: NO_ACTIVE_DEVICE, PREMIUM_REQUIRED…).
+      const detail = await res.text().catch(() => '');
+      console.warn('[spotify] command failed', { method, path, status: res.status, detail: detail.slice(0, 300) });
+    } else {
+      console.warn('[spotify] command ok', { method, path });
+    }
     if (res.status === 404) {
       throw new AppError(
         'CONFLICT',
