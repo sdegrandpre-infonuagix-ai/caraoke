@@ -106,12 +106,20 @@ export class LivePlaybackController implements PlaybackController {
     }
   }
 
-  async prepare(refreshToken: string, trackUri: string): Promise<void> {
+  async prepare(refreshToken: string, _trackUri: string): Promise<void> {
     const token = await this.accessToken(refreshToken);
     const device = await this.deviceId(token);
-    // Load the track on the target device, then pause so both clients sit ready until T.
-    await this.command(token, 'PUT', '/me/player/play', device, { uris: [trackUri] });
-    await this.command(token, 'PUT', '/me/player/pause', device);
+    // Activate the target device WITHOUT playing (transfer with play:false), so the start at T is
+    // on a warm/active device. Avoids the early-audio blip and the pause "restriction violated"
+    // of a play-then-pause prebuffer. Best-effort — start() at T is authoritative.
+    const res = await fetch(`${SPOTIFY_API}/me/player`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_ids: [device], play: false }),
+    });
+    if (![200, 202, 204].includes(res.status)) {
+      console.warn('[spotify] transfer(prepare) non-2xx', { status: res.status });
+    }
   }
 
   async start(refreshToken: string, trackUri: string, positionMs: number): Promise<void> {
