@@ -68,15 +68,17 @@ export class LivePlaybackController implements PlaybackController {
     };
     const devices = (body.devices ?? []).filter((d) => d.id);
     console.warn('[spotify] devices', { count: devices.length, names: devices.map((d) => `${d.name}:${d.type}:${d.is_active}`) });
-    if (devices.length === 0) {
+    // Target the phone ONLY — never hijack a TV/speaker (FireTV, FibeTV, etc.) even if it's the
+    // active device, and even if it's the only one. A missing phone means Spotify isn't running
+    // on it, so tell the user rather than play on their living-room TV.
+    const phone = devices.find((d) => d.type === 'Smartphone');
+    if (!phone) {
       throw new AppError(
         'CONFLICT',
-        'No Spotify device found. Open the Spotify app on your phone and keep it open, then try again.',
+        'Your phone isn’t showing in Spotify. On the phone, open Spotify and start playing any song, then try again (keep it playing).',
       );
     }
-    const active = devices.find((d) => d.is_active);
-    const phone = devices.find((d) => d.type === 'Smartphone');
-    return (active ?? phone ?? devices[0]!).id as string;
+    return phone.id as string;
   }
 
   private async command(accessToken: string, method: string, path: string, deviceId: string, body?: unknown): Promise<void> {
