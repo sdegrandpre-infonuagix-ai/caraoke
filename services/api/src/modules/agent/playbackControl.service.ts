@@ -9,7 +9,7 @@ import type { PlaybackController } from '../../integrations/spotify/playbackCont
 
 export interface PlaybackControlService {
   prebuffer(sessionId: string, userId: string, trackUri: string): Promise<void>;
-  play(sessionId: string, userId: string): Promise<void>;
+  play(sessionId: string, userId: string, trackUri: string, positionMs: number): Promise<void>;
   seek(sessionId: string, userId: string, positionMs: number): Promise<void>;
   pauseBoth(sessionId: string, userId: string): Promise<void>;
   resumeBoth(sessionId: string, userId: string): Promise<void>;
@@ -43,8 +43,8 @@ export class LivePlaybackControlService implements PlaybackControlService {
     await this.controller.prepare(await this.callerToken(sessionId, userId), trackUri);
   }
 
-  async play(sessionId: string, userId: string): Promise<void> {
-    await this.controller.resume(await this.callerToken(sessionId, userId));
+  async play(sessionId: string, userId: string, trackUri: string, positionMs: number): Promise<void> {
+    await this.controller.start(await this.callerToken(sessionId, userId), trackUri, positionMs);
   }
 
   async seek(sessionId: string, userId: string, positionMs: number): Promise<void> {

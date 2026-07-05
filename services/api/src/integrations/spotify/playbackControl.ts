@@ -16,7 +16,9 @@ export interface PlaybackController {
   readonly mode: 'live' | 'mock';
   /** Load a track and leave it paused near position 0 (prebuffer for a synchronized start). */
   prepare(refreshToken: string, trackUri: string): Promise<void>;
-  /** Resume playback of the currently-loaded track. */
+  /** Start a SPECIFIC track at an absolute position — the authoritative synchronized start. */
+  start(refreshToken: string, trackUri: string, positionMs: number): Promise<void>;
+  /** Resume playback of the currently-loaded track (shared pause/resume controls). */
   resume(refreshToken: string): Promise<void>;
   /** Pause playback. */
   pause(refreshToken: string): Promise<void>;
@@ -84,6 +86,16 @@ export class LivePlaybackController implements PlaybackController {
     await this.command(token, 'PUT', '/me/player/pause');
   }
 
+  async start(refreshToken: string, trackUri: string, positionMs: number): Promise<void> {
+    const token = await this.accessToken(refreshToken);
+    // Authoritative start: play THIS track from the shared position, regardless of what was
+    // loaded/playing before. position_ms lets a slightly-late device catch up to the shared T.
+    await this.command(token, 'PUT', '/me/player/play', {
+      uris: [trackUri],
+      position_ms: Math.max(0, Math.round(positionMs)),
+    });
+  }
+
   async resume(refreshToken: string): Promise<void> {
     const token = await this.accessToken(refreshToken);
     await this.command(token, 'PUT', '/me/player/play');
@@ -104,6 +116,7 @@ export class LivePlaybackController implements PlaybackController {
 export class MockPlaybackController implements PlaybackController {
   readonly mode = 'mock' as const;
   async prepare(): Promise<void> {}
+  async start(): Promise<void> {}
   async resume(): Promise<void> {}
   async pause(): Promise<void> {}
   async seek(): Promise<void> {}

@@ -112,7 +112,10 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
             setState((s) => ({ ...s, status: 'playing', msRemaining: 0 }));
             transition('playing');
 
-            void playTrack(idToken, sessionId).catch(() => {
+            // Start the exact track at the shared position (how far past T we are), so it plays
+            // the requested song in sync — not whatever happened to be loaded on Spotify.
+            const positionMs = Math.max(0, Date.now() + clockSync.getOffsetMs() - startAt);
+            void playTrack(idToken, sessionId, trackUri, positionMs).catch(() => {
               setState((s) => ({ ...s, status: 'error' }));
             });
           }, Math.max(0, localDelayMs(startAt, Date.now(), clockSync.getOffsetMs())));

@@ -22,14 +22,20 @@ export function preBufferTrack(idToken: string, sessionId: string, req: PreBuffe
 }
 
 /**
- * Tell the backend to resume playback on the user's Spotify client.
- * Called at the exact local moment when server-time === T (from clockSync.msUntil).
- * The backend calls the Spotify MCP `resume_playback` immediately on receipt.
+ * Start the requested track on the user's Spotify at the shared moment T. Sends the exact
+ * trackUri (so it plays THAT song, not whatever was loaded) and positionMs (how far past T we
+ * are, so a slightly-late device catches up). Called at the local moment server-time === T.
  */
-export function playTrack(idToken: string, sessionId: string): Promise<void> {
+export function playTrack(
+  idToken: string,
+  sessionId: string,
+  trackUri: string,
+  positionMs: number,
+): Promise<void> {
   return apiFetch<void>(`/sessions/${sessionId}/playback/play`, {
     method: 'POST',
     token: idToken,
+    body: { trackUri, positionMs },
   });
 }
 
