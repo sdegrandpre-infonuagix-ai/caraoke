@@ -4,6 +4,7 @@ import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card } from '../../src/components';
 import { useAuthStore } from '../../src/stores/useAuthStore';
+import { useSessionRole } from '../../src/stores/useSessionRole';
 import { createSession, type CreateSessionResult } from '../../src/api/pairing';
 
 /**
@@ -13,10 +14,13 @@ import { createSession, type CreateSessionResult } from '../../src/api/pairing';
 export default function CreateSession() {
   const idToken = useAuthStore((s) => s.idToken);
   const authStatus = useAuthStore((s) => s.status);
+  const setRole = useSessionRole((s) => s.setRole);
   const { t } = useTranslation();
 
   const create = useMutation<CreateSessionResult>({
     mutationFn: () => createSession(idToken!),
+    // The creator is the host — the one who drives song selection in the duet.
+    onSuccess: () => setRole('host'),
   });
 
   if (authStatus === 'signedOut') return <Redirect href="/(onboarding)/sign-in" />;

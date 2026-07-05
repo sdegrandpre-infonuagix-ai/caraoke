@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card, Icon } from '../src/components';
 import { colors } from '../src/theme/tokens';
 import { useAuthStore } from '../src/stores/useAuthStore';
+import { useSessionRole } from '../src/stores/useSessionRole';
 import { joinSession, type SessionConnection } from '../src/api/pairing';
 import { savePartner } from '../src/api/partners';
 
@@ -21,12 +22,15 @@ export default function Join() {
   const { token } = useLocalSearchParams<{ token?: string }>();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const setRole = useSessionRole((s) => s.setRole);
 
   const [code, setCode] = useState('');
   const autoJoined = useRef(false);
 
   const join = useMutation<SessionConnection, Error, { token?: string; code?: string }>({
     mutationFn: (invite) => joinSession(idToken!, invite),
+    // The joiner is the guest — they sing along; the host picks the song.
+    onSuccess: () => setRole('guest'),
   });
 
   // Save the host as a known partner (FR9) for one-tap re-pair next time.

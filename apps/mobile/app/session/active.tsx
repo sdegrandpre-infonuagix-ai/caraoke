@@ -3,6 +3,7 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
 import { useAuthStore } from '../../src/stores/useAuthStore';
+import { useSessionRole } from '../../src/stores/useSessionRole';
 import { useMotionDetection } from '../../src/motion/useMotionDetection';
 import { useVoiceRoom } from '../../src/voice/useVoiceRoom';
 import { useReconnect } from '../../src/reconnect/useReconnect';
@@ -29,6 +30,7 @@ import { ScreenContainer, Text, Card } from '../../src/components';
  */
 export default function ActiveSession() {
   const authStatus = useAuthStore((s) => s.status);
+  const role = useSessionRole((s) => s.role);
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { isDriving } = useMotionDetection();
@@ -89,8 +91,15 @@ export default function ActiveSession() {
           </Text>
         ) : null}
 
-        {/* Pick a song → synchronized start on both phones. Voice comes in a later pass. */}
-        <SongRequest sessionId={id} />
+        {/* Only the host (inviter) picks the song → synchronized start on both phones. The
+            guest sings along. Voice-driven requests come in a later pass. */}
+        {role === 'guest' ? (
+          <Text variant="body" color="secondary" style={styles.countdown}>
+            {"Your partner picks the song — get ready to sing."}
+          </Text>
+        ) : (
+          <SongRequest sessionId={id} />
+        )}
 
         <SessionControls sessionId={id} />
       </View>
