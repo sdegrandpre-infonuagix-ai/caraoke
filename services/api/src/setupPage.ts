@@ -175,19 +175,31 @@ eas build --profile preview --platform ios</pre></div>
     <h2>Your first duet</h2>
     <ol class="steps">
       <li>
-        <div class="shead"><span class="num"></span><h3>Pair up</h3><span class="who">Both</span></div>
-        <p>One of you opens <b>Start a duet</b> and shares the invite. Your friend either types the
-          <b>6-character pairing code</b> on the join screen, or taps the <b>invite link</b>
-          (<code class="inline">https://api.caraoke.ai/join?token=…</code>) — which opens straight
-          into Caraoke on the join screen. When both tap ready, you're connected.</p>
+        <div class="shead"><span class="num"></span><h3>Pair up &amp; open voice</h3><span class="who">Both</span></div>
+        <p>The <b>host</b> taps <b>Start a duet</b> and shares the invite; the <b>guest</b> types the
+          <b>6-character code</b> or taps the invite link
+          (<code class="inline">https://api.caraoke.ai/join?token=…</code>). Both tap <b>I'm ready</b> →
+          <b>Open voice</b> → you hear each other → <b>Start singing</b>.</p>
       </li>
       <li>
-        <div class="shead"><span class="num"></span><h3>Ask for a song &amp; drive</h3><span class="who">Both</span></div>
-        <p>Say "play our song." Riff finds it, counts you in, and both phones start together — you
-          hear each other over the live voice channel while the track plays in sync on each phone's
-          own Spotify. For the real feel, do it on the road, not parked.</p>
+        <div class="shead"><span class="num"></span><h3>Make each phone the Spotify device</h3><span class="who">Both · important</span></div>
+        <p>On <b>each</b> phone: open <b>Spotify</b> → tap the <b>Connect / devices</b> icon → choose
+          <b>this phone</b> (its own name) — <b>not</b> a TV, speaker, or Chromecast → play any track and
+          confirm the sound comes <b>from the phone</b> → leave it playing and switch back to Caraoke.
+          Caraoke can only drive Spotify on a phone that's the active device.</p>
+      </li>
+      <li>
+        <div class="shead"><span class="num"></span><h3>Host picks the song</h3><span class="who">Host</span></div>
+        <p>On the singing screen the <b>host</b> types a <b>song + artist</b> and taps <b>Sing this</b>.
+          Both phones start that track together — each on its own Spotify — while you hear each other
+          over voice. The guest just sings along. For the real feel, do it on the road, not parked.</p>
       </li>
     </ol>
+    <div class="note warn">
+      <span class="t">If a song won't start</span>
+      It's almost always the Spotify device. Re-open Spotify on the phone, pick <b>this phone</b> under
+      Connect, and start a track so it's the <b>active</b> device — then try <b>Sing this</b> again.
+    </div>
   </section>
 
   <section>
@@ -195,14 +207,15 @@ eas build --profile preview --platform ios</pre></div>
     <h2>What's in, what's not</h2>
     <div class="note ok">
       <span class="t">Working</span>
-      Google sign-in, Spotify Premium linking, invite-link + pairing-code joining, live voice,
-      synchronized start + drift correction, and the voice agent (Riff) for song requests.
+      Google sign-in, Spotify Premium linking, invite-link + pairing-code joining, live voice, and
+      host-driven <b>typed</b> song requests with a synchronized start on both phones.
     </div>
     <div class="note warn">
       <span class="t">Not in this test</span>
-      Apple sign-in (use Google), billing, and stranger discovery + age-verification. The backend
-      is a single dev instance that scales to zero when idle, so the <b>first request after a quiet
-      spell may take a few seconds to warm up</b> — that's expected, not a failure.
+      Voice song requests ("say the song") — for now the host <b>types</b> the song. Also: Apple
+      sign-in (use Google), billing, and stranger discovery. Playback runs through Spotify's API,
+      so each phone must be its own active Spotify device (above). The dev backend scales to zero
+      when idle, so the <b>first request after a quiet spell takes a few seconds to warm up</b>.
     </div>
   </section>
 
