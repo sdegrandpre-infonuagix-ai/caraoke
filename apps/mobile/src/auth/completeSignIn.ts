@@ -22,8 +22,19 @@ const spotifyDiscovery: DiscoveryDocument = {
   tokenEndpoint: 'https://accounts.spotify.com/api/token',
 };
 
+// An OAuth code is single-use. Both completion paths (the auth session's inline result AND the
+// callback screen from the deep link) can fire with the SAME code; the second exchange would fail
+// with "invalid authorization code". Guard synchronously so only the first attempt per code runs.
+const consumedCodes = new Set<string>();
+function claimCode(code: string): boolean {
+  if (consumedCodes.has(code)) return false;
+  consumedCodes.add(code);
+  return true;
+}
+
 /** Exchange a Cognito auth code and persist the session. Returns true on success. */
 export async function completeCognitoSignIn(code: string, state?: string): Promise<boolean> {
+  if (!claimCode(code)) return false; // the other path already exchanged this code
   const pending = await takeCognitoPending();
   if (!pending) return false; // already completed, or no flow in progress
   if (state && pending.state && state !== pending.state) return false; // CSRF guard
@@ -48,6 +59,7 @@ export async function completeCognitoSignIn(code: string, state?: string): Promi
  * handled it). Real failures throw with a specific message so the UI can show the cause.
  */
 export async function completeSpotifyLink(code: string, state?: string): Promise<boolean> {
+  if (!claimCode(code)) return false; // the other path already exchanged this code
   const pending = await takeSpotifyPending();
   if (!pending) return false; // already completed by the other path — not an error
   if (state && pending.state && state !== pending.state) throw new Error('Spotify: state mismatch');
