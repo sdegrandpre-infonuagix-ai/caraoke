@@ -1,4 +1,5 @@
 import type { ExpoConfig } from 'expo/config';
+import withSpotifySdk from '@wwdrew/expo-spotify-sdk/plugin';
 
 /**
  * Expo app config (Story 1.1). Uses CNG (`expo prebuild`) — no hand-edited
@@ -65,17 +66,15 @@ const config: ExpoConfig = {
     // On-device Spotify App Remote: controls the phone's own Spotify app directly (no Web-API
     // active-device requirement). Redirect URI = caraoke://spotify-auth — register it, the iOS
     // bundle id, and the Android package + signing SHA-1 in the Spotify dashboard.
-    [
-      '@wwdrew/expo-spotify-sdk',
-      {
-        // Public Spotify OAuth client ID (ships in every build, not a secret). Hardcoded fallback
-        // so the config plugin always resolves a value — the EAS build's config step doesn't load
-        // the local .env, and an empty clientID makes the plugin throw.
-        clientID: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || 'e867c98588144777a723752540a67bba',
-        scheme: 'caraoke',
-        host: 'spotify-auth',
-      },
-    ],
+    // On-device Spotify App Remote. This plugin is a factory — call it with the props and put the
+    // result in the array (per its docs); the [name, options] string form breaks it. The client
+    // ID is a public OAuth id (ships in every build, not a secret); hardcoded fallback so config
+    // resolves even where the local .env isn't loaded (EAS build's config step).
+    withSpotifySdk({
+      clientID: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || 'e867c98588144777a723752540a67bba',
+      scheme: 'caraoke',
+      host: 'spotify-auth',
+    }),
   ],
   experiments: {
     typedRoutes: true,
