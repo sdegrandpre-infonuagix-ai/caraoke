@@ -68,7 +68,10 @@ const config: ExpoConfig = {
     [
       '@wwdrew/expo-spotify-sdk',
       {
-        clientID: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '',
+        // Public Spotify OAuth client ID (ships in every build, not a secret). Hardcoded fallback
+        // so the config plugin always resolves a value — the EAS build's config step doesn't load
+        // the local .env, and an empty clientID makes the plugin throw.
+        clientID: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || 'e867c98588144777a723752540a67bba',
         scheme: 'caraoke',
         host: 'spotify-auth',
       },
