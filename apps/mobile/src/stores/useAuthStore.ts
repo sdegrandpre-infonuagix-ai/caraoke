@@ -1,6 +1,10 @@
 import { create } from 'zustand';
+import * as WebBrowser from 'expo-web-browser';
 import { clearSession, loadSession, saveSession } from '../auth/secureStore';
+import { authConfig } from '../auth/config';
 import { isExpired } from '../auth/jwt';
+
+const SIGN_OUT_URI = 'caraoke://signout';
 
 export type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 
@@ -35,6 +39,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
+    // End the Cognito hosted-UI session too — otherwise its cookie survives and the next
+    // "Continue with Google" silently reuses it (no account chooser). Best-effort: whatever
+    // happens with the web session, always clear the local session.
+    try {
+      if (authConfig.domain && authConfig.clientId) {
+        const url =
+          `https://${authConfig.domain}/logout?client_id=${authConfig.clientId}` +
+          `&logout_uri=${encodeURIComponent(SIGN_OUT_URI)}`;
+        await WebBrowser.openAuthSessionAsync(url, SIGN_OUT_URI);
+      }
+    } catch {
+      // ignore — fall through to clearing the local session
+    }
     await clearSession();
     set({ status: 'signedOut', idToken: null });
   },

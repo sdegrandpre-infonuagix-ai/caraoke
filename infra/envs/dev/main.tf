@@ -66,6 +66,10 @@ module "cognito" {
     "caraoke://auth/callback",
     "https://api.caraoke.ai/auth/callback",
   ]
+
+  # Sign-out returns here after the hosted-UI /logout clears the Cognito session, so the next
+  # "Continue with Google" prompts for an account instead of silently reusing the cookie.
+  logout_urls = ["caraoke://signout"]
 }
 
 module "secrets" {
