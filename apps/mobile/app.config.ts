@@ -62,6 +62,17 @@ const config: ExpoConfig = {
       '@stripe/stripe-react-native',
       { merchantIdentifier: 'merchant.ai.caraoke.app', enableGooglePay: false },
     ],
+    // On-device Spotify App Remote: controls the phone's own Spotify app directly (no Web-API
+    // active-device requirement). Redirect URI = caraoke://spotify-auth — register it, the iOS
+    // bundle id, and the Android package + signing SHA-1 in the Spotify dashboard.
+    [
+      '@wwdrew/expo-spotify-sdk',
+      {
+        clientID: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? '',
+        scheme: 'caraoke',
+        host: 'spotify-auth',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

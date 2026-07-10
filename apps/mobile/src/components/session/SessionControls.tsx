@@ -6,9 +6,8 @@ import { View, StyleSheet } from 'react-native';
 import { useState, useCallback } from 'react';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
-import { useAuthStore } from '../../stores/useAuthStore';
 import { useSessionMachine } from '../../stores/useSessionMachine';
-import { pausePlayback, resumePlayback, stopSession } from '../../api/playback';
+import { pauseOnDevice, resumeOnDevice } from '../../spotify/appRemote';
 import { sonicEngine } from '../../sonic';
 import { useLocale } from '../../i18n/useLocale';
 import { colors } from '../../theme/tokens';
@@ -17,41 +16,41 @@ interface SessionControlsProps {
   sessionId: string;
 }
 
-export function SessionControls({ sessionId }: SessionControlsProps) {
-  const idToken = useAuthStore((s) => s.idToken);
+export function SessionControls(_props: SessionControlsProps) {
   const transition = useSessionMachine((s) => s.transition);
   const { current: locale } = useLocale();
   const [isPaused, setIsPaused] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
+  // Pause/resume act on THIS phone's own Spotify via the App Remote (each car controls its own).
   const handlePauseResume = useCallback(async () => {
-    if (!idToken || isBusy) return;
+    if (isBusy) return;
     setIsBusy(true);
     try {
       if (isPaused) {
-        await resumePlayback(idToken, sessionId);
+        await resumeOnDevice();
         sonicEngine.riff.speak('Resuming.', locale);
         setIsPaused(false);
       } else {
-        await pausePlayback(idToken, sessionId);
+        await pauseOnDevice();
         sonicEngine.riff.speak('Paused.', locale);
         setIsPaused(true);
       }
     } finally {
       setIsBusy(false);
     }
-  }, [idToken, sessionId, isPaused, isBusy, locale]);
+  }, [isPaused, isBusy, locale]);
 
   const handleStop = useCallback(async () => {
-    if (!idToken || isBusy) return;
+    if (isBusy) return;
     setIsBusy(true);
     try {
-      await stopSession(idToken, sessionId);
+      await pauseOnDevice();
       transition('ended');
     } finally {
       setIsBusy(false);
     }
-  }, [idToken, sessionId, isBusy, transition]);
+  }, [isBusy, transition]);
 
   return (
     <View style={styles.container}>

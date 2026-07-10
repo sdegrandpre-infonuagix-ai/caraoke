@@ -1,13 +1,13 @@
 // Simultaneous scheduled-start hook (Story 4.4, FR14/FR18/NFR1/NFR21).
 // Subscribes to the session's AppSync Events channel, receives `playback.scheduled{startAt, trackUri}`,
-// pre-buffers via the backend (→ Spotify MCP), then fires the play command at exactly the
-// local moment corresponding to the absolute server epoch T — targeting ≤200ms sync.
+// connects the on-device Spotify App Remote during the pre-roll, then fires the play command at
+// exactly the local moment corresponding to the absolute server epoch T — targeting ≤200ms sync.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { clockSync } from '../lib/clockSync';
 import { subscribeSessionEvents } from './appSyncEvents';
-import { preBufferTrack, playTrack } from '../api/playback';
+import { connectSpotify, playTrackOnDevice } from '../spotify/appRemote';
 import { hasPrebufferWindow, localDelayMs, PRE_ROLL_MS } from './scheduledStart';
 import { useSessionMachine } from '../stores/useSessionMachine';
 
@@ -82,12 +82,10 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
 
         setState({ status: 'pre_buffering', trackUri, msRemaining: delayMs });
 
-        // Pre-buffer only if we have enough runway.
-        const doPrebuffer = hasPrebufferWindow(startAt, now, offsetMs);
-        const prebufferPromise = doPrebuffer
-          ? preBufferTrack(idToken, sessionId, { trackUri }).catch(() => {
-              // Non-fatal: Spotify may already have the track; proceed to play regardless.
-            })
+        // Pre-roll: open the App Remote connection to the local Spotify app so the play at T is
+        // instant. Best-effort — playTrackOnDevice falls back to authorizeAndPlay if not connected.
+        const prebufferPromise = hasPrebufferWindow(startAt, now, offsetMs)
+          ? connectSpotify().catch(() => {})
           : Promise.resolve();
 
         void prebufferPromise.then(() => {
@@ -112,10 +110,10 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
             setState((s) => ({ ...s, status: 'playing', msRemaining: 0 }));
             transition('playing');
 
-            // Start the exact track at the shared position (how far past T we are), so it plays
-            // the requested song in sync — not whatever happened to be loaded on Spotify.
+            // Start the exact track at the shared position (how far past T we are) on the phone's
+            // own Spotify via App Remote — in sync, and the requested song regardless of state.
             const positionMs = Math.max(0, Date.now() + clockSync.getOffsetMs() - startAt);
-            void playTrack(idToken, sessionId, trackUri, positionMs).catch(() => {
+            void playTrackOnDevice(trackUri, positionMs).catch(() => {
               setState((s) => ({ ...s, status: 'error' }));
             });
           }, Math.max(0, localDelayMs(startAt, Date.now(), clockSync.getOffsetMs())));
