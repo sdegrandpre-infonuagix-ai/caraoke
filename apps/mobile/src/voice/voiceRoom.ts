@@ -3,7 +3,7 @@
 // by construction (LiveKit/WebRTC). The native audio path is provided by @livekit/react-native
 // (built on react-native-webrtc) — auto-linked via its Expo config plugin.
 
-import { registerGlobals, AudioSession } from '@livekit/react-native';
+import { registerGlobals, AudioSession, AndroidAudioTypePresets } from '@livekit/react-native';
 import { Room, RoomEvent } from 'livekit-client';
 import type { VoiceGrant } from '../api/voice';
 
@@ -33,6 +33,18 @@ export async function connectVoiceRoom(
   grant: VoiceGrant,
   callbacks: VoiceCallbacks = {},
 ): Promise<VoiceConnection> {
+  // Route voice to the loudspeaker (not the call earpiece, which is why it was barely audible)
+  // and keep the communication audio mode so echo cancellation / noise suppression stay on —
+  // important so each phone's own Spotify playback doesn't feed back over the mic.
+  await AudioSession.configureAudio({
+    android: {
+      audioTypeOptions: AndroidAudioTypePresets.communication,
+      preferredOutputList: ['speaker'],
+    },
+    ios: {
+      defaultOutput: 'speaker',
+    },
+  });
   await AudioSession.startAudioSession();
 
   const room = new Room({ adaptiveStream: false, dynacast: false });
