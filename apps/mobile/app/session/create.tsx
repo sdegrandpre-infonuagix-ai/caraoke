@@ -1,6 +1,6 @@
 import { Share, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
-import { Redirect } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Card } from '../../src/components';
 import { useAuthStore } from '../../src/stores/useAuthStore';
@@ -15,6 +15,7 @@ export default function CreateSession() {
   const idToken = useAuthStore((s) => s.idToken);
   const authStatus = useAuthStore((s) => s.status);
   const setRole = useSessionRole((s) => s.setRole);
+  const router = useRouter();
   const { t } = useTranslation();
 
   const create = useMutation<CreateSessionResult>({
@@ -66,6 +67,14 @@ export default function CreateSession() {
               />
             </View>
           </Card>
+        ) : null}
+
+        {invite && create.data ? (
+          <Button
+            label="Continue"
+            accessibilityLabel="Continue to the duet"
+            onPress={() => router.push(`/session/ready?id=${create.data.session.id}`)}
+          />
         ) : null}
 
         <Button
