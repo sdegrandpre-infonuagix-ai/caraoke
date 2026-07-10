@@ -33,6 +33,10 @@ resource "aws_appsync_channel_namespace" "caraoke" {
 resource "aws_appsync_api_key" "events" {
   api_id      = aws_appsync_api.events.api_id
   description = "Caraoke session events (publish + subscribe)"
+  # AppSync API keys default to a 7-day expiry — set ~1 year so it doesn't silently expire
+  # mid-test (max allowed is 365 days). NOTE: still needs rotation before this date, which means
+  # updating the EAS env var + rebuilding the apps. The real fix is Cognito-auth (deferred).
+  expires = "2027-07-01T00:00:00Z"
 }
 
 # The raw DNS map (HTTP + REALTIME endpoints) — surfaced so URL construction can be corrected
