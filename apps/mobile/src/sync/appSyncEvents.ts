@@ -1,7 +1,11 @@
 // AppSync Events WebSocket subscription (Story 4.4). Thin client for the AWS AppSync Events
 // pub/sub service — the channel `/caraoke/session/{id}` carries all in-session domain events
 // (playback.scheduled, partner.ready, session.reconnecting, etc.).
-// Protocol: connect → connection_ack → subscribe → data frames. API-key auth (device-safe).
+//
+// Protocol (validated against the live endpoint): connect with subprotocols
+// ['aws-appsync-event-ws', 'header-<base64url(auth)>'] → connection_init → connection_ack →
+// subscribe → data frames. API-key auth. The auth `host` MUST be the HTTP (appsync-api) endpoint,
+// not the realtime (appsync-realtime-api) one, even though we dial the realtime URL.
 
 import type { DomainEvent } from '@caraoke/shared';
 
@@ -15,14 +19,17 @@ const API_KEY = process.env.EXPO_PUBLIC_APPSYNC_API_KEY ?? '';
 interface AppSyncMessage {
   type: string;
   id?: string;
-  channel?: string;
-  event?: string;
-  payload?: Record<string, unknown>;
+  event?: string | string[];
+  errors?: unknown;
+}
+
+/** Base64URL per the AppSync Events subprotocol spec (+/ → -_, no padding). */
+function base64url(input: string): string {
+  return btoa(input).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
  * Subscribe to all domain events for a session. Returns an `unsubscribe` thunk.
- * Calling it while offline is safe — the subscription retries aren't wired (Story 4.8).
  * Events arrive parsed; unknown event types are forwarded so the caller can filter.
  */
 export function subscribeSessionEvents(
@@ -35,13 +42,20 @@ export function subscribeSessionEvents(
     return () => {};
   }
 
+  // Auth host is the HTTP endpoint (appsync-api), derived from the realtime host.
+  const httpHost = new URL(REALTIME_URL.replace('wss://', 'https://')).host.replace(
+    'appsync-realtime-api',
+    'appsync-api',
+  );
+  const auth = { host: httpHost, 'x-api-key': API_KEY };
   const channel = `/caraoke/session/${sessionId}`;
   const subId = `sub-${sessionId}`;
-  // API-key auth header encoded in the URL per AppSync Events WebSocket protocol.
-  const authHeader = btoa(JSON.stringify({ 'x-api-key': API_KEY, host: new URL(REALTIME_URL.replace('wss://', 'https://')).host }));
-  const wsUrl = `${REALTIME_URL}?header=${authHeader}&payload=${btoa('{}')}`;
 
-  let ws: WebSocket | null = new WebSocket(wsUrl, ['aws-appsync-event-ws', 'header']);
+  // Auth travels in the subprotocol list (NOT a URL query param) for AppSync Events.
+  let ws: WebSocket | null = new WebSocket(REALTIME_URL, [
+    'aws-appsync-event-ws',
+    `header-${base64url(JSON.stringify(auth))}`,
+  ]);
   let closed = false;
 
   ws.onopen = () => {
@@ -56,23 +70,31 @@ export function subscribeSessionEvents(
       return;
     }
 
-    if (msg.type === 'connection_ack') {
-      // Connection ready — subscribe to the session channel.
-      ws?.send(JSON.stringify({
-        type: 'subscribe',
-        id: subId,
-        channel,
-        authorization: { 'x-api-key': API_KEY },
-      }));
-    } else if (msg.type === 'data' && msg.event) {
-      try {
-        const event = JSON.parse(msg.event) as AnyDomainEvent;
-        onEvent(event);
-      } catch {
-        // Malformed event payload — ignore.
+    switch (msg.type) {
+      case 'connection_ack':
+        ws?.send(JSON.stringify({ type: 'subscribe', id: subId, channel, authorization: auth }));
+        break;
+      case 'ka': // keep-alive
+      case 'subscribe_success':
+        break;
+      case 'data': {
+        // `event` may be a single stringified event or an array of them.
+        const raws = Array.isArray(msg.event) ? msg.event : msg.event != null ? [msg.event] : [];
+        for (const raw of raws) {
+          try {
+            onEvent(JSON.parse(raw) as AnyDomainEvent);
+          } catch {
+            // Malformed event payload — ignore.
+          }
+        }
+        break;
       }
-    } else if (msg.type === 'connection_error' || msg.type === 'error') {
-      onError?.(JSON.stringify(msg.payload ?? msg));
+      case 'connection_error':
+      case 'subscribe_error':
+      case 'broadcast_error':
+      case 'error':
+        onError?.(JSON.stringify(msg.errors ?? msg));
+        break;
     }
   };
 
