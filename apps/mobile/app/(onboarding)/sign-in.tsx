@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer, Text, Button, Icon } from '../../src/components';
 import { useCognitoSignIn } from '../../src/auth/useCognitoSignIn';
+import { useAuthStore } from '../../src/stores/useAuthStore';
 import type { FederatedProvider } from '../../src/auth/config';
 
 /**
@@ -11,6 +13,7 @@ import type { FederatedProvider } from '../../src/auth/config';
  */
 export default function SignIn() {
   const { signIn, ready } = useCognitoSignIn();
+  const authStatus = useAuthStore((s) => s.status);
   const { t } = useTranslation();
   const [busy, setBusy] = useState<FederatedProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +22,10 @@ export default function SignIn() {
     setBusy(provider);
     setError(null);
     try {
-      // On the happy path signIn resolves false — the OAuth return is an App Link that Expo
-      // Router hands to app/auth/callback, which finishes the exchange and navigates. Only a
-      // thrown error is a real failure here.
+      // Two return paths complete the exchange: on iOS the auth session returns inline (signIn
+      // sets the session directly); on Android the caraoke:// redirect deep-links to
+      // app/auth/callback. Either way the session flips to signedIn — the redirect below then
+      // leaves this screen. Only a thrown error is a real failure.
       await signIn(provider);
     } catch {
       setError(t('onboarding.error'));
@@ -29,6 +33,10 @@ export default function SignIn() {
       setBusy(null);
     }
   };
+
+  // Once signed in (by either return path), leave the sign-in screen. Without this, the iOS
+  // inline path sets the session but never navigates, stranding the user on this screen.
+  if (authStatus === 'signedIn') return <Redirect href="/" />;
 
   return (
     <ScreenContainer>
