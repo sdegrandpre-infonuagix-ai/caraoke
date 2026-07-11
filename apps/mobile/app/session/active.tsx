@@ -77,7 +77,7 @@ export default function ActiveSession() {
           : null;
 
   return (
-    <ScreenContainer>
+    <ScreenContainer scroll>
       <View style={styles.content}>
         <Text variant="h1">{t('session.singing')}</Text>
 

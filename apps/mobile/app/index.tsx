@@ -39,7 +39,7 @@ export default function Index() {
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer scroll>
       <View className="flex-1 items-center justify-center gap-lg">
         <Avatar name={me.data?.displayName ?? me.data?.email ?? 'You'} size="lg" partner="A" />
         <Text variant="h2">{me.data?.displayName ?? me.data?.email ?? t('home.welcome')}</Text>
