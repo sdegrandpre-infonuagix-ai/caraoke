@@ -7,6 +7,10 @@ import { z } from 'zod';
 export const DOMAIN_EVENT_TYPES = [
   'session.started',
   'partner.ready',
+  // Host picked a song; both phones show it and must tap "Start singing" before playback.
+  'song.proposed',
+  // A participant tapped "Start singing" (carries progress until all have confirmed).
+  'start.confirmed',
   'session.reconnecting',
   'playback.scheduled',
   'session.ended',

@@ -10,6 +10,7 @@ import type { AuthClaims, User } from '../identity/identity.types.js';
 import type { TokenVerifier } from '../../middleware/auth.js';
 import type { Session } from '../pairing/pairing.types.js';
 import type { SessionParticipantGuard, TrackResolver, ScheduledStartProducer } from './agent.service.js';
+import { StartCoordinator } from './startCoordinator.js';
 import type { ResolvedTrack, SongRequestResult } from './agent.types.js';
 import type { PlaybackPositionService } from './playback.service.js';
 import { AppError } from '@caraoke/shared';
@@ -93,75 +94,140 @@ class StubProducer implements ScheduledStartProducer {
   }
 }
 
+/** Build an AgentService with a real StartCoordinator + a mock publisher (overridable deps). */
+function newService(
+  guard: SessionParticipantGuard = new StubGuard(),
+  resolver: TrackResolver = new StubResolver(),
+  producer: ScheduledStartProducer = new StubProducer(),
+  publisher: MockEventPublisher = new MockEventPublisher(),
+): AgentService {
+  return new AgentService(guard, resolver, producer, publisher, new StartCoordinator());
+}
+
 // ---------------------------------------------------------------------------
 // AgentService unit tests
 // ---------------------------------------------------------------------------
 
-describe('AgentService.handleSongRequest', () => {
-  it('returns a resolved track and scheduledAt for a valid request', async () => {
-    const service = new AgentService(new StubGuard(), new StubResolver(), new StubProducer());
+describe('AgentService.handleSongRequest (the host picks a song)', () => {
+  it('proposes a resolved track WITHOUT scheduling playback yet', async () => {
+    const scheduled: string[] = [];
+    const producer: ScheduledStartProducer = {
+      async schedule({ participantIds }) {
+        scheduled.push(...participantIds);
+        return { scheduledAt: FIXED_SCHEDULED_AT };
+      },
+    };
+    const service = newService(new StubGuard(), new StubResolver(), producer);
     const result = await service.handleSongRequest('sess-1', 'host-1', 'Bohemian Rhapsody');
     expect(result.sessionId).toBe('sess-1');
     expect(result.track.name).toBe('Bohemian Rhapsody');
     expect(result.track.uri).toMatch(/^spotify:track:/);
-    expect(result.scheduledAt).toBe(FIXED_SCHEDULED_AT);
+    expect(result.proposedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    // The whole point of the gate: nothing is scheduled on a bare request.
+    expect(scheduled).toEqual([]);
   });
 
-  it('includes both participants when scheduling', async () => {
-    const scheduled: string[] = [];
-    const producer: ScheduledStartProducer = {
-      async schedule({ participantIds }) {
-        scheduled.push(...participantIds);
-        return { scheduledAt: FIXED_SCHEDULED_AT };
-      },
-    };
-    const service = new AgentService(
-      new StubGuard(makeSession({ hostUserId: 'host-x', guestUserId: 'guest-x' })),
-      new StubResolver(),
-      producer,
-    );
-    await service.handleSongRequest('sess-1', 'host-x', 'test');
-    expect(scheduled).toContain('host-x');
-    expect(scheduled).toContain('guest-x');
-  });
-
-  it('only includes the host when guest has not joined yet', async () => {
-    const scheduled: string[] = [];
-    const producer: ScheduledStartProducer = {
-      async schedule({ participantIds }) {
-        scheduled.push(...participantIds);
-        return { scheduledAt: FIXED_SCHEDULED_AT };
-      },
-    };
-    const service = new AgentService(
-      new StubGuard(makeSession({ hostUserId: 'host-x', guestUserId: null })),
-      new StubResolver(),
-      producer,
-    );
-    await service.handleSongRequest('sess-1', 'host-x', 'test');
-    expect(scheduled).toEqual(['host-x']);
+  it('broadcasts song.proposed so both phones show the pick', async () => {
+    const pub = new MockEventPublisher();
+    const service = newService(new StubGuard(), new StubResolver(), new StubProducer(), pub);
+    await service.handleSongRequest('sess-1', 'host-1', 'Bohemian Rhapsody');
+    const evt = pub.published.find((e) => e.type === 'song.proposed');
+    expect(evt).toBeTruthy();
+    expect((evt!.data as Record<string, unknown>).trackUri).toBe(MOCK_TRACK.uri);
   });
 
   it('throws FORBIDDEN when the caller is not a session participant', async () => {
     const guard = new StubGuard(makeSession({ hostUserId: 'host-1', guestUserId: 'guest-1' }));
-    const service = new AgentService(guard, new StubResolver(), new StubProducer());
+    const service = newService(guard);
     await expect(service.handleSongRequest('sess-1', 'outsider', 'query')).rejects.toMatchObject({
       code: 'FORBIDDEN',
     });
   });
 
   it('throws SESSION_NOT_FOUND when the session does not exist', async () => {
-    const service = new AgentService(new StubGuard(null), new StubResolver(), new StubProducer());
+    const service = newService(new StubGuard(null));
     await expect(service.handleSongRequest('missing', 'host-1', 'query')).rejects.toMatchObject({
       code: 'SESSION_NOT_FOUND',
     });
   });
 
   it('throws NOT_FOUND when the track resolver returns null', async () => {
-    const service = new AgentService(new StubGuard(), new StubResolver(null), new StubProducer());
+    const service = newService(new StubGuard(), new StubResolver(null));
     await expect(
       service.handleSongRequest('sess-1', 'host-1', 'no such song ever'),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+});
+
+describe('AgentService.confirmStart (the "Start singing" gate)', () => {
+  it('does NOT schedule until every participant confirms', async () => {
+    const scheduled: string[] = [];
+    const producer: ScheduledStartProducer = {
+      async schedule({ participantIds }) {
+        scheduled.push(...participantIds);
+        return { scheduledAt: FIXED_SCHEDULED_AT };
+      },
+    };
+    const service = newService(
+      new StubGuard(makeSession({ hostUserId: 'host-x', guestUserId: 'guest-x' })),
+      new StubResolver(),
+      producer,
+    );
+    await service.handleSongRequest('sess-1', 'host-x', 'test');
+
+    const first = await service.confirmStart('sess-1', 'host-x');
+    expect(first.status).toBe('waiting');
+    expect(scheduled).toEqual([]); // host alone can't start the duet
+
+    const second = await service.confirmStart('sess-1', 'guest-x');
+    expect(second.status).toBe('scheduled');
+    expect(scheduled).toContain('host-x');
+    expect(scheduled).toContain('guest-x');
+  });
+
+  it('schedules on the host alone only when the guest has not joined', async () => {
+    const scheduled: string[] = [];
+    const producer: ScheduledStartProducer = {
+      async schedule({ participantIds }) {
+        scheduled.push(...participantIds);
+        return { scheduledAt: FIXED_SCHEDULED_AT };
+      },
+    };
+    const service = newService(
+      new StubGuard(makeSession({ hostUserId: 'host-x', guestUserId: null })),
+      new StubResolver(),
+      producer,
+    );
+    await service.handleSongRequest('sess-1', 'host-x', 'test');
+    const r = await service.confirmStart('sess-1', 'host-x');
+    expect(r.status).toBe('scheduled');
+    expect(scheduled).toEqual(['host-x']);
+  });
+
+  it('schedules exactly once even if a participant double-taps or both race', async () => {
+    let scheduleCount = 0;
+    const producer: ScheduledStartProducer = {
+      async schedule() {
+        scheduleCount += 1;
+        return { scheduledAt: FIXED_SCHEDULED_AT };
+      },
+    };
+    const service = newService(
+      new StubGuard(makeSession({ hostUserId: 'host-x', guestUserId: 'guest-x' })),
+      new StubResolver(),
+      producer,
+    );
+    await service.handleSongRequest('sess-1', 'host-x', 'test');
+    await service.confirmStart('sess-1', 'host-x');
+    await service.confirmStart('sess-1', 'guest-x');
+    // A late/duplicate confirm after scheduling must not schedule again.
+    await expect(service.confirmStart('sess-1', 'host-x')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(scheduleCount).toBe(1);
+  });
+
+  it('throws NOT_FOUND when no song has been proposed', async () => {
+    const service = newService();
+    await expect(service.confirmStart('sess-1', 'host-1')).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
 
@@ -189,7 +255,7 @@ function makeAgentService(result: SongRequestResult | AppError): AgentService {
 const happyResult: SongRequestResult = {
   sessionId: 'sess-1',
   track: MOCK_TRACK,
-  scheduledAt: FIXED_SCHEDULED_AT,
+  proposedAt: '2026-07-01T00:00:00.000Z',
 };
 
 describe('POST /sessions/:id/agent', () => {
@@ -219,7 +285,7 @@ describe('POST /sessions/:id/agent', () => {
     expect(res.body.error.code).toBe('VALIDATION_FAILED');
   });
 
-  it('returns 201 with track and scheduledAt on a valid request', async () => {
+  it('returns 201 with the proposed track on a valid request', async () => {
     const app = createApp({
       verifier,
       identityService: new IdentityService(new InMemoryUsers()),
@@ -232,7 +298,7 @@ describe('POST /sessions/:id/agent', () => {
     expect(res.status).toBe(201);
     expect(res.body.error).toBeNull();
     expect(res.body.data.track.name).toBe('Bohemian Rhapsody');
-    expect(res.body.data.scheduledAt).toBe(FIXED_SCHEDULED_AT);
+    expect(res.body.data.proposedAt).toBe(happyResult.proposedAt);
     expect(res.body.data.track.uri).toMatch(/^spotify:track:/);
   });
 

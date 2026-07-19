@@ -48,6 +48,7 @@ import { createTelemetryAdminRouter } from './modules/telemetry/telemetry.admin.
 import { sensitiveLimiter, adminLimiter } from './middleware/rateLimit.js';
 import { AgentService } from './modules/agent/agent.service.js';
 import { AppSyncScheduledStartProducer } from './modules/agent/scheduledStart.js';
+import { StartCoordinator } from './modules/agent/startCoordinator.js';
 import { createAgentRouter } from './modules/agent/agent.router.js';
 import { getSpotifySearchProvider } from './integrations/spotify/search.js';
 import { LivePlaybackPositionService, type PlaybackPositionService } from './modules/agent/playback.service.js';
@@ -290,6 +291,9 @@ export function createApp(deps: AppDeps = {}): Express {
       getSpotifySearchProvider(env),
       // 4s lead time so both clients can prebuffer the track before the synchronized start.
       new AppSyncScheduledStartProducer(getEventPublisher(env), 4_000),
+      // Broadcasts song.proposed / start.confirmed and gates the schedule behind both taps.
+      getEventPublisher(env),
+      new StartCoordinator(),
     );
   app.use('/', createAgentRouter({ verifier, identityService, agentService }));
 

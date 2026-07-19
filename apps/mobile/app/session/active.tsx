@@ -9,10 +9,13 @@ import { useVoiceRoom } from '../../src/voice/useVoiceRoom';
 import { useReconnect } from '../../src/reconnect/useReconnect';
 import { useFeltTogether } from '../../src/telemetry/useFeltTogether';
 import { useScheduledStart } from '../../src/sync/useScheduledStart';
+import { useStartHandshakeEvents } from '../../src/sync/useStartHandshakeEvents';
+import { useStartHandshake } from '../../src/stores/useStartHandshake';
 import { DrivingModeScreen } from '../../src/components/session/DrivingModeScreen';
 import { WaveformVisualizer } from '../../src/components/session/WaveformVisualizer';
 import { SessionControls } from '../../src/components/session/SessionControls';
 import { SongRequest } from '../../src/components/session/SongRequest';
+import { StartSinging } from '../../src/components/session/StartSinging';
 import { ScreenContainer, Text, Card } from '../../src/components';
 
 /**
@@ -47,6 +50,11 @@ export default function ActiveSession() {
   // prebuffers, and fires Spotify play at the shared moment T. Mounted before the driving-mode
   // early return so it stays active whether parked or moving.
   const scheduled = useScheduledStart(id ?? '');
+
+  // "Start singing" gate (both must tap before the synchronized start). This subscription must be
+  // above the driving-mode early return so it stays live whether parked or moving.
+  useStartHandshakeEvents(id ?? '');
+  const proposedTrack = useStartHandshake((s) => s.proposedTrack);
 
   // Post-session felt-together capture (Story 4.9, FR42/UX-DR16). No visual component.
   // captureAnswer is wired here for the STT pipeline to call when a transcript arrives
@@ -91,11 +99,14 @@ export default function ActiveSession() {
           </Text>
         ) : null}
 
-        {/* Only the host (inviter) picks the song → synchronized start on both phones. The
-            guest sings along. Voice-driven requests come in a later pass. */}
-        {role === 'guest' ? (
+        {/* Only the host (inviter) picks the song. Once a song is picked, BOTH phones show it with
+            a "Start singing" button — the synchronized start only fires after both tap, so the host
+            can't start alone. Voice-driven requests come in a later pass. */}
+        {proposedTrack ? (
+          <StartSinging sessionId={id} />
+        ) : role === 'guest' ? (
           <Text variant="body" color="secondary" style={styles.countdown}>
-            {"Your partner picks the song — get ready to sing."}
+            {'Your partner picks the song — get ready to sing.'}
           </Text>
         ) : (
           <SongRequest sessionId={id} />

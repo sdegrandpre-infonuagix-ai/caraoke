@@ -9,6 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Button } from '../Button';
 import { Text } from '../Text';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useStartHandshake } from '../../stores/useStartHandshake';
 import { requestSong } from '../../api/agent';
 import { colors } from '../../theme/tokens';
 
@@ -18,6 +19,16 @@ export function SongRequest({ sessionId }: { sessionId: string }) {
 
   const request = useMutation({
     mutationFn: () => requestSong(idToken!, sessionId, query.trim()),
+    onSuccess: (result) => {
+      // Show the "Start singing" gate immediately for the host, rather than waiting on the
+      // AppSync echo of song.proposed (both phones also get it over the channel).
+      useStartHandshake.getState().propose({
+        trackUri: result.track.uri,
+        trackName: result.track.name,
+        artist: result.track.artist,
+        trackId: result.track.trackId,
+      });
+    },
   });
 
   return (

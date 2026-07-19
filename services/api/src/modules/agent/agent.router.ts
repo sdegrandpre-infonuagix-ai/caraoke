@@ -8,11 +8,16 @@ import { songRequestSchema } from './agent.schema.js';
 /**
  * Voice-agent routes (Story 9.1).
  *
- *   POST /sessions/:id/agent — submit a song request for the session.
+ *   POST /sessions/:id/agent — the host picks a song for the session.
  *     - Caller must be a session participant (host or guest).
  *     - Body: { query: string } — free-text song search (e.g. "Bohemian Rhapsody Queen").
- *     - Resolves the track via Spotify and schedules a synchronized start (Story 9.2).
- *     - Returns 201 { data: { sessionId, track, scheduledAt } }.
+ *     - Resolves the track via Spotify and broadcasts `song.proposed`. Does NOT start playback.
+ *     - Returns 201 { data: { sessionId, track, proposedAt } }.
+ *
+ *   POST /sessions/:id/agent/start — a participant taps "Start singing".
+ *     - Caller must be a session participant. No body.
+ *     - Once ALL participants have confirmed, schedules the synchronized start (playback.scheduled).
+ *     - Returns 200 { data: { status: 'waiting' | 'scheduled', ... } }.
  */
 export function createAgentRouter(deps: {
   verifier: TokenVerifier;
@@ -42,6 +47,18 @@ export function createAgentRouter(deps: {
       .findOrCreate(claims)
       .then((user) => deps.agentService.handleSongRequest(sessionId, user.id, query))
       .then((result) => res.status(201).json(ok(result)))
+      .catch(next);
+  });
+
+  router.post('/sessions/:id/agent/start', auth, (req, res, next) => {
+    const claims = req.authClaims;
+    if (!claims) return next(new AppError('UNAUTHORIZED', 'No auth claims.'));
+
+    const sessionId = String(req.params.id);
+    deps.identityService
+      .findOrCreate(claims)
+      .then((user) => deps.agentService.confirmStart(sessionId, user.id))
+      .then((result) => res.status(200).json(ok(result)))
       .catch(next);
   });
 
