@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { clearSession, loadSession, saveSession } from '../auth/secureStore';
 import { authConfig } from '../auth/config';
@@ -39,20 +40,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
-    // End the Cognito hosted-UI session too — otherwise its cookie survives and the next
-    // "Continue with Google" silently reuses it (no account chooser). Best-effort: whatever
-    // happens with the web session, always clear the local session.
-    try {
-      if (authConfig.domain && authConfig.clientId) {
-        const url =
-          `https://${authConfig.domain}/logout?client_id=${authConfig.clientId}` +
-          `&logout_uri=${encodeURIComponent(SIGN_OUT_URI)}`;
-        await WebBrowser.openAuthSessionAsync(url, SIGN_OUT_URI);
-      }
-    } catch {
-      // ignore — fall through to clearing the local session
-    }
+    // Clear the LOCAL session first so the app signs out instantly and reliably — never trapped
+    // signed-in by a stalling web session.
     await clearSession();
     set({ status: 'signedOut', idToken: null });
+
+    // iOS signs in with an ephemeral web session (see useCognitoSignIn), so there's no shared
+    // Cognito cookie to clear — a local clear is a complete sign-out. On Android (Chrome Custom
+    // Tabs share cookies), best-effort end the hosted-UI session so the next sign-in prompts for
+    // an account. Fire-and-forget: don't block or trap the UI on it.
+    if (Platform.OS === 'android' && authConfig.domain && authConfig.clientId) {
+      const url =
+        `https://${authConfig.domain}/logout?client_id=${authConfig.clientId}` +
+        `&logout_uri=${encodeURIComponent(SIGN_OUT_URI)}`;
+      void WebBrowser.openAuthSessionAsync(url, SIGN_OUT_URI).catch(() => {});
+    }
   },
 }));

@@ -36,7 +36,10 @@ export function useCognitoSignIn() {
       await request.makeAuthUrlAsync(discovery);
       await setCognitoPending({ codeVerifier: request.codeVerifier ?? '', state: request.state });
 
-      const result = await request.promptAsync(discovery);
+      // Ephemeral web session: no shared Safari/Cognito cookie persists, so every sign-in starts
+      // fresh (account chooser shows) and sign-out is a clean local clear — fixes the iOS case
+      // where the Cognito cookie survived logout and silently re-signed-in the same account.
+      const result = await request.promptAsync(discovery, { preferEphemeralSession: true });
       if (result.type === 'success' && result.params.code) {
         return completeCognitoSignIn(result.params.code, result.params.state);
       }
