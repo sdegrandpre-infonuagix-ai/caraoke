@@ -7,6 +7,7 @@ import { ScreenContainer, Text, Button, Card, Icon } from '../../src/components'
 import { colors } from '../../src/theme/tokens';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { markReady, useReadyState, type ReadyState } from '../../src/api/ready';
+import { connectSpotify } from '../../src/spotify/appRemote';
 
 /**
  * Ready-handshake screen (Story 3.4, FR10). Tapping "I'm ready" marks readiness; the screen
@@ -24,8 +25,15 @@ export default function Ready() {
 
   const state = useReadyState(id);
 
+  // "I'm ready" also connects the on-device Spotify App Remote — which triggers the first-time
+  // "Agree" in the Spotify app. Doing it HERE (before the duet) means both partners have agreed
+  // by the time either can request a song, so the synchronized-start countdown never races the
+  // authorization. Only mark ready once Spotify is connected.
   const ready = useMutation({
-    mutationFn: () => markReady(idToken!, String(id)),
+    mutationFn: async () => {
+      await connectSpotify();
+      return markReady(idToken!, String(id));
+    },
     onSuccess: (s: ReadyState) => {
       setIPressed(true);
       queryClient.setQueryData(['ready', id], s);
@@ -75,11 +83,23 @@ export default function Ready() {
 
         {!both ? (
           <Button
-            label={iPressed ? t('ready.youAreReady') : t('ready.imReady')}
+            label={
+              ready.isPending
+                ? 'Connecting Spotify…'
+                : iPressed
+                  ? t('ready.youAreReady')
+                  : t('ready.imReady')
+            }
             accessibilityLabel={t('ready.imReady')}
             disabled={iPressed || ready.isPending || !idToken || !id}
             onPress={() => ready.mutate()}
           />
+        ) : null}
+
+        {ready.isError ? (
+          <Text variant="caption" color="error">
+            Couldn’t connect Spotify. Make sure the Spotify app is installed, logged in, and Premium, then tap again.
+          </Text>
         ) : null}
       </View>
     </ScreenContainer>
