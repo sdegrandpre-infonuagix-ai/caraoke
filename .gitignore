@@ -57,6 +57,14 @@ terraform.rc
 **/android/.cxx/
 local.properties
 
+# Claude Code local settings (machine-specific permission allowlist — not shared config)
+.claude/settings.json
+.claude/settings.local.json
+
+# Stray root Expo config (the real config lives in apps/mobile — see app.config.ts / eas.json)
+/eas.json
+/app.json
+
 # OS / editor
 .DS_Store
 Thumbs.db
