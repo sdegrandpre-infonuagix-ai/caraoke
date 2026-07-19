@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { loadEnv } from '../config/env.js';
+import { getDbPassword, invalidateDbPassword } from './dbSecret.js';
 
 let pool: Pool | null = null;
 
@@ -14,17 +15,23 @@ export function getPool(): Pool {
   // trusts the in-VPC RDS endpoint without bundling the RDS CA (fine for dev — harden later).
   const ssl = env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined;
 
-  // Prefer discrete DB_* parts: DB_USER/DB_PASSWORD are injected directly from the RDS-managed
-  // master secret, so there's no standalone connection-string secret to drift out of sync.
-  if (env.DB_HOST && env.DB_USER && env.DB_PASSWORD) {
+  // Prefer discrete DB_* parts: DB_USER + host/name come from env, and the password comes from a
+  // provider function so it self-heals when RDS rotates the managed master secret (pg invokes the
+  // provider per new connection; see getDbPassword). DB_PASSWORD alone (no ARN) still works.
+  if (env.DB_HOST && env.DB_USER && (env.DB_SECRET_ARN || env.DB_PASSWORD)) {
     pool = new Pool({
       host: env.DB_HOST,
       port: env.DB_PORT,
       user: env.DB_USER,
-      password: env.DB_PASSWORD,
+      password: () => getDbPassword(),
       database: env.DB_NAME ?? 'caraoke',
       max: 10,
       ssl,
+    });
+    // A bad-password error on an idle client means the secret rotated under us — drop the cache so
+    // the next connection re-fetches the fresh password (the pool then recovers on its own).
+    pool.on('error', (err: Error & { code?: string }) => {
+      if (err.code === '28P01') invalidateDbPassword();
     });
     return pool;
   }

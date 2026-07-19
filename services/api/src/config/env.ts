@@ -23,6 +23,9 @@ const envSchema = z.object({
   DB_NAME: z.string().optional(),
   DB_USER: z.string().optional(),
   DB_PASSWORD: z.string().optional(),
+  // ARN of the RDS-managed master secret. When set, the pool fetches the password from it at
+  // runtime (self-healing across rotation) instead of relying on the start-time DB_PASSWORD.
+  DB_SECRET_ARN: z.string().optional(),
   // Cognito (Story 2.2). Required to verify JWTs in live mode.
   COGNITO_USER_POOL_ID: z.string().optional(),
   COGNITO_CLIENT_ID: z.string().optional(),

@@ -114,6 +114,10 @@ module "api" {
     { name = "DB_HOST", value = module.aurora.cluster_endpoint },
     { name = "DB_PORT", value = tostring(module.aurora.port) },
     { name = "DB_NAME", value = module.aurora.database_name },
+    # ARN of the RDS-managed secret so the API fetches the password at RUNTIME (via the task role,
+    # readable_secret_arns below) and self-heals when RDS rotates it — no redeploy needed. See
+    # services/api/src/db/dbSecret.ts. The start-time DB_PASSWORD injection above remains a fallback.
+    { name = "DB_SECRET_ARN", value = module.aurora.master_user_secret_arn },
   ]
   container_secrets = [
     # Injected straight from the RDS-managed master credentials secret (rds!cluster-…); RDS
@@ -132,9 +136,14 @@ module "api" {
     module.secrets.secret_arns["spotify"],
   ]
 
-  # The live Stripe providers fetch this secret at boot via the TASK role (SDK call, not ECS
-  # injection) — grant read so live mode doesn't crash. KMS not needed (aws-managed key).
-  readable_secret_arns = [data.aws_secretsmanager_secret.stripe_key.arn]
+  # TASK-role runtime secret reads (SDK GetSecretValue, not ECS injection):
+  #  - Stripe key: live billing providers fetch at boot (aws-managed key, no KMS grant needed).
+  #  - RDS managed secret: the pool re-fetches the DB password on rotation to self-heal. It's
+  #    CMK-encrypted, but kms_key_arn is passed above so the task-role policy grants kms:Decrypt.
+  readable_secret_arns = [
+    data.aws_secretsmanager_secret.stripe_key.arn,
+    module.aurora.master_user_secret_arn,
+  ]
 }
 
 # LiveKit self-host + Spotify MCP are intentionally NOT applied for the road test:
