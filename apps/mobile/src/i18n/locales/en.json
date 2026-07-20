@@ -62,6 +62,7 @@
     "codePlaceholder": "ABC234",
     "join": "Join",
     "joining": "Joining…",
+    "continue": "Join",
     "connected": "Connected!",
     "bothConnected": "You and your partner are both connected.",
     "waiting": "Waiting for your partner to connect…",

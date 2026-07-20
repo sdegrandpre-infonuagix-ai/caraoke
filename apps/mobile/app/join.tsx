@@ -72,8 +72,8 @@ export default function Join() {
                 {connection.bothConnected ? t('join.bothConnected') : t('join.waiting')}
               </Text>
               <Button
-                label={t('ready.imReady')}
-                accessibilityLabel={t('ready.imReady')}
+                label={t('join.continue')}
+                accessibilityLabel={t('join.continue')}
                 onPress={() => router.push(`/session/ready?id=${connection.session.id}`)}
               />
               <Button
