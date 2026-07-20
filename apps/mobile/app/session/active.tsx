@@ -9,6 +9,7 @@ import { useVoiceRoom } from '../../src/voice/useVoiceRoom';
 import { useReconnect } from '../../src/reconnect/useReconnect';
 import { useFeltTogether } from '../../src/telemetry/useFeltTogether';
 import { useScheduledStart } from '../../src/sync/useScheduledStart';
+import { useOnDeviceDriftCorrection } from '../../src/sync/useOnDeviceDriftCorrection';
 import { useStartHandshakeEvents } from '../../src/sync/useStartHandshakeEvents';
 import { useStartHandshake } from '../../src/stores/useStartHandshake';
 import { DrivingModeScreen } from '../../src/components/session/DrivingModeScreen';
@@ -50,6 +51,10 @@ export default function ActiveSession() {
   // prebuffers, and fires Spotify play at the shared moment T. Mounted before the driving-mode
   // early return so it stays active whether parked or moving.
   const scheduled = useScheduledStart(id ?? '');
+
+  // Continuous drift correction (Story 4.5): once playing, keep this phone's Spotify aligned to
+  // the shared timeline T. Only active while status is 'playing' (playStartServerMs non-null).
+  useOnDeviceDriftCorrection(scheduled.status === 'playing' ? scheduled.startAtServerMs : null);
 
   // "Start singing" gate (both must tap before the synchronized start). This subscription must be
   // above the driving-mode early return so it stays live whether parked or moving.

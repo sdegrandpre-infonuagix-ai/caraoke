@@ -23,6 +23,8 @@ export interface ScheduledStartState {
   trackUri: string | null;
   /** ms remaining until play fires (updated approximately every 200ms while scheduled). */
   msRemaining: number | null;
+  /** Absolute server-epoch ms of the shared start T — the timeline drift correction aligns to. */
+  startAtServerMs: number | null;
 }
 
 /** Pre-roll window used for the countdown display — mirrors scheduledStart.PRE_ROLL_MS. */
@@ -35,6 +37,7 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
     status: 'idle',
     trackUri: null,
     msRemaining: null,
+    startAtServerMs: null,
   });
 
   // Refs to cancel in-flight timers when the component unmounts or a new event arrives.
@@ -80,7 +83,7 @@ export function useScheduledStart(sessionId: string): ScheduledStartState {
         const offsetMs = clockSync.getOffsetMs();
         const delayMs = localDelayMs(startAt, now, offsetMs);
 
-        setState({ status: 'pre_buffering', trackUri, msRemaining: delayMs });
+        setState({ status: 'pre_buffering', trackUri, msRemaining: delayMs, startAtServerMs: startAt });
 
         // Pre-roll: open the App Remote connection to the local Spotify app so the play at T is
         // instant. Best-effort — playTrackOnDevice falls back to authorizeAndPlay if not connected.

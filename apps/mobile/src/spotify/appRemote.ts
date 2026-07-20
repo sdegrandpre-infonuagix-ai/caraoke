@@ -90,6 +90,21 @@ export async function seekOnDevice(positionMs: number): Promise<void> {
   if (AppRemote.isConnected()) await Player.seekTo(Math.max(0, Math.round(positionMs)));
 }
 
+/**
+ * Read the local Spotify player's current position (ms) and paused state — the on-device source
+ * for drift correction (no backend / Web-API active-device round-trip). Null if not connected or
+ * the state can't be read this tick.
+ */
+export async function getOnDevicePlayback(): Promise<{ positionMs: number; isPaused: boolean } | null> {
+  if (!AppRemote.isConnected()) return null;
+  try {
+    const state = await Player.getPlayerState();
+    return { positionMs: state.playbackPosition, isPaused: state.isPaused };
+  } catch {
+    return null;
+  }
+}
+
 export async function disconnectSpotify(): Promise<void> {
   session = null;
   if (AppRemote.isConnected()) await AppRemote.disconnect();
