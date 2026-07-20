@@ -43,15 +43,36 @@ export async function connectSpotify(): Promise<void> {
 /**
  * Play a specific track from a position — the synchronized start. If already connected, use the
  * fast Player.play; otherwise authorizeAndPlay wakes Spotify (launching if suspended) and plays.
+ *
+ * Resilience: isConnected() can report a connection that has gone stale/dead (e.g. the phone that
+ * tapped "Start singing" first and then sat idle waiting for its partner) as still live, so the
+ * fast Player.play silently no-ops and the song never starts. If the fast path throws, force a
+ * fresh authorize-and-play — which re-establishes the App Remote and plays reliably.
  */
 export async function playTrackOnDevice(trackUri: string, positionMs: number): Promise<void> {
   const uri = SpotifyURI.from(trackUri);
-  if (AppRemote.isConnected()) {
-    await Player.play(uri);
-  } else {
+
+  const authorizeAndPlay = async () => {
     const s = await getSession();
     await AppRemote.authorizeAndPlay(s.accessToken, uri);
+  };
+
+  try {
+    if (AppRemote.isConnected()) {
+      await Player.play(uri);
+    } else {
+      await authorizeAndPlay();
+    }
+  } catch {
+    // Fast path failed → the cached connection is stale. Drop it and re-establish from scratch.
+    try {
+      if (AppRemote.isConnected()) await AppRemote.disconnect();
+    } catch {
+      // already gone
+    }
+    await authorizeAndPlay();
   }
+
   if (positionMs > 0) {
     await Player.seekTo(Math.round(positionMs));
   }
